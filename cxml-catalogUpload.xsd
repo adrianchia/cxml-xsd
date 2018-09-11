@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/CatalogUpload.mod#1 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Contain all the information related to the catalog upload, the same
+    functionality as the catalog upload provided by supplier.ariba.com
+  -->
+  <xs:element name="CatalogUploadRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:CatalogName"/>
+        <xs:element ref="tns:Description"/>
+        <xs:element ref="tns:Attachment"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Commodities"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:AutoPublish"/>
+        <xs:element ref="tns:Notification"/>
+      </xs:sequence>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    CatalogName is the name of the uploaded/published catalog. The
+    name is unique per supplier, and it can be defined in the
+    different languages
+  -->
+  <xs:element name="CatalogName">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The list of the commodity codes.
+  -->
+  <xs:element name="Commodities">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:CommodityCode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The two-digit code
+  -->
+  <xs:element name="CommodityCode" type="xs:string"/>
+  
+  <!--
+    If the attribute "enabled" set to be "true", the updated catalog
+    will be published to the same buyers according to its previous
+    publish
+  -->
+  <xs:element name="AutoPublish">
+    <xs:complexType>
+      <xs:attribute name="enabled" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The information used by Ariba CSN to send the notification (the
+    status of the catalog upload) to the suppliers.
+  -->
+  <xs:element name="Notification">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Email"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:URLPost"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The URL to receive the StatusUpdateRequest, which describes the
+    status of the catalog upload, such as the "success" (means the
+    catalog is validated, or the catalog is published),
+    the "failed" (the catalog has errors, ......)
+  -->
+  <xs:element name="URLPost">
+    <xs:complexType>
+      <xs:attribute name="enabled" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+    
+    $Id: //ariba/cxml/schema/Modules/Approval.mod#0 $
+-->
+
+<!-- ====
+    This module is built as part of cXML DTD file.
+==== -->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-organizationPrivate.xsd"/>
+  
+  <!--
+    ApprovalRequestHeader
+        The approval request header contains data that is relevant for the entire approval request. This includes data about type of approval, date, reference documents.
+    AcceptanceItem
+        Approval request can contain one or more acceptance items. Acceptance item provides details about a specific approval of a line item.
+    ApprovalItem (Deprecated. Use AcceptanceItem instead.)
+        A approval request can contain one or more approval items. A approval item provides details about a specific approval of a line item.
+  -->
+  <xs:element name="ApprovalRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ApprovalRequestHeader"/>
+        <xs:choice>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AcceptanceItem"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ApprovalItem"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DocumentReference
+        Contains the payloadId of the underlaying document which is to approved. E.g.: OrderConfirmation.payloadId 
+    cXMLAttachment
+        Contains the original (cXML) document which is to be approved, e.g., original order confirmation cXML.
+    Contact
+        Contact information for the document partners.
+    Comments
+        Top-level comments.
+    approvalStatus
+        Approval status of the request (enumeration).
+    type
+        The type of document needing approval. The only possible value is "orderConfirmation".
+    creationDate
+        DateTime when the document was created.
+    approvalStartDate, approvalEndDate
+        DateTime in which the approval is allowed to start/end. 
+        For OrderConfirmationApproval not used so far.
+  -->
+  <xs:element name="ApprovalRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:DocumentReference"/>
+        <xs:element ref="tns:cXMLAttachment"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Contact"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="approvalStatus">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="approved"/>
+            <xs:enumeration value="awaitingApproval"/>
+            <xs:enumeration value="reject"/>
+            <xs:enumeration value="approvedAndUpdatePO"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="orderConfirmation"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="creationDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="approvalStartDate" type="xs:dateTime" />
+      <xs:attribute name="approvalEndDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Usage of ApprovalItem is deprecated! Use AcceptanceItem instead.
+    Line item that has to approved.
+    
+    UnitOfMeasure
+        Unit of measure to specify the quantity.
+    Comments
+        Contains comments associated with this approval item.
+    lineNumber
+        Number of the line item.
+    quantity
+        Cumulative confirmed quantity of all elements of the same line item in the corresponding order confirmation.
+    approvalStatus
+        Approval status of the line item (enumeration).
+    reason
+        Reason why it is not approved or why it is out of tolerance (enumeration).
+    startDate/endDate
+        Reserved for future use. What shall be the content in case of let's say 100 scheduleLines with different delivery dates? 
+        In such a case it's not common to have just and only ONE time period but up to the number of scheduleLines.
+        Which should be shown/given? Which "startDate" and which "endDate"? Does it make sense in case there are more
+        than one stratDate/endDate?
+    deviatedDate
+        First deliveryDate of all confirmation status elements of the same line item which is out of tolerance.
+  -->
+  <xs:element name="ApprovalItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required"/>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="approvalStatus" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="approved"/>
+            <xs:enumeration value="awaitingApproval"/>
+            <xs:enumeration value="reject"/>
+            <xs:enumeration value="approvedAndUpdatePO"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="reason">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="quantityDeviation"/>
+            <xs:enumeration value="dateDeviation"/>
+            <xs:enumeration value="quantityAndDateDeviation"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="startDate" type="xs:dateTime"/>
+      <xs:attribute name="endDate" type="xs:dateTime"/>
+      <xs:attribute name="deviatedDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Line item that has to approved.
+    
+    DeviationReason
+        Deviation reason why it is not approved.
+    Comments
+        Contains comments associated with this acceptance item.
+    lineNumber
+        Number of the line item.
+    acceptanceStatus
+        Acceptance status of the line item (enumeration).
+  -->
+  <xs:element name="AcceptanceItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:DeviationReason"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required"/>
+      <xs:attribute name="acceptanceStatus" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="approved"/>
+            <xs:enumeration value="awaitingApproval"/>
+            <xs:enumeration value="reject"/>
+            <xs:enumeration value="approvedAndUpdatePO"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Deviation reason.   
+    Value
+        Type of deviation (Enumeration)
+  -->
+  <xs:element name="DeviationReason">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="dateDeviation"/>
+            <xs:enumeration value="quantityDeviation"/>
+            <xs:enumeration value="priceDeviation"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a ProductActivityMessage. Transmits inventory, consignment movement and forecast information from the buyer’s erp system. 
+    The buyer provided inventory summary view includes the issued components to the supplier. 
+    The provided information represents a snapshot of the component inventory and forecast situation at a certain point in time.
+    The consignment movement information represents the movement of material from the consignment inventory to the customer inventory. 
+    
+    subcontractingIndicator  
+        Indicates the data is related to subcontracting. 
+  -->
+  <xs:element name="ProductActivityMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ProductActivityHeader"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:ProductActivityDetails"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="subcontractingIndicator">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ProductActivityHeader.
+    
+    messageID
+    An identifier for this particular product activity message
+    
+    creationDate
+            The date and time this component consumption document was created.
+    
+    processType 
+            is used to identify the Business process supported by the message
+            processTypes supported include the following
+            -SMI for Supplier Managed Inventory 
+             (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+            -OEM for Original Equipment Manufacturer owned Inventory scenarios
+             (Inventory, ConsignmentInventory, TimeSeries, PlanningTimeSeries, InventoryTimeSeries)
+            -VMI for Vendor Managed Inventory
+             (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+            -3PL for third party Logistics Inventory Scenarios
+             (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+            -ManufacturingVisibility allow ContractManufacturers to share Inventory Visibility
+             (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+            -Forecast for Forecast Collaboration
+             (TimeSeries, PlanningTimeSeries)
+            -Consignment for Consignment Material Movements 
+             (ConsignmentInventory, ConsagnmentMovement)
+            -Sales for Sales report Visibility
+             (SalesReport)
+            -POC for PO Collaboration Scenarios
+             (Inventory, ConsignmentInventory, TimeSeries, PlanningTimeSeries)
+  -->
+  <xs:element name="ProductActivityHeader">
+    <xs:complexType>
+      <xs:attribute name="messageID" use="required" type="xs:string"/>
+      <xs:attribute name="creationDate" type="xs:dateTime"/>
+      <xs:attribute name="processType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="SMI"/>
+            <xs:enumeration value="OEM"/>
+            <xs:enumeration value="VMI"/>
+            <xs:enumeration value="3PL"/>
+            <xs:enumeration value="ManufacturingVisibility"/>
+            <xs:enumeration value="Forecast"/>
+            <xs:enumeration value="Consignment"/>
+            <xs:enumeration value="Sales"/>
+            <xs:enumeration value="POC"/>
+            <xs:enumeration value="Other"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a single component inventory, the product forecast details or a consignment movement for that product. 
+    ItemID
+        A unique identification of a component item in supplier backend system or buyer backend system.
+    Description
+        Textual description of the component
+    Classification
+        Classification is used to group items into similar categories. This also includes product hierarchy and commodity information.
+    SerialNumberInfo 
+            This is a existing element. The representation of the required serial number information of a line item.
+            Component Inventory will only accept only type="list" or type="range"
+    ForecastDetails
+        Contains the cumulative start and end date of the forecast item
+    LeadTime
+        Lead time in days
+    PlannedAcceptanceDays
+        Number of days the buyer schedules for the inspection of goods after receiving them.
+    ManufacturerPartID
+        ID with which the item's manufacturer identifies the item.
+    ReferenceDocumentInfo
+        contains details of referenced document
+    Characteristic    
+        Characteristic contains detailed information about an item that can be used across different industries.
+        Can also be used to send material characteristics to support configurable material process.
+    Batch 
+        Batch information of goods or material. The information includes id and characteristics.
+    Contact
+        The location from and to the product activity is taking place.
+        The only Contact roles (Contact@role attribute value) likely to be sensible in this element are
+        "locationFrom" and "locationTo". locationFrom can be used by the supplier system to the determine 
+        the buyer notified ERP vendor ID or vendor location. locationTo can be used by the supplier system to 
+        determine the location of the buyer where the product demand originates. 
+        To provide a plant location description, the domain attribute of the element IdReference should be set to "buyerLocationID", "supplierLocationID" or "storageLocation" and the identifier to the plantID.
+    Inventory
+        Inventory that is in the possession of the buyer, and is owned and managed by the buyer.
+    ConsignmentInventory
+        Inventory that is in the possession of the buyer, but is owned by the supplier.
+    TimeSeries
+        Forecast data, can be of type "demand" or "orderForecast"
+    InventoryTimeSeries    
+            Support the transfer of projected stock, safety stock and target stock levels generated by the buyer's planning system to facilitate supply or demand balance.
+    ConsignmentMovement
+        The consignment movement information for this product
+    SalesReport
+        It contains all the information about the sales report at item level.
+    status
+            Indicate to the supplier whether the material used in the planning process is inactive or whether the value for the material has been deleted.
+            By default material status is considered Active.
+        UnitOfMeasure
+            The unit of measure for an inventory/forecast/consignment quantity at the Item level. This will be applicable for the entire item 
+            and will be defaulted over the unit of measure maintained across the time series quantities.        
+    PlanningTimeSeries
+        Planning information from buyers ERP system represented as keyfigures to provide visibility of critical business information to suppliers and other partners.
+  -->
+  <xs:element name="ProductActivityDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SerialNumberInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ForecastDetails" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:LeadTime" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PlannedAcceptanceDays" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ManufacturerPartID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Characteristic" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Inventory" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ConsignmentInventory" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TimeSeries" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:PlanningTimeSeries" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:InventoryTimeSeries" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ConsignmentMovement" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SalesReport" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="active"/>
+            <xs:enumeration value="inactive"/>
+            <xs:enumeration value="deleted"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ForecastDetails
+    
+    cumulativeStartDate
+        The start date at which the cumulative values for forecast and commit will be calculated. 
+        If not provided the accumulation of the forecast for a part will start on the earliest date for which there is forecast data.
+    cumulativeEndDate
+        The end date till which the cumulative values for forecast and commit will be calculated. 
+    
+  -->
+  <xs:element name="ForecastDetails">
+    <xs:complexType>
+      <xs:attribute name="cumulativeStartDate" type="xs:date"/>
+      <xs:attribute name="cumulativeEndDate" type="xs:date"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Provides inventory data in time intervals.
+    targetStock
+        Quantity required to meet the demand, based on customer service levels.
+    projectedStock
+        Calculated stock quantity that reflects the demand and supply stock balance.
+    safetyStock
+        Quantity of stock required to mitigate risk of stockouts.
+  -->
+  <xs:element name="InventoryTimeSeries">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:TimeSeriesDetails"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="targetStock" />
+            <xs:enumeration value="projectedStock" />
+            <xs:enumeration value="safetyStock" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Period
+        Item Sales start and end date
+
+  Comments
+    It allows to enter multiple comments
+
+  SalesQuantity
+    Quantity that was sold
+
+  ReturnQuantity
+    Quantity that was returned
+
+  Total
+    Line Item Amount
+
+  PromotionVariantID
+    Promotional Variant Number
+
+  -->
+  <xs:element name="SalesReport">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period" />
+        <xs:element ref="tns:SalesQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReturnQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PromotionVariantID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+      </xs:sequence>
+      <xs:attribute name="salesDate" type="xs:dateTime"/>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  SalesQuantity
+    Quantity that was sold.
+  -->
+  <xs:element name="SalesQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- TimeSeries is the Forecast information.
+    type
+        A string value to identify the type of a forecast. The value can be "orderForecast" or "demand".-->
+  <xs:element name="TimeSeries">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Forecast"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="orderForecast"/>
+            <xs:enumeration value="demand"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    PlanningTimeSeries is planning information from buyers ERP system represented as keyfigures 
+    to provide visibility of critical business information to suppliers and other partners.
+
+    type
+        A string value to identify the type time series. The value can be as follows:
+        grossdemand - Quantity that is considered as demand without taking inventory and receipts into consideration.
+        netdemand - Quantity determined based on available inventory and receipts derived based on planning output. 
+        supplyPlan - Quantity derived to meet the demand based on supply Planning.
+        longtermforecast - Forecast quantity derived based on historical trends.
+    constrainedforecast - Unconstrained forecast when limited by supply constraints results in constrained forecast.
+        custom - Buyer specific business values could be represented by the custom keyfigure.
+        Example :custom could be “NARegionalForecast”, when using custom, the buyer defined value will be provided in customType.
+    customType : string to include buyer defined custom types   
+  -->
+  <xs:element name="PlanningTimeSeries">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:TimeSeriesDetails"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="supplyPlan" />
+            <xs:enumeration value="longtermforecast" />
+            <xs:enumeration value="constrainedforecast" />
+            <xs:enumeration value="grossdemand" />
+            <xs:enumeration value="netdemand" />
+            <xs:enumeration value="custom" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="customType" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  
+  <!-- ConsignmentMovement is the product movement information from the consignment inventory to the customer inventory 
+
+    ProductMovementItemIDInfo
+        provides a reference to the line item in a movement document
+    InvoiceItemIDInfo
+        line item of a CC Invoice created by the buyer against the movement item
+    ReferenceDocumentInfo 
+        contains details of a referenced document in the consignment procurement process 
+        such as Purchase Order, Scheduling Agreement, Ship Notice and Receipt        
+    MovementQuantity
+        the quantity moved in a consignment movement
+    SubtotalAmount
+        The invoice subtotal of the current item
+    UnitPrice
+        Represents the price on which the charges are applied
+        e.g. standard price for item is 10, but after being for 30 days in the consignment inventory the price will increase to 12
+    Extrinsic
+        Additional information related to this document        
+  -->
+  <xs:element name="ConsignmentMovement">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ProductMovementItemIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:InvoiceItemIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReferenceDocumentInfo" />
+        <xs:element ref="tns:MovementQuantity" />
+        <xs:element ref="tns:SubtotalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

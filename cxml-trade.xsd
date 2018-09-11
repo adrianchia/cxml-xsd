@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!-- 
+    TradeRequest is used in Supply Chain Financing to represent a trade of a payable by a supplier to 
+    a financial institute to get early payment.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Defines the header information of a TradeRequest.
+
+    PaymentPartner
+        Contains payer and payee information. Funder is required (payer). 
+
+    Contact
+        The supplier user who created the trade request.
+
+    Comments
+        Textual comments for this document.
+
+    Extrinsic
+        Additional information related to this payment. Should not
+        duplicate anything in TradeRequest.
+
+    operation
+        The operational mode of the trade document.
+        A update operation allows the change of an existing document.
+
+    status
+        The status of the TradeRequest.
+        accepted
+            The funder has accepted the trade request
+        rejected
+            The funder has rejected the trade request. Funder may update this to be "accepted" later.
+
+    tradeID
+        ID of a trade transaction in the SCF provider's system.
+
+    tradeDate
+        The date/time that the trade is created.
+
+    tradeApprovedDate
+        The date/time that the trade is approved by funder.
+
+    settlementDate
+        The date/time that the payment will be paid in supplier's bank account.
+
+    autoTrade
+        Indicate whether it's auto trade or not (yes/no).          
+  -->
+  <xs:element name="TradeRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:PaymentPartner" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="status" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="accepted" />
+            <xs:enumeration value="rejected" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="tradeID" type="xs:string" use="required" />
+      <xs:attribute name="tradeDate" type="xs:dateTime" />
+      <xs:attribute name="tradeApprovedDate" type="xs:dateTime" />
+      <xs:attribute name="settlementDate" type="xs:dateTime" />
+      <xs:attribute name="autoTrade">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+            <xs:enumeration value="no" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="OriginalAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="CreditApplied">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Amount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the summary information of a TradeRequest.
+
+    OriginalAmount
+        The total original net payment amount excluding credit memo amount (negative amount).
+
+    CreditApplied
+        The total amount of all credit memos in the trade. These are captured in the AdjustmentAmount in each TradeItem with negative amount. Be aware that we have CreditApplied on header but in item, we use AdjustmentAmount. 
+
+    FeeAmount
+        The fee that supplier has to give to get all this early payment. This should be equal
+        to the sum of all FeeAmount in TradeItems. 
+
+    Amount
+        The total net value of the trade. This is the projected value to be paid to the supplier. It should satisfy the following equation:
+        Amount = OriginalAmount - CreditApplied - FeeAmount. 
+  -->
+  <xs:element name="TradeRequestSummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OriginalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:CreditApplied" />
+        <xs:element ref="tns:FeeAmount" />
+        <xs:element ref="tns:Amount" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DaysPaidEarly
+        The number of days that the supplier is paid early.
+  -->
+  <xs:element name="DaysPaidEarly" type="xs:decimal" />
+  
+  <!--
+    A trade item captures the trading information about a payment proposal or a credit memo. 
+
+    PayableInfo
+        The reference information of the payable.
+
+    OriginalAmount
+        The original amount for this payable before the trade happens. 
+
+    AdjustmentAmount
+        This field can capture any adjustment amount that's applied to the OriginalAmount.
+        For TradeItem, the only adjustment that can be applied is credit memo and it will have an 
+        AdditionalDeduction with type "creditMemoApplied".
+
+    DaysPaidEarly
+        The number of days that the supplier is paid early.
+
+    Amount
+        Net value of this trade item. It should satisfy the following equation:
+        Amount = OriginalAmount - FeeAmount - AdjustmentAmount. 
+
+    FeeAmount 
+        Contains various fees that happens during a Trade: service provider fee, funder fee, community fee.
+
+    lineNumber 
+        Optional attribute to keep track of line items.
+
+    paymentProposalID
+        Original payment proposal number.
+
+    maturityDate
+        The maturity date of the payment proposal of the trade item.
+  -->
+  <xs:element name="TradeItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:PayableInfo" />
+        <xs:element ref="tns:OriginalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:AdjustmentAmount" />
+        <xs:element ref="tns:DaysPaidEarly" />
+        <xs:element ref="tns:Amount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:FeeAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="paymentProposalID" type="xs:string" use="required" />
+      <xs:attribute name="maturityDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TradeRequest - a request to create or update a supply chain finance Trade object.
+
+    TradeRequestHeader
+        The header information of this request.
+
+    TradeRequestSummary
+        The summary information of this request.
+
+    TradeItem
+        A trade item captures the trading information about a payment proposal or a credit memo.
+  -->
+  <xs:element name="TradeRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:TradeRequestHeader" />
+        <xs:element ref="tns:TradeRequestSummary" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TradeItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

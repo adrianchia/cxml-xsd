@@ -1,0 +1,1539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/schema/Modules/OrganizationPrivate.mod#1 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    OrganizationRole - Identifies one of the roles this (new) organization
+    is playing.
+
+    name
+        Name of the role played by the organization. Common values
+        include "supplier" and "buyer".
+  -->
+  <xs:element name="OrganizationRole">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Inventory that is in the possession of the customer, and is owned and managed by the customer.-->
+  <xs:element name="Inventory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SubcontractingStockInTransferQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnrestrictedUseQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BlockedQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInspectionQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PromotionQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:StockInTransferQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:IncrementQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:RequiredMinimumQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:RequiredMaximumQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:StockOnHandQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:WorkInProcessQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:IntransitQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ScrapQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OrderQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DaysOfSupply" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Consignment Inventory  is inventory that is in the possession of the customer, but is still owned by the supplier.-->
+  <xs:element name="ConsignmentInventory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SubcontractingStockInTransferQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnrestrictedUseQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BlockedQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInspectionQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PromotionQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:StockInTransferQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:IncrementQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:RequiredMinimumQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:RequiredMaximumQuantity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--SubcontractingStockInTransfer is the transfer of stock to a vendor of type subcontracting using a special movement type. -->
+  <xs:element name="SubcontractingStockInTransferQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Unrestricted Stock is the physical stock that is always available at a plant/storage location that can be consumed for stock movements and available for Material requirements planning.-->
+  <xs:element name="UnrestrictedUseQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--Blocked stock is not counted as unrestricted stock .You can have Plant level configuration to consider the stock for MRP.-->
+  <xs:element name="BlockedQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- QualityInspectionQuantity is the stock type where the received  stock is under quality inspection.-->
+  <xs:element name="QualityInspectionQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--PromotionQuanity is the stock quantity that is reserved  for promotions.-->
+  <xs:element name="PromotionQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--StockInTransferQuantity 
+      When there is a movement of stock between plant to plant, company code to company code then such movement of stock is called as Stock transfer.
+  -->
+  <xs:element name="StockInTransferQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IncrementQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--Required Minimum Quantity is a minimum stock level above which the stock has to be maintained.-->
+  <xs:element name="RequiredMinimumQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--Required Maximum Quantity is a maximum stock level above which the stock has to be maintained.-->
+  <xs:element name="RequiredMaximumQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--Forecast, represents the forecast quantity of a product for a specific time period.-->
+  <xs:element name="Forecast">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period" />
+        <xs:element ref="tns:ForecastQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--The Forecast quantity.-->
+  <xs:element name="ForecastQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--The quantity withdrawn in a consignment movement.-->
+  <xs:element name="MovementQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--The minimum/maximum order quantity refers to the minimum/maximum quantity the customer must order. The trading partners are alerted if the order quantity is not within the required quantity range during order entry.-->
+  <xs:element name="OrderQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--DaysOfSupply is used to determine for how long stocks and receipts will cover the requirements, to avoid product shortages or stock levels that are too high.
+    Minimum and Maximum Days of Supply in days can be specified. The system then issues replenishment proposals when the days’ supply falls above or Below the threshold.-->
+  <xs:element name="DaysOfSupply">
+    <xs:complexType>
+      <xs:attribute name="minimum" type="xs:decimal"/>
+      <xs:attribute name="maximum" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--StockOnHand represents the calculated value of different Stock types dependent on the customer, location and material.-->
+  <xs:element name="StockOnHandQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--Work in progress (WIP), also called work in process, is inventory that has begun the manufacturing process and
+   is no longer included in raw materials inventory, but is not yet a completed product. 
+   On a balance sheet, work in progress is considered to be an asset because money has been spent towards a completed product.
+  -->
+  <xs:element name="WorkInProcessQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--The stock in transit is the quantity of a material that was withdrawn from the stock of the issuing plant but has not yet arrived at the receiving plant.-->
+  <xs:element name="IntransitQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--The quantity represents the Scrap of a material that is expected to occur during production if the material is a component.-->
+  <xs:element name="ScrapQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TimeSeriesDetails carries product activity or product replenishment information regarding the quantity of a product for a specific time period.
+    Period
+        The start date and end date for the forecast response.
+    TimeSeriesQuantity
+        The generic quantity associated with the given type of inventory timeseries or replenishment timeseries.
+    TimeSeriesValue  
+                The generic value associated with the timeseries. This can be used for non-numeric values like priority. 
+                It is tightly coupled with the keyfigure type specified in the enclosing TimeSeries Element. 
+    TimeSeriesAmount
+        The generic value associated with the timeseries. This can be used to hold any Amount or price based timeseries.
+    UpsideQuantity
+        The quantity of inventory that the supplier can provide above and beyond the request demand.
+        This quantity should only be specified when the type of ReplenishmentTimeSeries is forecastConrimation.
+    Note: Priority Element is removed and hence please use TimeSeriesValue going forward to map non-numeric values for TimeSeries
+  -->
+  <xs:element name="TimeSeriesDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period"/>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:TimeSeriesQuantity"/>
+          <xs:element ref="tns:TimeSeriesValue"/>
+          <xs:element ref="tns:TimeSeriesAmount"/>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UpsideQuantity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The generic quantity associated with the given type of inventory timeseries or replenishment timeseries.
+  -->
+  <xs:element name="TimeSeriesQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The generic value associated with the timeseries. This can be used to hold any non-numeric values associated with timeseries.
+  -->
+  <xs:element name="TimeSeriesValue">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+      </xs:sequence>
+      <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The generic value associated with the timeseries. This can be used to hold any Amount or price based timeseries.
+  -->
+  <xs:element name="TimeSeriesAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The Forecast Upside quantity. The quantity of inventory that the supplier can provide above and beyond the request demand.
+    This quantity should only be specified when the type of ReplenishmentTimeSeries is forecastConrimation.
+  -->
+  <xs:element name="UpsideQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Quality Notification Header
+        The quality notification header contains data that is relevant for the entire quality notification. 
+        This includes data about the partners, locations, reference documents, the subject, task, activity, affected product and quantity.
+    Defect items
+        A quality notification can contain one or more defect items. A defect item provides details about a specific problem or defect. 
+        You use a code to classify each item according to the type of problem or defect (codes).
+    Details of Defect Item
+        A defect item can contain causes, tasks, activities, including codes, code groups, and description.
+  -->
+  <xs:element name="QualityNotificationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QualityNotificationRequestHeader"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationRequestItem"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains information about this Quality Notification Request that is common to all contained QualityNotificationRequestItem.
+    
+    requestID
+        AN document number for QN.
+    externalRequestID
+        This is ERP document number for QN.
+    requestDate
+        QN date time.
+    requestVersion
+        Number of version of this document if the current operation is "update".
+    operation 
+        "new" operation identifies a new QN.
+        "update" operation identified an update to an existing QN. 
+            DocumentReference attribute should be used to indicate the original QN.
+    status
+        Current status of document. Its values are: draft, new, in-process, completed, postponed, canceled and closed.
+    discoveryDate
+        When the defect was discovered.
+    serialNumber
+        Serial number of defective good.
+    returnDate
+        Date on which the defective good is returned.
+    returnAuthorizationNumber
+        Return Authorization Number information for a line item.
+    itemCategory
+        if defect was originated in subcontract supplier, then its value is "subcontract".
+    minimumRequiredTasks
+       Number of minimum required tasks to close this quality notification, it will be evaluated only when the status is "closed".
+    minimumRequiredActivities
+       Number of minimum required activities to close this quality notification, it will be evaluated only when the status is "closed".
+    minimumRequiredCauses
+       Number of minimum required causes to complete a defect, it will be evaluated only when this attribute is not present at defect level.
+    DocumentReference
+        Reference to an earlier QualityNotificationRequest. If the attribute QualityNotificationRequestHeader@operation is "update", the DocumentReference is required and it must reference the original QualityNotificationRequest document (with value "new" for its attribute QualityNotificationRequest@operation) during the same notification process.
+    QualityInspectionRequestReference,
+        Reference to the Quality Inspection Request.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Quality Inspection Request.
+        This is used in the case when quality inspection results are not met successfully
+        and a Quality Notification is created with reference to the Quality Inspection Request.
+    QNCode
+        These codes define the QN in four domains:
+          - "type" of QN without code group.
+          - "subject" (category) group and code.
+          - "reason" of this QN.
+          - "revision" Quality Notification revision.
+        See element QNCode below for more details. 
+    ShipTo, BillTo, Shipping
+        Optional. Addresses related to item if it is not related to referenced PO or ASN.
+    Contact
+        Related contacts like buyerParty, sellerParty, senderBusinessSystemID, senderParty, receipientParty or componentSupplier.
+    QNNotes
+        Structure to define comments and attachments.
+    Priority
+        Priority for Quality Notification.s
+    RequestedProcessingPeriod
+        The time period during which the processing is required.
+    MalfunctionPeriod
+        The time period during which item presented this defect.
+    ReferenceDocumentInfo
+        Optional. Reference to Purchase Order or Ship Notice on which the quality notification is reported. Notifications are only addressed to a single item. It is possible send a QN without a referenced document in which case relevant information should be send in the other elements. 
+    ItemInfo
+        To get the good information.
+    Batch
+        Standard element to capture batch information of Customer and Supplier.
+    ComplainQuantity
+        Quantity that was complained.
+    ReturnQuantity
+        Quantity that was returned.
+    QualityNotificationTask
+        Structure to capture task detail at QN level: Task Number (Auto Generated 1 to n), Code Group (Task type)
+        Code Group description, Task Code, Task Code Description, Description,  Comments for Task Section,
+        Status, start end datetime, Processor and Completion detail.
+    QualityNotificationActivity
+        Structure to capture Activity detail at QN level: Activity Number , Code Group (Activity type)
+        Code Group description, Activity Code,  Code Description, Description,  Comments for activity Section,
+        Status, start end datetime.
+    AssetInfo
+        The list of asset information of the complaint items.
+    Extrinsic
+        Additional information related to this document.
+  -->
+  <xs:element name="QualityNotificationRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInspectionRequestReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QNCode"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BillTo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:QNNotes"/>
+        <xs:element ref="tns:Priority"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:RequestedProcessingPeriod"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MalfunctionPeriod"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReferenceDocumentInfo"/>
+        <xs:element ref="tns:ItemInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ComplainQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReturnQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationTask"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationActivity"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:string" use="required"/>
+      <xs:attribute name="externalRequestID" type="xs:string" />
+      <xs:attribute name="requestDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="requestVersion" type="xs:decimal" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute default="new" name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="draft" />
+            <xs:enumeration value="new" />
+            <xs:enumeration value="in-process" />
+            <xs:enumeration value="completed" />
+            <xs:enumeration value="postponed" />
+            <xs:enumeration value="canceled" />
+            <xs:enumeration value="closed" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="discoveryDate" type="xs:dateTime"/>
+      <xs:attribute name="serialNumber" type="xs:string"/>
+      <xs:attribute name="returnDate" type="xs:dateTime"/>
+      <xs:attribute name="returnAuthorizationNumber" type="xs:string"/>
+      <xs:attribute name="itemCategory">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="subcontract" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="minimumRequiredTasks" type="xs:unsignedInt" />
+      <xs:attribute name="minimumRequiredActivities" type="xs:unsignedInt" />
+      <xs:attribute name="minimumRequiredCauses" type="xs:unsignedInt" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    QualityNotificationRequestItem contains defect item detail. It's not PO/ASN item but defect item detail.
+
+    defectId
+        Ordinal of defect.
+    defectCount
+        Number of defects in this item.
+    isCompleted
+        All tasks and activities in item were completed.
+    completedDate
+        Date time when item was completed.
+    minimumRequiredTasks
+       Number of minimum required tasks to complete this defect, it will be evaluated only when isCompleted attribute is "true".
+    minimumRequiredActivities
+       Number of minimum required activities to complete this defect, it will be evaluated only when isCompleted attribute is "true".
+    minimumRequiredCauses
+       Number of minimum required causes to complete this defect, it will be evaluated only when isCompleted attribute is "true".
+    QNCode
+        Code with domain "defect".
+    OwnerInfo
+        Contains information about the owner of this defect.
+    Description
+        Explanatory text describing this defect.
+    Period
+        Start and end time period during which the processing of this defect is required.
+    AdditionalQNInfo
+        Structure to add additional batch and part numbers to this defect.
+    QualityNotificationTask
+        Tasks required to process this item.
+    QualityNotificationActivity
+        Activities required to process this item.
+    QualityNotificationCause
+        Causes of defects in this item.
+    AssetInfo
+        The list of asset information of the complaint items.
+    Extrinsic
+        Additional information related to this defect.
+  -->
+  <xs:element name="QualityNotificationRequestItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QNCode"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OwnerInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Period"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AdditionalQNInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationTask"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationActivity"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualityNotificationCause"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="defectId" type="xs:string" use="required"/>
+      <xs:attribute name="defectCount" type="xs:unsignedInt"/>
+      <xs:attribute name="isCompleted">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="completedDate" type="xs:dateTime"/>
+      <xs:attribute name="minimumRequiredTasks" type="xs:unsignedInt"/>
+      <xs:attribute name="minimumRequiredActivities" type="xs:unsignedInt"/>
+      <xs:attribute name="minimumRequiredCauses" type="xs:unsignedInt"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    AdditionalQNInfo provides additional information about a quality notification, such as part numbers (customer or supplier), batch information, or other information.
+
+    lineNumber
+        Additional QN Info line number, this attribute is required.
+    ItemID
+        Represents the supplier part number and customer part number.
+        To provide a plant location description, the domain attribute of the element IdReference should be set to "buyerLocationID", "supplierLocationID" or "storageLocation" and the identifier to the plantID.
+    Batch
+        Standard element to capture batch information of Customer and Supplier.
+    Extrinsic
+        Additional information related to this element.
+  -->
+  <xs:element name="AdditionalQNInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Quality Notification Task
+
+    taskId
+        Ordinal of task.
+    status
+        Current state of execution of this task. Its values are: new, in-process, complete  and close.
+        "Close" status is the final step when a task is considered closed. 
+    completedDate
+        Date time when task was completed.
+    completedBy
+        User Id of who completed this task.
+    processorId, processorName
+        Who is responsible of this task. In case of supplier can be User ID or Supplier ANId.
+    processorType
+        Type of processor. Its value can be: “customer”, “supplier” or “customerUser”.
+    QNCode
+        Codes for task with domain "task".
+    OwnerInfo
+        Contains information about the owner of this task.
+    Description
+        Explanatory text describing this task.
+    Period
+        Planned start and end time period during which the processing of this task is required.
+    Extrinsic
+        Additional information related to this task.
+  -->
+  <xs:element name="QualityNotificationTask">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QNCode"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OwnerInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Period"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="taskId" type="xs:string" use="required"/>
+      <xs:attribute name="status" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="in-process"/>
+            <xs:enumeration value="complete"/>
+            <xs:enumeration value="close"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="completedDate" type="xs:dateTime"/>
+      <xs:attribute name="completedBy" type="xs:string"/>
+      <xs:attribute name="processorId" type="xs:string"/>
+      <xs:attribute name="processorName" type="xs:string"/>
+      <xs:attribute name="processorType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="customer"/>
+            <xs:enumeration value="supplier"/>
+            <xs:enumeration value="customerUser"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Quality Notification Activity
+
+    activityId
+        Ordinal of activity.
+    isCompleted
+        "yes" if activity was completed.
+    QNCode
+        Codes for activities with domain "activity".
+    OwnerInfo
+        Contains information about the owner of this activity.
+    Description
+        Explanatory text describing this activity.
+    Period
+        Start and end time period during which the processing of this activity is required.
+    Extrinsic
+        Additional information related to this activity.
+  -->
+  <xs:element name="QualityNotificationActivity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QNCode"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OwnerInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Period"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="activityId" type="xs:string" use="required"/>
+      <xs:attribute name="isCompleted">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    QualityNotificationCause: Structure to capture cause detail: Cause Number , Code Group (Cause type)
+    Code Group description, Cause Code, Cause Code Description, Description.
+
+    causeId
+        Ordinal of cause.
+    QNCode
+        Group and codes defining the type of cause.
+    OwnerInfo
+        Contains information about the owner of this cause.
+    Description
+        Explanatory text describing this cause.
+    Extrinsic
+        Additional information related to this cause.
+  -->
+  <xs:element name="QualityNotificationCause">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QNCode"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OwnerInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="causeId" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Support for codes and their descriptions in different domains.
+
+    domain
+        Domain in which this value has meaning. Recognized domains includes:
+            type - Quality Notification type, does not have code group.
+            subject - Quality Notification subject (category).
+            reason - Reason of defect.
+            task - Quality Notification task.
+            activity - Quality Notification activity.
+            defect - Quality Notification defect.
+            cause - Quality Notification cause.
+            revision - Quality Notification revision.
+    codeGroup
+        Code of group.
+    codeGroupDescription
+        Description of group.
+    code
+        Code of type.
+    codeDescription
+        Description of type.
+  -->
+  <xs:element name="QNCode">
+    <xs:complexType>
+      <xs:attribute name="domain" type="xs:string" use="required"/>
+      <xs:attribute name="codeGroup" type="xs:string"/>
+      <xs:attribute name="codeGroupDescription" type="xs:string"/>
+      <xs:attribute name="code" type="xs:string" use="required"/>
+      <xs:attribute name="codeDescription" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Structure to define subject code, description and attachments of QN.
+
+    user
+        User name or user id of who created message.
+    createDate
+        Timestamp of message.
+    QNCode
+        Code identifying the type message. Its domain is “subject”.
+    Description
+        Detail of the subject.
+    Attachment
+        Attached files to this message.
+  -->
+  <xs:element name="QNNotes">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QNCode"/>
+        <xs:element ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Attachment"/>
+      </xs:sequence>
+      <xs:attribute name="user" type="xs:string" use="required"/>
+      <xs:attribute name="createDate" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Quantity that was compained.
+
+    quantity
+        Real value.
+    UnitOfMeasure
+        Unit of measure defined in cXML.dtd.
+  -->
+  <xs:element name="ComplainQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    The time period during which the processing of this defect was required.
+
+    Period
+        Start and end date time
+  -->
+  <xs:element name="RequestedProcessingPeriod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    The time period during which item presented this defect.
+
+    Period
+        Start and end date time
+  -->
+  <xs:element name="MalfunctionPeriod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    Describes the owner information of a defect, task, cause or activity.
+
+    owner
+        Owner of the element, this attribute should contain the userId.
+    role
+        Role of the owner, could be customer or supplier.
+  -->
+  <xs:element name="OwnerInfo">
+    <xs:complexType>
+      <xs:attribute name="owner" type="xs:string" use="required"/>
+      <xs:attribute name="role" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="customer"/>
+            <xs:enumeration value="supplier"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Request to examine a specific quantity of materials at a plant.
+
+    QualityInspectionRequestHeader
+        Contains data that is relevant for the entire quality inspection. This includes data about the partners, locations, reference documents, and item information.
+    QualityInspectionRequestDetail
+        Detail about quality inspection request.
+  -->
+  <xs:element name="QualityInspectionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QualityInspectionRequestHeader"/>
+        <xs:element ref="tns:QualityInspectionRequestDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains common information about the quality inspection request.
+    
+    requestID
+        AN document number for Quality Inspection Request.
+    requestDate
+        Quality Inspection Request date time.
+    operation 
+        "new" operation identifies a new Quality Inspection Request.
+        "update" operation identified an update to an existing Quality Inspection Request. 
+        "delete" operation identified a cancellation of the Quality Inspection Request.
+        DocumentReference attribute should be used to indicate the original Quality Inspection Request for "update" and "delete" operations.
+    version 
+        Number of version of this document if the current operation is "update".
+    createdBy
+        The user which creates the Quality Inspection Request.
+    DocumentReference
+        Reference to an earlier QualityInspectionRequest. If the attribute QualityInspectionRequestHeader@operation is "update", the DocumentReference is required and it must reference the original QualityInspectionRequest document (with value "new" for its attribute QualityInspectionRequest@operation) during the same quality inspection process.
+        If the attribute QualityInspectionRequestHeader@operation is "delete", the DocumentReference is required and it must reference the original QualityInspectionRequest document (with value "new" or "update" for its attribute QualityInspectionRequest@operation) during the same quality inspection process.
+    IdReference
+        This is the inspection type, composed by code and description.
+        Use IdReference element with domain "inspectionType". 
+    ShipTo, BillTo
+        Optional addresses related to item if it is not related to referenced PO or GRN.
+    Contact
+        Related contacts like buyerParty, sellerParty, senderBusinessSystemID, senderParty, receipientParty or componentSupplier.
+    Period
+        Start and end date of the quality inspection request.
+    Priority
+        Priority for Quality Inspection.
+    ReferenceDocumentInfo
+        Reference to Purchase Order or Good Receipt on which the quality inspection request is reported. Quality Inspection request is only addressed to a single item. 
+    ItemInfo
+        To get the good information.
+        Lot quantity for inspection is handled in quantity attribute.
+        Use UnitOfMeasure element for the UOM of lot quantity, samples.
+    SampleDefinition
+        This element contains the sample size, only use sampleSize at header level.
+    Batch
+        Standard element to capture batch information of Customer and Supplier.
+    QualityInfo
+        The representation of the quality information of a line item.
+    AssetInfo
+        The list of asset information of the complaint items.
+    Comments
+        Comments associated with Quality Inspection Request. 
+    Extrinsic
+        Optional additional information related to Quality Inspection Request.
+  -->
+  <xs:element name="QualityInspectionRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+        <xs:element ref="tns:IdReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BillTo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Period" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Priority" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReferenceDocumentInfo" />
+        <xs:element ref="tns:ItemInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SampleDefinition" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:string" use="required"/>
+      <xs:attribute name="requestDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="operation" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="version" type="xs:unsignedInt"/>
+      <xs:attribute name="createdBy" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Details about quality inspection request.
+
+    QualityInspectionCharacteristic
+        Represents an inspection characteristic that describes what should be inspected.
+        A quality inspection request can contain one or more characteristics.
+  -->
+  <xs:element name="QualityInspectionRequestDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:QualityInspectionCharacteristic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    Represents an inspection characteristic that describes what should be inspected.
+
+    characteristicID
+        Number of the characteristic, the combination of this attribute with operationNumber should be unique.
+    operationNumber
+        Inspection operation, the combination of this attribute with characteristicID should be unique.
+    workCenter
+        Work center number.
+    procedure
+        Specifies how the sample size is calculated and how the inspection characteristic is valuated, is a text value. 
+    isLocked
+        If a characteristic is locked not more valuations are allowed for this characteristic.
+    allowDefectRecording
+        If you set this indicator and an inspection characteristic is rejected during results recording, the function for recording defects for a characteristic is automatically called up.
+    characteristicType
+        You use inspection characteristics to describe the inspection criteria for materials, parts, and products. This allows you to plan inspections systematically, uniformly, and economically. An inspection request can contain different type of characteristics some required, optional or conditional.
+            required, the inspection of this characteristic is required to create an Inspection Decision.
+            optional, the inspection of this characteristic is not required to create an Inspection Decision.
+            afterAccept, if this type is selected, this conditional inspection characteristic must be inspected if the previous
+                required characteristic was valuated as accepted. 
+                i.e. QualityInspectionRequest with 3 characteristics, second one is "required", third one is "afterAccept". 
+                If the valuation of second characteristic is accepted, the third characteristic should be inspected.
+            afterRejection, if this type is selected, this conditional inspection characteristic must be inspected if the previous 
+                required characteristic in the operation was valuated as rejected.
+                i.e. QualityInspectionRequest with 3 characteristics, second one is "required", third one is "afterRejection". 
+                If the valuation of second characteristic is rejected, the third characteristic should be inspected.
+    isQuantitative
+            If send (Quantitative), it means numerical measurement for this characteristic.
+            If not send (Qualitative), it means non-numerical measurement for this characteristic. 
+    recordingType  
+        It indicates how the valuation will be sent: 
+        single value, summarized value, no characteristic record, classed recording. 
+    expirationDate
+        Expiration date of the characteristic.
+    inspectionPoint
+        There are inspection point types for equipment, functional locations, physical samples, and production. These inspection point types can be assigned individually in the user specifications if required.
+    version
+         It defines the version of Characteristic. If any of the attribute change for the characteristics, ERP would generate another version of it.
+    isAdHoc
+        Indicates the characteristic does not exist in the original quality inspection request, 
+        it is created due an additional valuation.
+    Description
+        Quality Inspection Request description.
+    IdReference
+        Describes the code and description of the buyer characteristic, supplier characteristic, inspection method and additional information.
+            For customer characteristic, the domain is "buyerInspectionCode".
+            For supplier characteristic, the domain is "supplierInspectionCode".
+            For inspection method, the domain is "inspectionMethod". 
+            For additional information, the domain is "additionalInfo".
+    AllowedValues  
+        Allowed values during the valuation.
+    ExpectedResult
+        Expected result for this characteristic.        
+        This element is necessary because is used in UI to calculate the conformance and non-conformance samples by characteristic.
+    SampleDefinition
+        This element contains the sample size and sample type.
+    Comments
+        Additional text.
+    Extrinsic   
+        Optional additional information related to this document.     
+  -->
+  <xs:element name="QualityInspectionCharacteristic">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference"/>
+        <xs:element ref="tns:AllowedValues"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ExpectedResult"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SampleDefinition"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="characteristicID" type="xs:string" use="required"/>
+      <xs:attribute name="operationNumber" type="xs:unsignedInt" use="required"/>
+      <xs:attribute name="workCenter" type="xs:string"/>
+      <xs:attribute name="procedure" type="xs:string"/>
+      <xs:attribute name="isLocked">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="allowDefectRecording">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="characteristicType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="required"/>
+            <xs:enumeration value="optional"/>
+            <xs:enumeration value="afterAccept"/>
+            <xs:enumeration value="afterRejection"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isQuantitative">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="recordingType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="summarizedRecording"/>
+            <xs:enumeration value="singleResult"/>
+            <xs:enumeration value="noCharacteristicRecording"/>
+            <xs:enumeration value="classedRecording"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="expirationDate" type="xs:dateTime"/>
+      <xs:attribute name="inspectionPoint" type="xs:string"/>
+      <xs:attribute name="version" type="xs:decimal"/>
+      <xs:attribute name="isAdHoc">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Sample definition.
+
+    sampleSize
+        Number of the samples required.
+    sampleType
+        Sample type. Possible values are:
+            - samplingProcedure: You define whether a sampling procedure must be assigned when the master inspection characteristic is used in the task list or in the material specification (optional for an inspection with a material specification).
+            - additiveSample: When samples are calculated, you define whether the size of the partial sample is increased by the quantity that is required for the inspection of this characteristic.
+            - destructiveSample: You specify whether the sample is to be destroyed after inspection. This means that is no longer available. This quantity is used in the usage decision as the proposed quantity for the posting to sample.
+            - spcCharacteristic: You define whether a [statistical process] control chart is to be run. 
+  -->
+  <xs:element name="SampleDefinition">
+    <xs:complexType>
+      <xs:attribute name="sampleSize" type="xs:unsignedInt"/>
+      <xs:attribute name="sampleType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="samplingProcedure"/>
+            <xs:enumeration value="additiveSample"/>
+            <xs:enumeration value="destructiveSample"/>
+            <xs:enumeration value="spcCharacteristic"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Allowed values during the valuation.
+
+    type
+        Type of allowed values.
+            If type is numeric, only numeric values are allowed during the valuation.
+            If type is decision, only "Accept" and "Reject" values are allowed during the valuation.
+            If type is choice, the provided values in "PropertyValue" element are allowed during the valuation.
+    PropertyValue
+        List of available values. This is mandatory when "choice" is selected for type attribute.
+        This element is used also to provide the unit of measure of the allowed values by characteristic using PropertyValue@Characteristic.
+  -->
+  <xs:element name="AllowedValues">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PropertyValue"/>
+      </xs:sequence>
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="numeric"/>
+            <xs:enumeration value="decision"/>
+            <xs:enumeration value="choice"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Expected result for a measurement.
+
+    targetValue
+        Target value for the measurement.
+    valuePrecision
+        To indicate how many place result need to captured after decimal, i.e. for some characteristics it may be a requirement to capture results up to 4 places for some just 2 only for example.
+    qualitativeValue
+        This is used to send the expected result for qualitative valuation.
+    MinimumLimit
+        Minimum acceptable value.
+    MaximumLimit
+        Maximum acceptable value.
+    PropertyValue
+        This is used to send the expected result for qualitative valuation.
+  -->
+  <xs:element name="ExpectedResult">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MinimumLimit"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MaximumLimit"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PropertyValue"/>
+      </xs:sequence>
+      <xs:attribute name="targetValue" type="xs:decimal"/>
+      <xs:attribute name="valuePrecision" type="xs:unsignedInt"/>
+      <xs:attribute name="qualitativeValue" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Minimum acceptable value.
+  -->
+  <xs:element name="MinimumLimit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ComparatorInfo"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Maximum acceptable value.
+  -->
+  <xs:element name="MaximumLimit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ComparatorInfo"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Structure to support comparison regarding a value.
+
+    comparatorType
+        Could be greater | less | greaterOrEqual | lessOrEqual
+    comparatorValue
+        Reference value to make the comparison.
+  -->
+  <xs:element name="ComparatorInfo">
+    <xs:complexType>
+      <xs:attribute name="comparatorType" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="greater"/>
+            <xs:enumeration value="less"/>
+            <xs:enumeration value="greaterOrEqual"/>
+            <xs:enumeration value="lessOrEqual"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="comparatorValue" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This is the supplier result for quality inspection request, it contains all the valuation according characteristic specification in request.
+
+    QualityInspectionResultRequestHeader
+        Contains common information about this Quality Inspection Result.
+    QualityInspectionValuation
+        To confirm the characteristic inspection results recorded in different inspection operations.      
+  -->
+  <xs:element name="QualityInspectionResultRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QualityInspectionResultRequestHeader"/>
+        <xs:element ref="tns:QualityInspectionResultRequestDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    Contains common information about this Quality Inspection Result.
+
+    resultID  
+        AN document number for Quality Inspection Result. 
+    resultDate      
+        Quality Inspection Result date time. 
+    version     
+        Version of the document.
+    createdBy
+        The user which creates the Quality Inspection Result. 
+    QualityInspectionRequestReference,
+        Reference to the Quality Inspection Request.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Quality Inspection Request.
+    Batch
+        Standard element to capture batch information of Customer and Supplier.
+    Comments
+        Comments associated with Quality Inspection Result.
+        One Comment by attachment, in Comments@type only "CertificateOfAnalysis" and "CertificateOfConformance" 
+        are supported, if it's another document not send the type.
+    QualityInspectionQuantity
+        Inspection lot quantity could be filled by supplier based on the inspected quantity on QualityInspectionResult. 
+        Generally, it is send by the buyer but if not contract manufacturer based on the inspection lot can provide this quantity.
+    AssetInfo
+        The list of asset information of the valuated items.
+    Extrinsic
+        Optional additional information related to Quality Inspection Result. 
+  -->
+  <xs:element name="QualityInspectionResultRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QualityInspectionRequestReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Batch"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInspectionQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="resultID" type="xs:string" use="required"/>
+      <xs:attribute name="resultDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="version" type="xs:decimal"/>
+      <xs:attribute name="createdBy" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Details about quality inspection result.
+
+    QualityInspectionValuation
+        Contains the valuation of a characteristic of an inspection request.
+  -->
+  <xs:element name="QualityInspectionResultRequestDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:QualityInspectionValuation" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains the valuation of a characteristic specified in an inspection request.
+
+    valuationID
+        Number of the valuation.
+    characteristicID
+        References to the characteristic, the combination of this attribute with operationNumber should be unique.
+    operationNumber
+        Inspection operation, the combination of this attribute with characteristicID should be unique.
+    workCenter
+        Work center number.
+    meanValue
+        Mean value in the valuation.
+    aboveTolerance
+        Number of samples above tolerance limit.
+    belowTolerance
+        Number of samples below tolerance limit. 
+    inspectedQuantity    
+        Number of samples inspected.
+    nonConformance
+        This value is auto calculated when aboveTolerance or belowTolerance are send.
+        If the supplier does not enter those attributes, "nonconformance" attribute could be send.
+    deviation
+        The deviation value.
+    variance
+        This will be used when we have valuation based on formula.
+    numberOfDefects
+        Number of the defects in this valuation.
+    serialNumber
+        Single unit number for the Unit to Be Inspected.
+    inspectionDate
+        Date of the characteristic inspection.
+    isAdHoc
+        Indicates the characteristic does not exist in the reference document, it is an additional valuation.
+    QualitySampleResult
+        Valuation for each sample inspected.
+        When QualityInspectionCharacteristic@recordingType is "summarizedRecording" and AllowedValues@type 
+        is "decision" or "choice" the summarized valuation is sent in this element.
+        When QualityInspectionCharacteristic@recordingType is "summarizedRecording" and AllowedValues@type is "numeric" this element is not required.
+    ValueGroup
+        Structure to support codes and code groups for this valuation.
+    Description
+        Valuation description. 
+    Extrinsic
+        Optional additional information related to this valuation. 
+  -->
+  <xs:element name="QualityInspectionValuation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QualitySampleResult"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ValueGroup"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="valuationID" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="characteristicID" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="operationNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="workCenter" type="xs:string"/>
+      <xs:attribute name="meanValue" type="xs:decimal"/>
+      <xs:attribute name="aboveTolerance" type="xs:decimal"/>
+      <xs:attribute name="belowTolerance" type="xs:decimal"/>
+      <xs:attribute name="inspectedQuantity" type="xs:unsignedInt"/>
+      <xs:attribute name="nonConformance" type="xs:decimal"/>
+      <xs:attribute name="deviation" type="xs:string"/>
+      <xs:attribute name="variance" type="xs:string"/>
+      <xs:attribute name="numberOfDefects" type="xs:decimal"/>
+      <xs:attribute name="serialNumber" type="xs:string"/>
+      <xs:attribute name="inspectionDate" type="xs:dateTime"/>
+      <xs:attribute name="isAdHoc">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    Contains the sample result after valuation. 
+    
+    PropertyValue
+        Result of the valuation when AllowedValues@type is "choice" in QualityInspectionCharacteristic.
+        This element is used also to provide the unit of measure of the valuation using PropertyValue@Characteristic.
+    sampleID
+        Sample Number in valuation.
+    unitValue
+        Value of the sample.
+    physicalSampleNumber
+         Is the unique number for the sample when the sample was taken.
+  -->
+  <xs:element name="QualitySampleResult">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PropertyValue"/>
+      </xs:sequence>
+      <xs:attribute name="sampleID" type="xs:unsignedInt"/>
+      <xs:attribute name="unitValue" type="xs:string"/>
+      <xs:attribute name="physicalSampleNumber" type="xs:unsignedInt"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  
+    Represents the posting of stock quantities from an inspection lot within the Quality Management module. An inspection lot is a formal request to examine a specific quantity of materials at a plant.
+    
+    UnrestrictedUseQuantity 
+        Unrestricted Stock is the physical stock that is always available at a plant/storage location that can be consumed for stock movements and available for Material requirements planning.
+    ScrapQuantity
+        The quantity represents the Scrap of a material that is expected to occur during production if the material is a component.
+    SampleUsageQuantity
+        quantity for sampleUsageQuantity
+    BlockedQuantity
+        Blocked stock is not counted as unrestricted stock. You can have Plant level configuration to consider the stock for MRP.
+    NewMaterialQuantity
+        for new material quantity
+    ReserveQuantity
+        for reserve quantity
+    ReturnQuantity
+        Quantity that was returned.
+  -->
+  <xs:element name="QualityInspectionLotStock">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnrestrictedUseQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ScrapQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SampleUsageQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BlockedQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:NewMaterialQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReserveQuantity"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReturnQuantity"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--quantity for sampleUsageQuantity . -->
+  <xs:element name="SampleUsageQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--quanity for NewMaterialQuantity . -->
+  <xs:element name="NewMaterialQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--quantity for ReserveQuantity. -->
+  <xs:element name="ReserveQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Request to confirm that all physical samples have been valuated and the inspection has been completed.
+  -->
+  <xs:element name="QualityInspectionDecisionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QualityInspectionDecisionDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+   <!--  
+    Contains the information of the quality inspection decision, like inspection result reference, quality quantity details and the decision of the inspection.
+    
+    decisionID
+        AN document number for Quality Inspection Decision Request.
+    decisionDate
+        Quality Inspection Decision Request date time.
+    status
+        Usage decision status. Possible values are "accepted" and "rejected".
+    qualityScore     
+        Quality score.
+    createdBy
+        The user which creates the Quality Inspection Decision Request.
+    QualityInspectionResultReference 
+        Reference to the inspection result to confirm that all physical samples have been valuated and the inspection has been completed.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Inspection Result.
+    QualityInspectionRequestReference,
+        Reference to the Quality Inspection Request.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Quality Inspection Request.
+    ShipNoticeReference
+        Reference to the Ship Notice Request.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Ship Notice Request.
+    ReceiptReference
+        Reference to the Receipt Request.
+        The reference can contain the payloadId or DocumentNumber and DocumentDate of the Receipt Request.
+    QualityInspectionLotStock
+        Contains information about what happened to the stock posting. For example, it could include the scrap quantity or the unrestricted use quantity from the ERP.
+    ValueGroup
+        Structure to support codes and code groups for this Inspection Decision.
+    Description
+        Description for the Usage Decision.
+    Extrinsic 
+        Optional additional information.
+  -->
+  <xs:element name="QualityInspectionDecisionDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="tns:QualityInspectionResultReference"/>
+          <xs:element ref="tns:QualityInspectionRequestReference"/>
+          <xs:element ref="tns:ShipNoticeReference"/>
+          <xs:element ref="tns:ReceiptReference"/>
+        </xs:choice>
+        <xs:element ref="tns:QualityInspectionLotStock"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ValueGroup"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="decisionID" type="xs:string" use="required"/>
+      <xs:attribute name="decisionDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="accepted"/>
+            <xs:enumeration value="rejected"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="qualityScore" type="xs:unsignedInt"/>
+      <xs:attribute name="createdBy" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

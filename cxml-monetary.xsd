@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  
+  <!-- Basic financial elements used throughout -->
+
+  <!--
+    The following defines a list of money amounts.
+
+    DepositAmount
+        The amount of deposit or prepayment.
+
+    SubtotalAmount
+        The subtotal amount.
+        
+    DiscountAmount
+  Defines the discount amount
+
+    FixedAmount
+    Defines a new amount
+
+    SpecialHandlingAmount
+        The special handling amount.
+
+    ShippingAmount
+        The shipping amount.
+
+    GrossAmount
+        The gross amount.
+
+    NetAmount
+        The net amount.
+
+    DueAmount
+        The due amount.
+
+    FeeAmount
+        Defines gross amount of the fee associated with a purchase
+        in original currency.
+  -->
+  <xs:element name="DepositAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SubtotalAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SpecialHandlingAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Distribution" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ShippingAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Distribution" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="GrossAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="NetAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DueAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DiscountAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="FixedAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines gross amount of the fee associated with a purchase in original currency.
+    Money - the fee amount
+    Fee
+        different types of individual fees, for example, service provider fee 
+  -->
+  <xs:element name="FeeAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Fee"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Different types of individual fees
+    type - the type of fee
+  -->
+  <xs:element name="Fee">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DeductionAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DeductedPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Defines a Purchasing Card element used for payment -->
+  <xs:element name="PCard" substitutionGroup="cxml.payment"/>
+  
+   <!--
+    TotalCharges represents the total sum of all the charges  applied on the goods and 
+    services. This can appear at the line item and summary in an invoice.
+  -->
+  <xs:element name="TotalCharges">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TotalAllowances represents the total sum of all the allowances applied on the goods and 
+    services. This can appear at the line item and summary in an invoice.
+  -->
+  <xs:element name="TotalAllowances">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TotalAmountWithoutTax represents the sum of the SubTotal, Charges (including special handling 
+    charges and shipping charges), Allowances (including discounts). This does not include taxes.
+    This can appear at the line item and summary in an invoice.
+  -->
+  <xs:element name="TotalAmountWithoutTax">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

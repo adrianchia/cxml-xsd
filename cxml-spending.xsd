@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  <xs:include schemaLocation="cxml-travel.xsd" />
+  <xs:include schemaLocation="cxml-labor.xsd" />
+  <xs:include schemaLocation="cxml-reference.xsd" />
+  
+  <!--
+    This element captures spend detail information. SpendDetail can
+    be used in the ItemIn and ItemOut and for the following types of
+    messages:
+
+        PunchOutSetupRequest
+        PunchOutOrderMessage
+        OrderRequest
+        ConfirmationRequest
+
+    But not for:
+
+        MasterAgreementRequest
+
+    TravelDetail
+        Travel details for the current travel line item.
+
+    LaborDetail
+        Labor details for the current temporary labor line item.
+
+    FeeDetail
+        Fee details for the current fee line item.
+        
+    Extrinsic
+        Detail information for the any undefined spend category. The name
+        attribute of the Extrinsic element should specify the type of the
+        spend category (e.g., (PrintDetail, ProjectLaborDetail)).
+
+  -->
+  <xs:element name="SpendDetail">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tns:TravelDetail" />
+        <xs:element ref="tns:FeeDetail" />
+        <xs:element ref="tns:LaborDetail" />
+        <xs:element ref="tns:Extrinsic" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    FeeDetail contains additional information about a line item for a fee, 
+    which may or may not be recurring.
+
+    UnitRate
+        The amount(s) to be paid per unit (of time or other measure).
+        In the case of multiple UnitRates (i.e., a "rate schedule"), it is
+        customary and expected that each UnitRate will include a
+        TermReference to distinguish them.
+
+    Period
+        The Period of time over which the fee is charged, if applicable.
+
+    isRecurring 
+        Indicates that the fee is recurring (charged more than once).
+  -->
+  <xs:element name="FeeDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:UnitRate"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Period"/>
+      </xs:sequence>
+      <xs:attribute name="isRecurring">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+ 
+</xs:schema>

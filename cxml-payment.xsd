@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/schema/Modules/Payment.mod#1 $
+-->
+
+<!--
+    This file contains all the payment related elements
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!-- Defines different payment methods -->
+  <xs:simpleType name="cxml.paymentMethod">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="ach"/>
+      <xs:enumeration value="cash"/>
+      <xs:enumeration value="check"/>
+      <xs:enumeration value="creditCard"/>
+      <xs:enumeration value="debitCard"/>
+      <xs:enumeration value="draft"/>
+      <xs:enumeration value="wire"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!--
+    Defines a payment method
+
+    Description
+        The description of the payment method. Description is
+        mandatory if the type is set to "other". The <ShortName>
+    element in Description must indicate the name of the payment
+    method.
+
+    type
+        the payment method type
+  -->
+  <xs:element name="PaymentMethod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="cxml.paymentMethod" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines payable information related to a invoice.
+
+    InvoiceReference
+        The reference to invoice being paid. Copied from the InvoiceDetailRequest message.
+
+    InvoiceIDInfo
+        The reference to invoice in the Supplier system being paid.
+
+    PayableOrderInfo
+        Supplementary information related to the invoice. For example,
+        if you are making a payment against a consolidated invoice,
+        you may also include associated order information.
+
+    PayableMasterAgreementInfo
+        Supplementary information related to the invoice. For example,
+        if you are making a payment against a Consolidated Invoice,
+        you may also include associated master agreement information.
+  -->
+  <xs:element name="PayableInvoiceInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="tns:InvoiceReference" />
+          <xs:element ref="tns:InvoiceIDInfo" />
+        </xs:choice>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:PayableOrderInfo" />
+          <xs:element ref="tns:PayableMasterAgreementInfo" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines payable information related to an order.
+
+    OrderReference
+        The reference to the order being paid.
+
+    OrderIDInfo
+        The buyer system order id of the order.
+  -->
+  <xs:element name="PayableOrderInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tns:OrderReference" />
+        <xs:element ref="tns:OrderIDInfo" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines payable information related to a master agreement.
+
+    MasterAgreementReference
+        The reference to master agreement in the Buyer system being paid.
+        Copied from the InvoiceDetailRequest message.
+
+    MasterAgreementIDInfo
+        The reference to master agreement in the Buyer system being paid.
+  -->
+  <xs:element name="PayableMasterAgreementInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tns:MasterAgreementReference" />
+        <xs:element ref="tns:MasterAgreementIDInfo" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information related to a payable such as an invoice,
+    order, masteragreement, receipt, etc. More than one payable
+    information can be included.
+
+    PayableInvoiceInfo
+        The info about the invoice being paid.
+
+    PayableOrderInfo
+        The info about the order being paid.
+
+    PayableMasterAgreeementInfo
+        The info about the master agreement being paid.
+  -->
+  <xs:element name="PayableInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tns:PayableInvoiceInfo" />
+        <xs:element ref="tns:PayableOrderInfo" />
+        <xs:element ref="tns:PayableMasterAgreementInfo" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the party involved in the payment, including Payer of this
+    payment (payer), Payee of this payment (payee),
+    Payer's bank (originatingBank), Payee's bank (receivingBank),
+    Payer's Correspondent Bank, Payee's Correspondent Bank, Intermediary Bank, etc
+
+    Contact
+        Contact information of the payment partner. Allowed contact
+        roles include payer, payee, originatingBank, receivingBank,
+        originatingCorrespondentBank, receivingCorrespondent, 
+        receivingCorrespondentBank, intermediaryBank, and remitTo.
+
+        Contact elements with role 'payer' and 'payee' are always
+        required. If the payment method indicates a bank transfer,
+        then Contact elements with role 'originatingBank' and
+        'receivingBank' are required.
+
+        If the contact role is 'remitTo', it would contain contact
+        information of the remittance address. For this role, the
+        IdReference and PCard elements may be absent.
+
+    IdReference
+        Partner reference ID, including bank account identification,
+        bank identification, and optionally bank branch identification.
+
+        IdReference is mandatory for all transactions that involve
+        electronic payments. It is optional only for non-electronic
+        forms of payments, such as, 'check', 'draft' etc.
+
+        The bank account identification is specified as follows:
+            bankAccountID   : Domestic account number
+            ibanID          : IBAN ID (International Bank Account Number) as
+                              specified in ISO 13616.
+
+        The bank identification is specified as follows:
+            abaRoutingNumber: ABA (American Banking Association)
+                              Routing Number)
+            swiftID         : SWIFT ID (Society for Worldwide Interbank Financial
+                              Telecommunications)
+            chipsID         : CHIPS ID (Clearing House Interbank Payment System)
+            isoBicID        : ISO BIC ID (Bank Identifier Code) as specified
+                              in ISO 9362.
+                              The Bank Identifier Code (BIC) is a
+                              universal method of identifying
+                              financial institutions. The BIC consists
+                              of 8 or 11 characters, comprising a bank
+                              code (4 characters), a country code (2
+                              characters), a location code (2
+                              characters) and an optional branch code
+                              (3 characters).
+
+            bankNationalID : If none of the above bank identification
+                             methods are applicable, then use this to
+                             specify national clearing codes that are
+                             specific to a country. This identification
+                             if used, should uniquely identify
+                             the bank within the country specified in the
+                             Contact.
+    
+        
+        The bank branch identification, if necessary, is specified as follows:
+            bankBranchID    : The bank branch ID
+
+        The following table illustrates some valid combinations of
+        Contact and IdReference domains:
+        +..............................+.....................................+
+        | Contact@role                 | IdReference@domain                  |
+        +..............................+.....................................+
+        | payer                        | bankAccountID, ibanID               |
+        |                              |                                     |
+        | payee                        | bankAccountID, ibanID               |
+        | receivingCorrespondent       | bankAccountId, swiftID              |        
+        |                              |                                     |
+        | originatingBank              | abaRoutingNumber, bankNationalID,   |
+        |                              | isoBicID, swiftID,                  |
+        |                              | bankBranchID (optional)             |
+        |                              |                                     |
+        | receivingBank                | abaRoutingNumber, bankNationalID,   |
+        |                              | isoBicID, swiftID,                  |
+        |                              | bankBranchID (optional)             |
+        |                              |                                     |
+        | originatingCorrespondentBank | abaRoutingNumber, isoBicID, swiftID |
+        |                              |                                     |
+        | receivingCorrespondentBank   | abaRoutingNumber, isoBicID, swiftID |
+        |                              |                                     |
+        | intermediaryBank             | abaRoutingNumber, isoBicID, swiftID |
+        +..............................+.....................................+
+
+    PCard
+        PCard information including pcard number, pcard expiration date,
+        pcard name.
+        
+    IdReference
+        This can only appear for the Contact with payer role. This is used
+        when the payment is done through a pcard.
+  -->
+  <xs:element name="PaymentPartner">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Contact"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PCard" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

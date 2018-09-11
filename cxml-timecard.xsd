@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: $
+-->
+
+<!-- ====
+    Allow this module to be built separately from any other DTD file.
+==== -->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    TimeCardRequest describes a time card document that is sent from a supplier/staffing agency to a buyer.
+  -->
+  <xs:element name="TimeCardRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:TimeCard" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TimeCardInfoRequest describes a time card document that is sent from a buyer to a supplier/staffing agency.
+  -->
+  <xs:element name="TimeCardInfoRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:TimeCard" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a Time card that is used to capture time and expense 
+  entered by a contractor/temp labor. Document reference is for update 
+  to timecards. Approval info is only when suppliers send in timecards 
+  that are approved in their system. There can be multiple approval 
+  infos since many people could have approved it. The OrderInfo element 
+  is used to reference an order. One timecard can reference only one 
+  order. Also the document reference is used on an update operation to 
+  refer to a previous TimeCardRequest/TimeCardInfoRequest. 
+
+      type
+          the type of the timecard defaults to "new". To update the 
+    status of the timecard, one needs to do an update to the 
+    original timecard with the new status in it.
+
+      status
+          the status of the timecard. Defaults to submitted.
+
+      timeCardID
+          the buyer system/supplier system unique identifier for this 
+    timecard
+  -->
+  <xs:element name="TimeCard">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OrderInfo" />
+        <xs:element ref="tns:Contractor" />
+        <xs:element ref="tns:ReportedTime" />
+        <xs:element ref="tns:SubmitterInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ApprovalInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+      </xs:sequence>
+      <xs:attribute default="new" name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute default="submitted" name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="submitted" />
+            <xs:enumeration value="approved" />
+            <xs:enumeration value="denied" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="timeCardID" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        Definition of ReportedTime. This captures the line items for
+        the time card. Though the DTD allows it, the expectation is
+        that at least one of TimeCardTimeInterval or Expense will be
+        present.
+  -->
+  <xs:element name="ReportedTime">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TimeCardTimeInterval" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Expense" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a time interval that is being reported on a timecard. 
+  Extrinsic are used to pass other things not captured. For the 
+  TimeRange the start date is mandatory. The difference in time between 
+  the endDate and startDate attributes in TimeRange need not agree with 
+  the duration. Hence the endDate attribute is for informational purpose 
+  only. 
+    
+  duration
+        The duration of time that is being claimed for this line item
+    in ISO 8601 format. In the event that duration and timerange 
+    don't agree, duration takes precedence. 
+    (http://www.w3.org/TR/xmlschema-2/#duration)
+    
+  paycode
+        The paycode to be used. Some recommended ones are Regular,
+    Overtime, Doubletime, Mealbreak, Tripletime, WeeklyRestDay,
+    HolidayWorked, RegularNightShift, OvertimeNightShift,
+    DoubletimeNightShift, TripletimeNightShift,
+    WeeklyRestDayNightShift, RegularMixedShift, OvertimeMixedShift,
+    DoubletimeMixedShift, TripletimeMixedShift,
+    WeeklyRestDayMixedShift
+
+    isNonBillable
+        Whether the time is not Billable. Default behavior is the 
+    time is billable. 
+  -->
+  <xs:element name="TimeCardTimeInterval">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:TimeRange" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="duration" type="xs:duration" use="required" />
+      <xs:attribute name="payCode" type="xs:string" use="required" />
+      <xs:attribute name="isNonBillable">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        Definition of an expense item. The type of expense, date and
+        amount are required pieces of information
+
+        expenseDate
+                Date of the expense.
+        expenseType 
+                Type of expense. Some recommended examples are
+                mileage, airfare, taxi, perDiem, hotel.
+        isNonBillable
+                Whether the time is not billable. Default behavior is
+                the expense is billable.
+  -->
+  <xs:element name="Expense">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ExpenseAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="expenseDate" type="xs:date" use="required" />
+      <xs:attribute name="expenseType" type="xs:string" use="required" />
+      <xs:attribute name="isNonBillable">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        Amount of the expense item
+  -->
+  <xs:element name="ExpenseAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Information about someone submitting a timecard. If the contact 
+  is absent, then it is assumed that the contractor is the submitter 
+  of the timecard. 
+    
+  submittedDate
+          The time when the timecard was submitted.
+  -->
+  <xs:element name="SubmitterInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Contact" />
+      </xs:sequence>
+      <xs:attribute name="submittedDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+      Information about the approver for a timecard. This is sent by the 
+  supplier for informational purposes only. The buyer system does 
+  not send it. This can includes all the approvers in the chain.
+    
+  approvedDate
+          Time when the timecard was approved.
+  -->
+  <xs:element name="ApprovalInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Contact" />
+      </xs:sequence>
+      <xs:attribute name="approvedDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

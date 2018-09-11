@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/modules/Pending.mod#6 $
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    A request used for polling for waiting messages. A waiting message, if
+    any, will be included in the returned stream. The lastReceivedTimestamp
+    attribute, if present, provides the timestamp of the last received
+    message. When the Receiver sees this, it can remove messages with earlier
+    timestamps from the pending queue.
+
+    The maxMessages attribute is used to indicate the maximum number of
+    pending messages that can be included in the response.
+  -->
+  <xs:element name="GetPendingRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:MessageType"/>
+      </xs:sequence>
+      <xs:attribute name="maxMessages" type="xs:unsignedInt"/>
+      <xs:attribute name="lastReceivedTimestamp" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Indicates the type of message(s) being polled for. The valid values are
+    the corresponding element names, e.g., SubscriptionChangeMessage.
+  -->
+  <xs:element name="MessageType" type="xs:NMTOKEN"/>
+  
+  <!--
+    The data elements being carried back in the response. These are fully
+    formed cXML messages being carried through the Request/Response channel.
+  -->
+  <xs:element name="GetPendingResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:cXML"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

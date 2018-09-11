@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    Please note that all amounts at receipt line level should add up
+    to the Total specified in ReceiptRequest.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Request representing details about a receipt against Purchase Order or Master Agreement
+    sent from a buyer to supplier. Provides purchase order references, line item references, 
+    quantities and amounts received and, optionally, reference to related ship notices from supplier.
+
+    This request can be used to send receipt information for any portion of all or 
+    selected line items from single or multiple purchase orders.
+
+    ReceiptRequestHeader
+         The header information of this receipt.
+
+    ReceiptOrder
+         Details about purchase order or master agreement against which this receipt is generated.
+
+    Total 
+        Summary total amount of all receipt line item amounts.       
+  -->
+  <xs:element name="ReceiptRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ReceiptRequestHeader" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:ReceiptOrder" />
+        <xs:element ref="tns:Total" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines header information of an ReceiptRequest
+
+    DocumentReference
+        Reference to an earlier ReceiptRequest.  If the
+        attribute ReceiptRequestHeader@operation is "delete",
+        the DocumentReference is required and it must reference the
+        original ReceiptRequest document (with value "new" for
+        its attribute ReceiptRequestHeader@operation) during the
+        same receipt process.  The DocumentReference is optional and, if it
+        is provided, it must reference the ReceiptRequest which
+        is related to the current ReceiptRequest.
+
+    Comments
+        Textual comments for this receipt.
+
+    Extrinsic
+        Additional information related to this receipt. Should not duplicate
+        anything in ReceiptRequestHeader or ReceiptRequest.
+
+    receiptID
+        A buyer-generated identifier for this receipt. A unique identifier for 
+        this receipt document.
+
+    receiptDate
+        Date and time this receipt was deemed fully received in the Buying Organization. 
+    Should be earlier than the document's timestamp.
+  
+    operation
+        Type of operation described by this receipt document.
+        new - This document creates a new receipt.
+        delete - This document cancels an existing receipt. That existing
+            receipt must be specified as DocumentReference.
+            This operation is supported only for Component Receipts.
+        By default, it is "new".
+
+    ShipNoticeIDInfo
+        References shipment related document identifiers.
+  -->
+  <xs:element name="ReceiptRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipNoticeIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="receiptID" type="xs:string" use="required" />
+      <xs:attribute name="receiptDate" type="xs:dateTime" use="required" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines the receipt information of a purchase order or master agreement with item details.
+    In this case, an receipt line is an ReceiptItem and its receipt line number is 
+    ReceiptItem@receiptLineNumber.
+
+    ReceiptOrderInfo
+        The reference information of the purchase order or master agreement.
+
+    ReceiptItem
+        The information of an item in the purchase order or master agreement.
+
+    closeForReceiving
+        Flag indicating if the underlying order or master agreement needs to be 
+        closed for further receiving on approval of this receipt. 
+
+        If this receipt is against a purchase order or release order against a
+        master agreement, this flag indicates corresponding order being closed for
+        receiving. If this receipt is against a no release master agreement, this 
+    flag indicates closing the master agreement for receiving.
+  -->
+  <xs:element name="ReceiptOrder">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ReceiptOrderInfo" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:ReceiptItem" />
+      </xs:sequence>
+      <xs:attribute name="closeForReceiving">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines information related to a purchase order, including purchase order
+    reference and related master agreement reference, if any.
+
+    The various content options of ReceiptOrderInfo are in order
+    of preference, i.e., OrderReference is strongly recommended. If
+    that is not possible, MasterAgreementReference, MasterAgreementIDInfo,
+    OrderIDInfo should be used, in that order.
+
+    If this receipt is against a release order, reference to both order as well
+    as the master agreement should be specified. If the receipt is against a 
+    no-release master agreement, only the master agreement reference is required.
+    If the receipt is against a purchase order, reference to the purchase order
+    should be specified.
+
+    OrderReference
+        The reference to the purchase order being received.
+
+    MasterAgreementReference
+        The reference to the master agreement being received.
+
+    OrderIDInfo
+        The buyer system order ID of the order.
+
+    MasterAgreementIDInfo
+        The buyer system ID of the corresponding master agreement if receiving
+    against master agreement.
+  -->
+  <xs:element name="ReceiptOrderInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="tns:OrderReference" />
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="tns:MasterAgreementReference" />
+            <xs:element ref="tns:MasterAgreementIDInfo" />
+          </xs:choice>
+        </xs:sequence>
+        <xs:sequence>
+          <xs:element ref="tns:MasterAgreementReference" />
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:OrderIDInfo" />
+        </xs:sequence>
+        <xs:sequence>
+          <xs:element ref="tns:MasterAgreementIDInfo" />
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:OrderIDInfo" />
+        </xs:sequence>
+        <xs:element ref="tns:OrderIDInfo" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines line item in the ReceiptRequest
+
+    ReceiptItemReference
+        The references related to this line item.
+
+    UnitRate
+        The amount(s) to be paid per unit (of specified measure).
+
+    ReceivedAmount
+        Amount of received goods or services for this line item. The total received amount for the rate.  
+        The total received amount must equal to quantity x UnitRate.
+
+    AssetInfo
+        Optional asset information for this line item. Specified for each quantity of the line item.
+        
+    DeliveryAddress
+             Address where goods are received.
+
+    Comments
+        Textual comments for this line item.
+
+    receiptLineNumber
+        Buyer defined ID for the current line item. It should be unique across
+        all receipt line items of the same ReceiptRequest.
+
+    quantity
+        The quantity being actually received or returned for the current line.
+        A negative quantity indicates reversal of the previous receipt quantity for this line.
+    
+    type 
+      Indicates whether the items are "received" or "returned".
+  
+      parentReceiptLineNumber
+          lineNumber of the parent line item in the receipt request.
+  
+      itemType
+          specify whether the line item contains child line items or acts as a child item
+  
+    compositeItemType
+      specify type of parent line item(lot/box)
+  
+      completedIndicator
+          An attribute specifying whether a component ship notice item is considered closed. This would mean that no more component receipts are expected for this item.
+      
+      Batch
+          An element carrying batch information for material or goods  produced
+          in a single manufacturing run.
+      
+      Classification
+          Multiple element that can be used to add a classification for Receipt Item Movement Type, Stock Type or other Classification of the item receipt.
+  -->
+  <xs:element name="ReceiptItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ReceiptItemReference" />
+        <xs:element ref="tns:UnitRate" />
+        <xs:element ref="tns:ReceivedAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DeliveryAddress" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="receiptLineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="received" />
+            <xs:enumeration value="returned" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="parentReceiptLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="itemType" type="tns:lineItemType"/>
+      <xs:attribute name="compositeItemType" type="tns:compositeItemType"/>
+      <xs:attribute name="completedIndicator">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines all references related to a line item in this receipt.
+
+    ItemID
+        The supplier part number of current line item, copied from
+        OrderRequest.
+
+    Description
+        The line item description, copied from OrderRequest.
+
+    ManufacturerPartID
+        The manufacturer part number.
+
+    ManufacturerName
+        The name of the manufacturer.
+
+    ShipNoticeReference
+        Reference to the ShipNoticeRequest document sent from the supplier 
+        when this item was shipped.
+
+    ShipNoticeIDInfo
+       ID of the ShipNoticeRequest known to the Buyer system. This ID is used when ShipNoticeReference is omitted.
+       
+    ShipNoticeLineItemReference
+        Provides a reference to the line item in a prior ShipNoticeRequest document.
+
+    ReferenceDocumentInfo
+        Additional document reference information.
+        
+    lineNumber
+        The line number of current line item, copied from OrderRequest. In the scenario where the OrderRequest 
+    is blank, the line number will refer to that of the Component Ship Notice, i.e., the ASN referenced 
+    in the ShipNoticeReference.
+  -->
+  <xs:element name="ReceiptItemReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:sequence minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:ManufacturerPartID" />
+          <xs:element ref="tns:ManufacturerName" />
+        </xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:ShipNoticeReference" />
+          <xs:element ref="tns:ShipNoticeIDInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipNoticeLineItemReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Amount of goods or services received by the buying organization.
+  -->
+  <xs:element name="ReceivedAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The delivered address for an item.
+  -->
+  <xs:element name="DeliveryAddress">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Address" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ComponentConsumptionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ComponentConsumptionHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ComponentConsumptionPortion" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  ComponentConsumptionHeader. Information about this component consumption that is common to all contained portions.
+  
+  Comments
+  The Comments element list may contain additional information about this consumption document. All such data must be 
+  intended for human use.
+  
+  Elements in the Comments list may appear in any order. The xml:lang attribute may have the same value in multiple 
+  Comments elements in the list. The set of Comments with a particular xml:lang value should contain similar content 
+  to that for any other xml:lang value present in the list.
+  
+  consumptionID
+  An identifier for this particular component consumption document
+  
+  operation
+  The (optional) operational mode of component consumption document. Defaults
+  to "new". Update and delete operations are not supported for this document.
+  
+  referenceDocumentID
+  The identifier of reference Work Order for which the consumption is reported.
+  
+  creationDate
+  The date and time this component consumption document was created.
+  
+  lastChangeDate
+  The date and time this component consumption document was last modified.
+  
+  Extrinsic
+  This element list may be used to insert additional data about this component consumption header.
+  -->
+  <xs:element name="ComponentConsumptionHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="consumptionID" type="xs:string" use="required" />
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="referenceDocumentID" type="xs:string" />
+      <xs:attribute name="creationDate" type="xs:dateTime" />
+      <xs:attribute name="lastChangeDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  ComponentConsumptionPortion: This element captures details of all component consumptions for a particular OrderRequest 
+  (via the OrderReference or  MasterAgreementReference element).
+  
+  OrderReference
+  This element can be used to identify the corresponding purchase order for which component consumption is reported.
+  
+  MasterAgreementReference or MasterAgreementIDInfo
+  This element can be used to identify the corresponding scheduling agreement if the component consumption is generated 
+  from a scheduling agreement release.
+  
+  ComponentConsumptionItem
+  This element captures details of all consumption items for given order reference.
+  
+  Extrinsic
+  This element list may be used to insert additional data about this component consumption portion.
+  -->
+  <xs:element name="ComponentConsumptionPortion">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OrderReference" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:MasterAgreementReference" />
+          <xs:element ref="tns:MasterAgreementIDInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ComponentConsumptionItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ComponentConsumptionItem: This element captures details of all consumption for a given order reference item.
+    
+    ItemID
+    This element can be used to identify the part ID of sub-contracted purchase order item for which component 
+    consumption is reported.
+    
+    BuyerBatchID
+    BuyerBatchID is the batch ID provided by the buyer at the line item level to identify the buyer batch for which the 
+    item or the product was produced. The batch id is helpful in traceability.
+    
+    SupplierBatchID
+    SupplierBatchID is the batch ID provided by the supplier at the line item level to identify  the batch in which the item 
+    or the product was produced. The batch id is helpful in traceability. Batch numbers (also call "lot number", "variant") 
+    are used in several industries to uniquely identify items produced together.
+    
+    Contact
+    In this context, roles that are usually included are : BuyerParty, ProductReceipentParty, ShipFromLocation, 
+    and ShipToLocation.
+    
+    ComponentConsumptionDetails
+    This element captures details of component consumption for a given PO line item
+    
+    poLineNumber
+    This attribute identifies referring PO item number
+    
+    completedIndicator
+    This Boolean flag attribute indicates whether consumption reporting is completed for a PO item or not
+    
+    ScrapQuantity
+    The quantity represents the Scrap of a material that is expected to occur during production if the material is a component.
+    
+    Extrinsic
+    This element list may be used to insert additional data about this component consumption portion.
+  -->
+  <xs:element name="ComponentConsumptionItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ComponentConsumptionDetails" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ScrapQuantity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="poLineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="completedIndicator">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="quantity" type="xs:decimal" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ComponentConsumptionDetails: This element captures consumption details.
+    
+    Product
+    The supplier & buyer part ID of component that is consumed .
+    
+    BuyerBatchID
+    BuyerBatchID is the batch ID provided by the buyer for the component that is consumed
+    
+    SupplierBatchID
+    SupplierBatchID is the batch ID provided by the supplier for the component that is consumed.
+    
+    ReferenceDocumentInfo
+    Details of referenced production order
+    
+    AssetInfo
+    The list of asset information of the components consumed. The quantity of these elements must match the 
+    quantity of component consumed if at least one is specified.
+    
+    Extrinsic
+    The Extrinsic element list may be used to insert additional data at schedule line level of component consumption.
+    
+    lineNumber
+    The position of a component in the current consumption details
+    
+    quantity
+    The quantity of component that is consumed
+    
+    type
+    Used to refer to the type of inventory movement which could cause the suppliers to not consume the material. 
+    Following are the possible values.
+      blocked - This inventory is not valuated and cannot be consumed.
+      qualityRestricted - This inventory is not qualified for unrestricted use and cannot be consumed in production.
+      scrapped - This inventory is out of date or material has been destroyed during logistics operation, etc.
+    
+    usage
+    When confirming an order, "usage" is used to specify whether or not the supplier will use a component listed in the PO. 
+    Only in the context of order confirmation, omitting "usage" is interpreted as 'yes'. In other contexts, "usage" is 
+    not used. For example, when reporting component consumption, use "type" instead.
+  -->
+  <xs:element name="ComponentConsumptionDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Product" />
+        <xs:element ref="tns:UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BuyerBatchID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierBatchID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AssetInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="blocked" />
+            <xs:enumeration value="qualityRestricted" />
+            <xs:enumeration value="scrapped" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="usage">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+            <xs:enumeration value="no" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This document is intended for Suppliers to communicate the following three types of messages to Buyers:
+      1.  For Suppliers to Communicate the Manufacturing and Planning related information to Buyers .
+      The processes for Outsourced Manufacturing processes where Contract Manufacturer is the considered to the extension of internal manufacturing.
+      2.  For Suppliers to Communicate the Inventory details to Buyers .
+      The processes for Outsourced Manufacturing and Supplier Managed Inventory requires Suppliers provide customers with Inventory updates to support Planning.
+      3.  For Supplier to provide Forecast confirmation to the Buyers in Collaborative Planning processes. 
+      The goal of sending a Forecast confirmation is to enable an automated process that provides the receiver critical information about the supplier’s constraints. 
+      Forecast Confirmation should help automate existing processes for both senders and receivers.
+  -->
+  <xs:element name="ProductReplenishmentMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ProductReplenishmentHeader" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:ProductReplenishmentDetails" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ProductReplenishmentHeader.
+    messageID
+        An identifier for this particular product replenishment message
+    creationDate
+        The date and time this product replenishment message was created.
+    processType is used to identify the Business process supported by the message
+        processTypes supported include the following
+        -SMI for Supplier Managed Inventory 
+         (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+        -OEM for Original Equipment Manufacturer owned Inventory scenarios
+         (Inventory, ConsignmentInventory, TimeSeries, PlanningTimeSeries, InventoryTimeSeries)
+        -VMI for Vendor Managed Inventory
+         (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+        -3PL for third party Logistics Inventory Scenarios
+         (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+        -ManufacturingVisibility allow ContractManufacturers to share Inventory Visibility
+         (Inventory, ConsignmentInventory, PlanningTimeSeries, InventoryTimeSeries)
+        -Forecast for Forecast Collaboration
+         (TimeSeries, PlanningTimeSeries)
+        -Consignment for Consignment Material Movements 
+         (ConsignmentInventory, ConsagnmentMovement)
+        -Sales for Sales report Visibility
+         (SalesReport)
+        -POC for PO Collaboration Scenarios
+         (Inventory, ConsignmentInventory, TimeSeries, PlanningTimeSeries)
+  -->
+  <xs:element name="ProductReplenishmentHeader">
+    <xs:complexType>
+      <xs:attribute name="messageID" type="xs:string" use="required" />
+      <xs:attribute name="creationDate" type="xs:dateTime" />
+      <xs:attribute name="processType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="SMI" />
+            <xs:enumeration value="OEM" />
+            <xs:enumeration value="VMI" />
+            <xs:enumeration value="3PL" />
+            <xs:enumeration value="ManufacturingVisibility" />
+            <xs:enumeration value="Forecast" />
+            <xs:enumeration value="Consignment" />
+            <xs:enumeration value="Sales" />
+            <xs:enumeration value="POC" />
+            <xs:enumeration value="Other" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+      The representation of product replenishment for the given product. 
+      ItemID
+          A unique identification of a component item in supplier backend system or buyer backend system.
+      Description
+          Textual description of the component
+      LeadTime
+          Lead time in days
+      PlannedAcceptanceDays
+          Number of days the buyer schedules for the inspection of goods after receiving them.
+      ManufacturerPartID
+          ID with which the item's manufacturer identifies the item.
+      ReferenceDocumentInfo
+          contains details of referenced document
+      Characteristic    
+          Characteristic contains detailed information about an item that can be used across different industries.
+          Can also be used to send material characteristics to support configurable material process.
+      Batch 
+          Batch information of goods or material. The information includes id and characteristics.
+      Contact
+          When the type of message is forecast confirmation:
+              Contact represents the location to which the product forecast confirmation is taking place.
+              The only Contact role (Contact@role attribute value) likely to be sensible in this element are
+              "locationTo".
+              To provide a plant location description, the domain attribute of the element IdReference should be set to "buyerLocationID" and the identifier to the plantID.
+          When the type of message is NOT forecast confirmation:
+              Contact with role “locationTo” represents the destination of the product replenishment
+              Contact with role “locationFrom” represents the source of the product replenishment
+              Contact with role “inventoryOwner” (if specified), represents the owner of the inventory, in this case,
+                  Inventory or ConsignmentInventory should be specified in the message.
+     Unit Price
+      Price per unit of item
+      Comments
+          These are comments provided for the part whose quantity is being committed
+      ReplenishmentTimeSeries
+          It represents the product replenishment quantity of a product for a specific time period.
+    UnitOfMeasure
+      The unit of measure for an inventory/forecast/consignment quantity at the Item level. This will be applicable for the entire item and will be defaulted 
+      over the unit of measure maintained across the time series quantities.
+          
+  -->
+  <xs:element name="ProductReplenishmentDetails">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:LeadTime" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PlannedAcceptanceDays" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ManufacturerPartID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Characteristic" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Inventory" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ConsignmentInventory" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReplenishmentTimeSeries" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ReplenishmentTimeSeries is used to enclose information about the following replenishment timeseries types:
+    Manufacturing Order is an order that initiates the manufacturing process to tracks the status of manufacturing from Raw material to Finished Goods status.
+    SupplierForecast :is the Forecast created by the Supplier based on the Demand Supply situation in the ERP systems. Typically the Supplier  Creates the forecast for components based on the FinishedGoods Demand.
+    ProjectedStock :This is the stock that is expected to be available in the location at the end of this day. Based on this value, the system calculates the projected stock for the following day by adding the demands and receipts from the next day. Based on this value, the system calculates the projected stock for the day after next and so on.
+    Planned Receipts represents the total quantity that the supplier wants to deliver to the customer in a period so that the raw net demands of the Buyer are covered. It is a planned quantity which is subject to changes.
+    Firmed Receipts represents the total quantity that the supplier wants to deliver to the customer in period so that the total demand from the customer is covered.
+    Shipment represents the Supplier shipment Quantity from suppliers location and customers location to ship the quantities requested.
+    custom represents supplier specific business values could be represented by the custom keyfigure.
+    Example :custom could be “BuildQuanitity” and could have its own values defined by the buyer.
+     
+  -->
+  <xs:element name="ReplenishmentTimeSeries">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:TimeSeriesDetails" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="manufacturingOrder" />
+            <xs:enumeration value="purchaseOrder" />
+            <xs:enumeration value="supplierForecast" />
+            <xs:enumeration value="shipment" />
+            <xs:enumeration value="projectedStock" />
+            <xs:enumeration value="firmReceipt" />
+            <xs:enumeration value="plannedReceipt" />
+            <xs:enumeration value="forecastConfirmation" />
+            <xs:enumeration value="custom" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="customType" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

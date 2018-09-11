@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    Sales Order mod file
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!-- ====
+    SalesOrderRequest transaction forwards shopping basket data in the Request.
+    No specific Response document is required for this transaction.
+    Servers must respond to a SalesOrderRequest with a generic Response
+    document.
+  ==== -->
+
+  <!--
+    Definition of a Sales Order Request. This is the shopping basket data 
+    that is sent to the procurement application from the supplier. 
+  -->
+  <xs:element name="SalesOrderRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:SalesOrderHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Header of a Sales Order Request.
+
+    The contained DocumentReference element may appear in a document only
+    when the operation is "update". In that case, the DocumentReference is
+    required and it must reference the most recent SalesOrderRequest
+    document for this particular sales order (usually also indicated by a
+    common salesOrderID). For example when a sale order is created, updated
+    and then updated again, the final document must contain a
+    DocumentReference referring to the previous Sales Order with
+    operation="update". That document must, in turn, refer to the original
+    (operation="new") SalesOrderRequest document.
+
+    Tax information can be present at this level. It indicates taxes that
+    are applicable to the whole document.
+
+    Contact information should uniquely identify the requester in the 
+    procurement application. There must a contact with the role as 
+    "requester" along with the details of the requester.
+
+    The Comments element list may contain additional information about the
+    status of the overall order. This data must be intended for human use.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about the order for application consumption. These
+    elements may include predefined keywords and values affecting workflow
+    in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a SalesOrderHeader element. (The SalesOrderHeader must not 
+    contain a default extrinsic value  overridden at the lower level.)
+
+    SupplierOrderInfo of PunchOutOrderMessage should have the orderID
+    same as salesOrderID. Procurement application would use the orderID of
+    PunchOutOrderMessage and salesOrderID of SalesOrderRequest to identify
+    the document within the procurement application.
+    
+    salesOrderID
+        An identifier for this particular sale order assigned
+        by the supplier. This attribute provides an unambiguous and direct
+        connection between all versions of the sale order. A user-visible 
+        and secondary (to the payloadID attribute of the cXML element) 
+        identifier for this document. This value should remain same for all
+        SalesOrderRequests corresponding to the same order.
+        
+        salesOrderID may be used in the procurement application for 
+        processing this request. Links between these documents must be
+        deduced using the DocumentReference element contained in the
+        update's SalesOrderHeader and the payloadID attribute of the
+        original or previous update.
+
+    operation
+        The (optional) operational mode of the sales order document.
+        Defaults to "new". This specifies the type of operation made 
+        on the sales order by the supplier.
+
+        An "update" operation allows a supplier to correct an error in a
+        sale order or to add additional information learned later. In
+        either case, an "update" document must be complete: All data from
+        the original sale order or a previous update should be discarded
+        by the recipient.
+        
+        A "cancel" operation allows a supplier to cancel a sale order sent
+        earlier.
+        
+        An operation="update" SalesOrderRequest must also include a
+        DocumentReference element in the SalesOrderHeader. (See above
+        for more information on this element.)  This effectively sequences
+        multiple versions of a confirmation and may provide the only link
+        between those versions.
+
+    operationAllowed
+        Highest operation allowed on the shopping basket in the procurement
+        application. "create" allows only later OrderRequest operations on 
+        these items. "inspect" adds a PunchOutSetupRequest with 
+        operation="inspect". And, "edit" allows operation="edit" in the 
+        later punchout setup request.
+
+
+    noticeDate
+        The date and time this sale order was created.
+
+    orderVersion
+        The seller system order version number for this request. Relevant
+        when the SalesOrderRequest represents a change order request. The
+        version number for the original document should be 1 and should be
+        incremented by 1 for each subsequent version (2,3,4...).
+
+    channelType
+        Indicates the action expected by the seller who initiates the
+        sales document, either to "buy" or "sell", or "visibility" on
+        another PO from a third party.
+        - When the seller sends "buy" it means the buyer will create a
+          Sales Order.
+        - When the seller sends "sell" it means the buyer will create a
+          Purchase Order.
+        - When the seller sends "visibility" it means for visibility
+          reasons only.
+  -->
+  <xs:element name="SalesOrderHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="salesOrderID" type="xs:string" use="required" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="cancel" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="operationAllowed" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="inspect" />
+            <xs:enumeration value="edit" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="noticeDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="orderVersion" type="xs:decimal" />
+      <xs:attribute name="channelType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="buy" />
+            <xs:enumeration value="sell" />
+            <xs:enumeration value="visibility" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

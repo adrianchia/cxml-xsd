@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Provider.mod#1 $
+-->
+<!-- ====
+    Provider* transaction is used to visually integrate an application with
+    a UI provided by a service provider.
+==== -->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+     ProviderSetupRequest
+
+     The originating application would provide the BrowserFormPost location
+     only if it wished the provider site to display a "Done" button or
+     would like information (at least Status) returned at the end of the
+     interactive session. Inclusion should lead to a ProviderDoneMessage
+     from the provider at the end of a session.
+
+     The originating application would provide the Followup location if it
+     wished the provider to provide information about later status changes
+     in the service (after the end of a particular Provider session). This
+     applies only when the initial status (transmitted via a
+     ProviderDoneMessage) was an interim value.
+  -->
+  <xs:element name="ProviderSetupRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OriginatorCookie"/>
+        <xs:sequence minOccurs="0" maxOccurs="1">
+            <xs:element ref="tns:BrowserFormPost"/>
+            <xs:element minOccurs="0" maxOccurs="1" ref="tns:Followup"/>
+        </xs:sequence>
+        <xs:element ref="tns:SelectedService"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     ProviderSetupResponse
+  -->
+  <xs:element name="ProviderSetupResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:StartPage"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ProviderDoneMessage
+  -->
+  <xs:element name="ProviderDoneMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OriginatorCookie" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReturnData" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

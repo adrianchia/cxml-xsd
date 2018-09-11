@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Index.mod#1 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+     IndexItemAdd is the element used to insert an item in an index.
+
+     ItemID          - uniquely identifies the item
+     ItemDetail      - general information about the item
+     IndexItemDetail - Index specific item detail
+
+     Note that for historical reasons there is a LeadTime element in
+     both ItemDetail and IndexItemDetail.  For interoperability, it is
+     recommended to specify the same value in both LeadTime elements.
+     If different values are specified in the different LeadTime
+     elements for the same IndexItemAdd, the meaning of this is
+     undefined.
+  -->
+  <xs:element name="IndexItemAdd">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID"/>
+        <xs:element ref="tns:ItemDetail"/>
+        <xs:element ref="tns:IndexItemDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     IndexItemDelete is the element used to remove an item from the
+     index.
+     ItemID          - uniquely identifies the item
+
+  -->
+  <xs:element name="IndexItemDelete">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     IndexItemPunchout is the element used to dynamically connect an
+     index item to the supplier's resource for that item.
+
+     ItemID          - uniquely identifies the item
+     PunchoutDetail  - Describes the item being accessed
+  -->
+  <xs:element name="IndexItemPunchout">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID"/>
+        <xs:element ref="tns:PunchoutDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     IndexItem is the general ELEMENT for the list of items in an
+     index.
+
+     IndexItemAdd      - Item(s) to be added to the index
+     IndexItemDelete   - Item(s) to be removed from the index
+     IndexItemPunchout - PunchOut Item(s) to be added to the index
+
+  -->
+  <xs:element name="IndexItem">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:IndexItemAdd"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:IndexItemDelete"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:IndexItemPunchout"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     PunchoutDetail is the description of an item which is referenced
+     in the index.
+  -->
+  <xs:element name="PunchoutDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Description" />
+        <xs:element ref="tns:URL" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PriceBasisQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ManufacturerName" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ManufacturerPartID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:LeadTime" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ExpirationDate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:EffectiveDate" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SearchGroupData" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TerritoryAvailable" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="punchoutLevel" default="store">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="store" />
+            <xs:enumeration value="aisle" />
+            <xs:enumeration value="shelf" />
+            <xs:enumeration value="product" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     Index is the element used to update the list of goods and/or
+     services which are being handled by the system.
+
+     SupplierID  - One or more identities by which this supplier is
+                   known. NOTE: These are to be considered synonyms
+                   for the same Supplier.
+     SearchGroup - Description(s) of parametric search(es) for this
+                   index.  Use of the SearchGroup element is
+                   deprecated.
+     IndexItem   - The list of items with which to modify the index
+
+     loadmode    - The mode in which the Index is loaded, either Full
+                   or Incremental.  A full index load will
+                   completely replace a previously loaded index. The
+                   recommended application default is incremental.
+  -->
+  <xs:element name="Index">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:SupplierID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SearchGroup"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:IndexItem"/>
+      </xs:sequence>
+      <xs:attribute name="loadmode">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Full"/>
+            <xs:enumeration value="Incremental"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     Use of the SearchGroup element is deprecated.  Parametric search
+     shapes should be defined using TypeDefinition and its child
+     elements.
+
+     SearchGroup is a grouping of attributes which constitute a search
+     which can be performed against an index.
+
+     Name            - Name of the search
+     SearchAttribute - List of searchable index fields.
+  -->
+  <xs:element name="SearchGroup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Name"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:SearchAttribute"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     Use of the SearchAttribute element is deprecated.  Parametric
+     search shapes should be defined using TypeDefinition and its
+     child elements.
+
+     An attribute that can searched parametrically.
+
+     name - name of the attribute.
+     type - the type of the attribute
+  -->
+  <xs:element name="SearchAttribute">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     ExpirationDate is the date and time after which the element is no longer
+     valid.  Must be specified in ISO 8601 format.
+  -->
+  <xs:element name="ExpirationDate" type="xs:dateTime"/>
+  
+  <!--
+     EffectiveDate date and time at which the element becomes valid.
+     Must be specified in ISO 8601 format.
+  -->
+  <xs:element name="EffectiveDate" type="xs:dateTime"/>
+  
+  <!--
+     IndexItemDetail contains various index specific elements which
+     help to define an index item.
+     LeadTime           - time in days to receive the item
+     ExpirationDate     - Expiration date and time for the item in this index
+     EffectiveDate      - Effective date and time for the item in this index
+     SearchGroupData    - Parametric search data
+     TerritoryAvailable - Country codes
+  -->
+  <xs:element name="IndexItemDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:LeadTime"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ExpirationDate"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:EffectiveDate"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SearchGroupData"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TerritoryAvailable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     Specification of a territory (using ISO country and/or region codes)
+     in which the particular index item is available.
+  -->
+  <xs:element name="TerritoryAvailable" type="xs:string"/>
+  
+  <!--
+     SearchGroupData specifies the data which should be used to identify
+     this item in a search.
+  -->
+  <xs:element name="SearchGroupData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Name"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SearchDataElement"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+   <!--
+     SearchDataElement is a field and value which are used to provide the
+     parametric data to a search.
+  -->
+  <xs:element name="SearchDataElement">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

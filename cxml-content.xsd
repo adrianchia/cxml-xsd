@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Content.mod#1 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Definition of Content transaction
+  -->
+  <xs:element name="ContentRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SelectedService" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ItemOut" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ContentResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ContentResponseHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ContentResponseHeader
+
+    operationAllowed - has the same semantics as the operationAllowed
+    attribute of the PunchOutOrderMessageHeader.
+
+    This attribute is only used where a user may later want to PunchOut
+    based on the service provided. This can also be used to provide a UI
+    if there are any errors on the ContentResponse requiring user
+    interaction.
+  -->
+  <xs:element name="ContentResponseHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+      </xs:sequence>
+      <xs:attribute name="operationAllowed">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="inspect" />
+            <xs:enumeration value="edit" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,2761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Transaction.mod#5 $
+-->
+
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  <xs:include schemaLocation="cxml-supplier.xsd" />
+  <xs:include schemaLocation="cxml-item.xsd" />
+  <xs:include schemaLocation="cxml-spending.xsd"/>
+  <xs:include schemaLocation="cxml-reference.xsd"/>
+  <xs:include schemaLocation="cxml-transport.xsd"/>
+  
+  <!-- 
+     Detailed per-unit asset information for a line item.
+
+     Extrinsic
+         Additional per-unit asset information.
+
+     serialNumber
+         Manufacturer's serial number for the unit.
+
+     tagNumber
+         Asset tag number for the unit.
+
+     location
+         Location of the unit.
+  -->
+  <xs:element name="AssetInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="tagNumber" type="xs:string"/>
+      <xs:attribute name="serialNumber" type="xs:string"/>
+      <xs:attribute name="location" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines gross amount in posted currency.
+  -->
+  <xs:element name="TotalAmountInPostedCurrency">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines gross amount in billing currency. If specified, customer
+    needs to pay this amount.
+  -->
+  <xs:element name="TotalAmountInBillingCurrency">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The bill to for an item.
+
+   IdReference
+       ID reference is Within the application context (for example, a certain pair of buyer and supplier), the (identifier, domain) pair should be unique.
+  -->
+  <xs:element name="BillTo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Address"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The ship to for a item.
+
+   IdReference
+       ID reference is Within the application context (for example, a certain pair of buyer and supplier), the (identifier, domain) pair should be unique.
+   
+   Address
+       To provide a plant location description, the domain attribute of the element IdReference should be set to "buyerLocationID", the identifier to the plantID.
+       The addressIDDomain should be set to "buyerLocationID" and the addressID to the plantID. Use the name for the description.
+
+  -->
+  <xs:element name="ShipTo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Address" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:CarrierIdentifier" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:TransportInformation" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a cXML Shipping item. Represents a shipping cost in the
+    shopping basket (PunchOutOrderMessage) or an order to the supplier
+    (OrderRequest). There could be one of these for the entire order, or one
+    per lineitem.
+    The Modifications element (if present) represents any changes to
+    the shipping cost.
+
+    trackingDomain
+        Represents the logistics supplier, I.E., "FedEx", "UPS", etc.
+
+    trackingId
+        An optional element value that represents the logistics supplier
+        tracking number.
+
+    tracking
+        Deprecated - Do Not Use.
+  -->
+  <xs:element name="Shipping">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+        <xs:element ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Modification"/>
+      </xs:sequence>
+      <xs:attribute name="trackingDomain" type="xs:string" />
+      <xs:attribute name="trackingId" type="xs:string" />
+      <xs:attribute name="tracking" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the payment terms in a PaymentProposalRequest document.
+
+    Description
+        A general description on payment terms.
+
+    Extrinsic
+        Additional information related to this payment terms.
+
+    paymentTermCode
+        This is the payment term code defined by buyers in ERP.
+  -->
+  <xs:element name="PaymentTerms">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:PaymentTerm"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="paymentTermCode" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a payment term in an invoice or order. This deprecates the
+        InvoiceDetailPaymentTerm previously defined. Payment term can be the 
+        net term (without discount) or discount term (with discount).
+
+    payInNumberOfDays
+        The number of days after invoice effective date for the invoice to be paid.
+
+    Discount
+        The percentage or amount of the discount term. This element should be omitted
+        if the payment term is a net term.
+    Extrinsic
+        Additional information related to this payment term.
+  -->
+  <xs:element name="PaymentTerm">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Discount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="payInNumberOfDays" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- The list of valid payment types. -->
+  <xs:element name="cxml.payment" abstract="true">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PostalAddress" />
+      </xs:sequence>
+      <xs:attribute name="number" type="xs:string" use="required" />
+      <xs:attribute name="expiration" type="xs:string" use="required" />
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Payment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="cxml.payment"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines an accounting segment. Segment is an older, deprecated way to
+    transport this information.
+
+    type
+        The accounting type of this segment.
+
+    id
+        The unique key of this Segment against the type.
+
+    description
+        Textual description of the Segment. For human readability.
+  -->
+  <xs:element name="Segment">
+    <xs:complexType>
+      <xs:attribute name="type" type="xs:string" use="required" />
+      <xs:attribute name="id" type="xs:string" use="required" />
+      <xs:attribute name="description" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines an accounting segment. AccountingSegment is the newer, better
+    way to transport this information. Name corresponds to the type
+    attribute of Segment; Description corresponds to description. Both add
+    required locale attributes to the strings.
+
+    id
+        The unique key of this Segment against the type.
+  -->
+  <xs:element name="AccountingSegment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Name" />
+        <xs:element ref="tns:Description" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:complexType name="cxml.accounting">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Segment" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:AccountingSegment" />
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!--
+    An accounting object. Use of the Segment element here is deprecated.
+
+    name
+        The name of the object containing the specified accounting segments.
+  -->
+  <xs:element name="Accounting">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="cxml.accounting">
+          <xs:attribute name="name" use="required" type="xs:string"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A charge against an Accounting element.
+  -->
+  <xs:element name="Charge">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The combination of a Charge against an Accounting Element. A distribution
+    represents the breakdown of one overall amount into sub-amounts.
+  -->
+  <xs:element name="Distribution">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Accounting" />
+        <xs:element ref="tns:Charge" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Item Elements -->
+  <!--
+    The representation of a line item as it needs to be for sending to a
+    supplier. The item can refer to a MasterAgreement in itself.
+
+    quantity
+        How many items are desired. Supplier and Commodity level items in an order of type
+        "blanket" will use a default value of "1". The quantity in this case will not be
+        used to compute the sub total. The MaxAmount in the BlanketItemDetail will be 
+        used to indicate any line level amounts.
+    lineNumber
+        Position (counting from 1) of this item in an order. Used to
+        maintain a reference between items in create and update OrderRequest
+        documents.
+    requisitionID
+        The buyers system requisition id for this line item. It might be the
+        same as orderID, and it might not be included at all. Must not be
+        included if requisitionID is specified in the OrderRequestHeader.
+    requestedDeliveryDate
+        The date this item was requested for delivery.
+    agreementItemNumber 
+        The corresponding Item Number of the Item in the Master Agreement if this is 
+        a 'release' order item.
+    parentLineNumber
+        lineNumber of the parent line item in the order.
+    itemType 
+        Specify whether the line item contains child line items or acts as a child item.
+    requiresServiceEntry
+        This is a flag to indicate if a service entry request is required
+        for this item.
+    confirmationDueDate
+        Specifies the date by which the supplier has to respond with a Confirmation to the Purchase Order.
+
+    ScheduleLine
+        Schedule Line(s) listed for the specific line item.
+    
+    ItemOutIndustry
+        Industry specific item information.
+    
+    Packaging
+        Specify the packaging information for a line item. 
+    
+    compositeItemType
+        Specify type of parent line item(lot/box).
+
+    Batch
+        Batch information of goods or material produced in a single manufacturing run. The information includes id, characteristic, date, etc.
+
+    itemCategory
+        It is for defining how a component or material is procured. Possible values are:
+        subcontract - refers to process of procuring a material by providing component information that makes the finished product
+        consignment - refers to process of managing a material through a special process where the payment to supplier is withheld 
+            until the material or service is consumed by the buyer.
+        thirdParty - refers to vendor from which a material is ordered.
+
+    subcontractingType
+        The Buyers ERP system determines the subcontracting type based on the  material provision indicator determined to support the regular subcontracting, Refurbishments or Replacements.
+        The value will be either regular  for standard subcontracting scenario, refurbwochange for Refurbishment without unchanged material ,2 Refurbishment with changed material , 3 for replacement of the materials.
+
+    requestedShipmentDate
+        The ship date requested by the buyer for the item
+
+    isReturn
+        A value of yes indicates that this item is for return process.
+        Return Items are subject to Order confirmation optionally and also do not support the supplier ASN’s and Goods receipts from Buyers.
+        Return Items is not included in the total of the PO amount of the PO as they are excluded in the case of Mixed line items in single PO.
+
+    returnAuthorizationNumber
+        Return Authorization Number information for a line item.
+
+    isDeliveryCompleted
+        A value of yes indicates that this item is considered closed, it means that no more deliveries are expected for this item.
+        This flag is set by the buyer for informative purposes.
+
+  -->
+  <xs:element name="ItemOut">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Path" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:ItemDetail" />
+          <xs:element ref="tns:BlanketItemDetail" />
+        </xs:choice>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:SupplierID" />
+          <xs:element ref="tns:SupplierList" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SpendDetail" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Distribution" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tolerances" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ControlKeys" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ScheduleLine" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:MasterAgreementReference" />
+          <xs:element ref="tns:MasterAgreementIDInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemOutIndustry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Packaging" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReleaseInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="requisitionID" type="xs:string" />
+      <xs:attribute name="agreementItemNumber" type="xs:string" />
+      <xs:attribute name="requestedDeliveryDate" type="xs:date" />
+      <xs:attribute name="isAdHoc">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="itemType" type="tns:lineItemType"/>
+      <xs:attribute name="requiresServiceEntry">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="confirmationDueDate" type="xs:date" />
+      <xs:attribute name="compositeItemType" type="compositeItemType" />
+      <xs:attribute name="itemCategory">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="subcontract" />
+            <xs:enumeration value="consignment" />
+            <xs:enumeration value="thirdParty" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="subcontractingType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="regular" />
+            <xs:enumeration value="refurbWithoutChange" />
+            <xs:enumeration value="refurbWithChange" />
+            <xs:enumeration value="replacement" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="requestedShipmentDate" type="xs:dateTime" />
+      <xs:attribute name="isReturn">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="returnAuthorizationNumber" type="xs:string" />
+      <xs:attribute name="isDeliveryCompleted">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of the release information of a line item
+
+    releaseType
+        A string value to identify the type of release. The value will be either jit or forecast.
+    releaseNumber
+        A string value to identify the release.
+    cumulativeReceivedQuantity
+        A number value to identify the cumulative quantity of all goods receipts against the scheduling agreement over a period up to a certain date
+    materialGoAheadEndDate
+        Date denoting the end of the material go-ahead period (go-ahead for purchase of input materials)
+    productionGoAheadEndDate
+        Date denoting the end of the production go-ahead period
+  -->
+  <xs:element name="ReleaseInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipNoticeReleaseInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="releaseType" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="forecast"/>
+            <xs:enumeration value="jit"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="cumulativeReceivedQuantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="releaseNumber" type="xs:string"/>
+      <xs:attribute name="productionGoAheadEndDate" type="xs:dateTime"/>
+      <xs:attribute name="materialGoAheadEndDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The ShipNoticeReleaseInfo will be used to reference a ship notice created from a scheduling agreement release. 
+
+    receivedQuantity 
+        Quantity received by the buyer for the referenced ship notice
+  -->
+  <xs:element name="ShipNoticeReleaseInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="tns:ShipNoticeReference"/>
+          <xs:element ref="tns:ShipNoticeIDInfo"/>
+        </xs:choice>
+        <xs:element ref="tns:UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="receivedQuantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a line item as it needs to be for sending to a
+    buyer.
+    
+    quantity
+        How many items are desired.
+    openQuantity
+        The quantity pending to be fulfilled by the seller to ship to
+        the buyer.
+        Example: for an Order Quantity of 100, if 50 was delivered, the
+        open quantity is set to 50. The quantity is recorded as undelivered
+        quantity by the buyer.
+    promisedQuantity
+        The quantity that has been promised by the selling party. The
+        promised quantity, also called confirmed quantity, will be computed
+        in the seller’s ERP based on ATP functionality. ATP is a function
+        that enables customers’ orders to be confirmed based on available
+        inventory or based on incoming commitments from the suppliers. This
+        quantity will be used to indicate if the Order has been confirmed
+        by the ERP system.
+    lineNumber
+        Position (counting from 1) of this item in an order. Used to
+        maintain a reference between items in create and update OrderRequest
+        documents.
+    parentLineNumber
+        Position of the parent line item. Used to create a nesting structure for line items.
+    itemType 
+        Specify whether the line item contains child line items or acts as a child item
+    compositeItemType
+        Specify type of parent line item(lot/box)
+    itemClassification
+        Specifies whether the current line item is material or service.
+        Valid values are material and service.
+    itemCategory
+        It is for defining how a component or material is procured. Possible values are:
+        subcontract - refers to process of procuring a material by providing component information that makes the finished product
+        consignment - refers to process of managing a material through a special process where the payment to supplier is withheld until the materail or service is consumed by the buyer.
+            thirdParty - refers to vendor from which a material is ordered.
+    
+  -->
+  <xs:element name="ItemIn">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Path" />
+        <xs:element ref="tns:ItemDetail" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:SupplierID" />
+          <xs:element ref="tns:SupplierList" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SpendDetail" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Distribution" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ScheduleLine" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BillTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:DateInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="openQuantity" type="xs:decimal" />
+      <xs:attribute name="promisedQuantity" type="xs:decimal" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt" />
+      
+      <xs:attribute name="itemType" type="tns:lineItemType" />
+      <xs:attribute name="compositeItemType" type="tns:compositeItemType" />
+      <xs:attribute name="itemClassification" type="tns:serviceItemType" />
+      <xs:attribute name="itemCategory">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="subcontract" />
+            <xs:enumeration value="consignment" />
+            <xs:enumeration value="thirdParty" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+   <!--
+    Defines SubcontractingComponent  information.
+    
+    ComponentID
+    An identifier for a subcontracting component within the procurement process
+    
+    Description
+    Description of subcontracting component
+    
+    Product
+    It contains product information of subcontracting component (such as buyer product id, supplier product id, standard product id, internal product id…etc.)
+    
+    ProductRevisionID
+    An identifier that is assigned when changes are made to component
+    
+    Batch
+    An element carrying a batch information for material or goods  produced in a single manufacturing run (such as buyer/supplier batch id, production date, property valuation…etc.)
+    
+    UnitOfMeasure
+    Unit of measure code
+    
+    quantity
+    Quantity of the subcontracting component required to produce the finished goods in a unit of measurement
+    
+    requirementDate
+    Specifies the date on which the requested quantity of subcontracting component is required
+    
+    materialProvisionIndicator
+        The material provision indicator (MPI) is used to identify the subcontracting type of a part for the components. The following indicators are provided to support the subcontracting type 
+        Rework Material to Subcontractor  with Value 1
+        Rework Material from Subcontractor  with Value 2
+        Subcontracting with Value 3 when the vendor is provide stock 
+  -->
+  <xs:element name="SubcontractingComponent">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ComponentID"/>
+        <xs:element ref="tns:UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Product"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ProductRevisionID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Batch"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="requirementDate" type="xs:dateTime" />
+      <xs:attribute name="materialProvisionIndicator">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="reworkTo"/>
+            <xs:enumeration value="reworkFrom"/>
+            <xs:enumeration value="regular"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines Schedule Line information.
+
+    quantity
+        Quantity of items to be shipped for this schedule line. 
+
+    requestedDeliveryDate
+        Date that the specified quantity is expected to be delivered. 
+        
+    lineNumber
+        Line identifier for a specific schedule line.
+
+    UnitOfMeasure
+        Unit of Measure for specified quantity.
+        
+    deliveryWindow
+        Duration of time in which the quantity is expected to be delivered.
+
+    SubcontractingComponent
+        Contains detailed information about a subcontracting component which is used to manufacture the finished goods
+
+    requestedShipmentDate
+        The ship date requested by the buyer for the schedule line
+
+    originalRequestedDeliveryDate
+        The Original Date that the specified quantity is expected to be delivered. This Date is not subject to changes
+  -->
+  <xs:element name="ScheduleLine">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ScheduleLineReleaseInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SubcontractingComponent"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="requestedDeliveryDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt"/>
+      <xs:attribute name="deliveryWindow" type="xs:duration"/>
+      <xs:attribute name="requestedShipmentDate" type="xs:dateTime" />
+      <xs:attribute name="originalRequestedDeliveryDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines release information on schedule line.
+
+    commitmentCode
+        String value to identify the type of the delivery. The value will be
+    firm – go ahead for production. Vendor can ship against the schedule line and customer is 
+        responsible for cost of production as well as cost of material procurement 
+    tradeoff – go ahead for material procurement. Vendor can ship against the schedule 
+        line if rule is enabled. Buyer is responsible for cost of material procurement
+    forecast – informational. Customer can change the schedule line without incurring any
+        liabilities  with the vendor
+
+    cumulativeScheduledQuantity
+        Total quantity to be shipped for a particular line item up through the schedule line
+    receivedQuantity
+        Received Quantity is the Quantity Received against the Schedule line of the PO or Scheduling Agreement line item based on the Goods Receipt posted in ERP. 
+        The quantity is informational and will be only used as visibility for suppliers and will not be validated for Invoice or Shipment processing.
+  -->
+  <xs:element name="ScheduleLineReleaseInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure" />
+      </xs:sequence>
+      <xs:attribute name="commitmentCode" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="firm"/>
+            <xs:enumeration value="tradeoff" />
+            <xs:enumeration value="forecast" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="cumulativeScheduledQuantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="receivedQuantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    StatusUpdate for Confirmation (type=RequestToPay) request.
+    
+    transactionTimestamp
+        time when the XMLPay transaction was submitted
+    
+    transactionID
+        an identifier assisgned to the transaction by the payment processing gateway
+    
+    authorizationID
+        the authorization code for the transaction provided by the bank
+    
+    isFailed
+        should have a status code greater than zero. Zero implies a successful transaction.
+  -->
+  <xs:element name="PaymentStatus" substitutionGroup="cxml.statuses">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:PCard" />
+        <xs:element ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="orderID" type="xs:string" use="required" />
+      <xs:attribute name="transactionTimestamp" type="xs:dateTime" use="required" />
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Authorization" />
+            <xs:enumeration value="Settlement" />
+            <xs:enumeration value="Sale" />
+            <xs:enumeration value="Credit" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isFailed">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="transactionID" type="xs:string" />
+      <xs:attribute name="authorizationID" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Partial amount paid against an InvoiceDetail request. Used in InvoiceStatus.
+    If this element exists in an InvoiceStatus element, it should mean that the buyer
+    does not pay the full amount as the InvoiceDetail request specified. 
+  -->
+  <xs:element name="PartialAmount">
+   <xs:complexType>
+     <xs:sequence>
+       <xs:element ref="tns:Money"/>
+     </xs:sequence>
+   </xs:complexType>
+  </xs:element>
+  
+  <!--
+    StatusUpdate for InvoiceDetail request.
+
+        InvoiceIDInfo
+            ID of an invoice known to the supplier system. This attribute is used to reference an invoice in StatusUpdateRequest when DocumentReference is omitted.
+
+    PartialAmount
+        The partial amount paid against the InvoiceDetail document. This attribute is
+        only relevant when the status type is "paid".
+
+    Comments
+        Comments associated with the status update.
+
+    type
+        Type of the invoice status. 
+                    processing - The invoice is received and being processed.
+                    canceled - The invoice has been canceled.
+                    reconciled - The invoice is reconciled. 
+                    rejected - The invoice is rejected.
+                    paying - The invoice is being paid. 
+                    paid - The InvoiceDetail request is paid. 
+  -->
+  <xs:element name="InvoiceStatus" substitutionGroup="cxml.statuses">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:InvoiceIDInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PartialAmount"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="processing"/>
+            <xs:enumeration value="canceled"/>
+            <xs:enumeration value="reconciled"/>
+            <xs:enumeration value="rejected"/>
+            <xs:enumeration value="paying"/>
+            <xs:enumeration value="paid"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- OrderRequest* Elements -->
+  <!--  
+  Specifies the earliest date when either the supplier can deliver the goods or when the receiver is able to handle incoming shipments, 
+  and  the latest date when either the supplier can deliver the goods OR until the receiver is able to handle incoming shipments. 
+  -->
+  <xs:element name="DeliveryPeriod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Period" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of an order. This is the data that is sent to the supplier
+    to have them place an order in their order management system. The new
+    world order equivalent of a PO.
+  -->
+  <xs:element name="OrderRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OrderRequestHeader" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:ItemOut" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+        Header of an order. This is the data that is sent to the supplier
+        to have them place an order in their order management system. Money
+        represents the total amount of this order.
+    
+        orderID
+        The buyer system orderID for this request. This is an internal
+        Buyer unique number.
+    
+        orderVersion
+        The buyer system order version number for this request. Relevant when
+        the OrderRequest represents a change order request. The version number
+        for the original document should be 1 and should be incremented by 1 for
+        each subsequent version (2,3,4...).
+    
+        isInternalVersion
+        A value of yes indicates that this OrderRequest is a version whose changes from
+        the previous version are deemed internal to the buyer system. Relevant when the
+        version being sent to the supplier is not the first version.
+    
+        orderDate
+        The date and time the order request was created.
+    
+        type
+        The type of the order request. Defaults to "new".
+    
+        requisitionID
+        The buyers system requisition id for this entire order. It might be
+        the same as orderID, and it might not be included at all. Must not
+        be included if requisitionID is specified in any ItemOut elements.
+    
+        shipComplete
+        Optional preference for "hold until complete" processing. Defaults
+        to shipping when available if not specified. Future versions of the
+        protocol may extend the datatype of this attribute to include
+        additional possible values (such as "unlessGreatlyBackOrdered"?).
+    
+        orderType
+        "release", indicates that this is a Release Order from an existing
+        Master Agreement/ Contract. Default is regular. Type "blanket" indicates
+        that this order is a Blanket Order.
+        releaseRequired
+        "yes" if the blanket order allows released. Currently used only if 
+        orderType is "blanket".
+        effectiveDate
+        Date the order is available for ordering. If orderType is "blanket", 
+        effectiveDate is required. Otherwise it is optional. Currently only
+        used with blanket orders.
+        expirationDate
+        Date the order is no longer available. If not defined, end date is open
+        ended. Currently only used with blanket orders.
+        agreementID
+        Identifies associated agreement corresponding to the Release Order.
+        At an implementation level it has to be validated that if the orderType
+        is 'release' then the appropriate agreementID is also provided.
+        agreementPayloadID
+        Optional PayloadID for the corresponding Master Agreement.
+    
+        parentAgreementID
+        Used only in the context of a Order of type "blanket". This identifies the
+        parent blanket order if the current order is part of an hierarchy.
+    
+        parentAgreementPayloadID
+        Optional PayloadID for the corresponding Master Agreement.
+    
+        pickUpDate
+        Specifies the date when the goods can be/will be provided for picking up and delivery
+    
+        requestedDeliveryDate
+        The requested delivery date reflects the time when the buyer is willing to receive the goods.
+    
+        Total 
+        If the Order is of type "blanket", the Total element is not used to compute
+        the sum of the item level subtotals. The total is used to indicate the maximum
+        commitment with the supplier. The total will not add upto the individual item
+        level sub total or MaxAmounts. The item level MaxAmounts should not exceed the
+        header level total. If the item level MaxAmount is not specified it is assumed
+        that the Item level maximum amount is the same as the Total.
+    
+        LegalEntity and OrganizationalUnit elements are intended to include
+        the company code and purchasing organization respectively.
+    
+         DeliveryPeriod
+        Start and end date for the delivery.
+    
+         IdReference
+           ID reference is Within the application context (for example,
+    a certain pair of buyer and supplier), 
+           the (identifier, domain) pair
+     should be unique.
+    
+        OrderRequestHeaderIndustry
+        Industry specific header information  
+    
+        The contained DocumentReference element would appear in a document only
+        when the type is "update" or "delete". In that case, the
+        DocumentReference would reference the most recent OrderRequest document
+        for the order. For example when an order is created, updated and then
+        deleted, the final document should contain a DocumentReference
+        referring to the OrderRequest with type="update". That document would,
+        in turn, refer to the original (type="new") OrderRequest document.
+  -->
+  <xs:element name="OrderRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element ref="tns:BillTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:LegalEntity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:OrganizationalUnit" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Payment" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:PaymentTerm" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Followup" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ControlKeys" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierOrderInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DeliveryPeriod" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OrderRequestHeaderIndustry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="orderID" type="xs:string" use="required"/>
+      <xs:attribute name="orderDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="orderType" default="regular">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="release"/>
+            <xs:enumeration value="regular"/>
+            <xs:enumeration value="blanket"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="releaseRequired">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="orderVersion" type="xs:decimal"/>
+      <xs:attribute name="isInternalVersion">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="parentAgreementID" type="xs:string"/>
+      <xs:attribute name="parentAgreementPayloadID" type="xs:string"/>
+      <xs:attribute name="effectiveDate" type="xs:dateTime"/>
+      <xs:attribute name="expirationDate" type="xs:dateTime"/>
+      <xs:attribute name="agreementID" type="xs:string"/>
+      <xs:attribute name="agreementPayloadID" type="xs:string"/>
+      <xs:attribute name="requisitionID" type="xs:string"/>
+      <xs:attribute name="shipComplete">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="pickUpDate" type="xs:dateTime"/>
+      <xs:attribute name="requestedDeliveryDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a Master Agreement. This is the electronic document representing the 
+    Master Agreement that was created and agreed upon in the Buying organizations.
+  -->
+  <xs:element name="MasterAgreementRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:MasterAgreementRequestHeader"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:AgreementItemOut"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   Header of an Agreement. This is the header level information in the Agreement.
+   
+   agreementID
+     The buyer system agreementID for this request. the Master Agreement Number in Buyer.
+   agreementDate
+     The date and time the agreement request was created. 
+     This is different from the effective and expiry date of the agreement.
+   agreementType
+     Identifies if this is a Value based agreement or quantity based Agreement.
+   requestType
+     The type of the agreement request. Defaults to "new".
+   effectiveDate
+         Date the Master Agreement is available for ordering/releases.
+   expirationDate
+         Date the Master Agreement is no longer available.
+   parentAgreementPayloadID
+     PayloadID for the corresponding parent document that this agreement is derived from.
+   operation: 
+    "delete" operation will be used to cancel an existing Master Agreement, the
+     assumption here is that the delete request will be an exact replica of the 
+     original request.
+     "new" operation identifies a new MasterAgreement transaction.
+     "update" operation identified an update to an existing transaction. 
+     the DocumentReference attribute should be used to indicate the Orignal
+     Document information.
+   Note: 
+     Use "Contact" element to supply any additional Address or Location information.
+  -->
+  <xs:element name="MasterAgreementRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MaxAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MinAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MaxReleaseAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MinReleaseAmount"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="agreementID" type="xs:string" use="required"/>
+      <xs:attribute name="agreementDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="type" default="value">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="value"/>
+            <xs:enumeration value="quantity"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="effectiveDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="expirationDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="parentAgreementPayloadID" type="xs:string" />
+      <xs:attribute name="operation" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The representation of a  agreement line item as it needs to be for sending to a
+    supplier.
+    maxQuantity 
+          maximum quantity for this particular lineItem
+    minQuantity 
+          minimum quantity for this particular lineItem
+    maxReleaseQuantity 
+          maximum quantity per release for this particular lineItem
+    minReleaseQuantity 
+          minimum quantity per release for this particular lineItem
+
+    Note :
+      The #lineNumber attribute in the <ItemOut> will be used to specify the corresponding 
+      lineNumber on the Master Agreement in the Procurement Application.
+      At an implementation, level checks should be made to validate this.
+    Note :
+      The quantity attribute in the ItemOut tag should be set to one and ignored at 
+      the Mater Agreement implementation processing stage. 
+    Note :
+      The MaxReleaseAmount/Quantity and MinReleaseAmount/Quantity at an item level i
+      indicate the ItemLevel amounts and quantities per release.
+  -->
+  <xs:element name="AgreementItemOut">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MaxAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MinAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MaxReleaseAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:MinReleaseAmount"/>
+        <xs:element ref="tns:ItemOut"/>
+      </xs:sequence>
+      <xs:attribute name="maxQuantity" type="xs:decimal"/>
+      <xs:attribute name="minQuantity" type="xs:decimal"/>
+      <xs:attribute name="maxReleaseQuantity" type="xs:decimal"/>
+      <xs:attribute name="minReleaseQuantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The minimum amount  for something.
+  -->
+  <xs:element name="MaxAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The maximum amount  for something.
+  -->
+  <xs:element name="MinAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The contractual maximum amount per Release of this Master Agreement.
+  -->
+  <xs:element name="MaxReleaseAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The contractual minimum amount per Release of this Master Agreement.
+  -->
+  <xs:element name="MinReleaseAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The Overall Limit amount for something.
+  -->
+  <xs:element name="OverallLimit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     The Expected Limit amount for something.
+  -->
+  <xs:element name="ExpectedLimit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The maximum quantity  for something.
+  -->
+  <xs:element name="MaxQuantity" type="xs:decimal" />
+  
+  <!--
+    The minimum quantity  for something.
+  -->
+  <xs:element name="MinQuantity" type="xs:decimal" />
+   
+  <!--
+    The contractual maximum quantity per Release of a contract.
+  -->
+  <xs:element name="MaxReleaseQuantity" type="xs:decimal"/>
+  
+  <!--
+    The contractual minimum quantity per Release of a contract.
+  -->
+  <xs:element name="MinReleaseQuantity" type="xs:decimal"/>
+  
+  <!-- Followup
+
+     Location to which future StatusUpdateRequest documents should be
+     posted. In general, this is the input location for any later
+     documents which reference the current OrderRequest document.
+  -->
+  <xs:element name="Followup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:URL" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- PunchOut* Elements -->
+  <!--
+    Definition of a PunchOut Setup Request. This is the data that is sent
+    to the external system that the procurement application is going to
+    extract catalog data from.
+
+    The BrowserFormPost element contains the URL we would like the browser
+    re-directed to when the PunchOut shopping experience is finished (where
+    the PunchOutOrder message should be returned).
+  -->
+  <!-- PurchaseRequisitionRequest* Elements -->
+  <!--
+    Definition of Purchase Requisition. This is the data that is sent from the Buyer
+    to another buyer system.
+  -->
+  <xs:element name="PurchaseRequisitionRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:PurchaseRequisition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="PurchaseRequisition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:PurchaseRequisitionHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ItemIn"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Header of an Purchase Requisition. 
+
+    requisitionID
+        The buyer system requisitionID  for this request. This is an internal
+        Buyer unique number.
+
+    requisitionVersion
+        The buyer system requisition version number for this request. Relevant when
+        the PurchaseRequisitionRequest represents a change Requisition request. The version 
+        number for the original document should be 1 and should be incremented by 1 for
+        each subsequent version (2,3,4...).
+
+    requisitionDate
+        The date and time the Requisition request was created.
+
+    type
+        The type of the Requisition request. Defaults to "new".
+
+       
+    The contained DocumentReference element would appear in a document only
+    when the type is "update" or "delete". In that case, the
+    DocumentReference would reference the most recent PurchaseRequisitionRequest document
+    for the order. For example when an requisition is created, updated and then
+    deleted, the final document should contain a DocumentReference
+    referring to the PurchaseRequisitionRequest with type="update". That document would,
+    in turn, refer to the original (type="new") PurchaseRequisitionRequest document.
+  -->
+  <xs:element name="PurchaseRequisitionHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:BillTo"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments"/>
+          <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+        </xs:sequence>
+      </xs:sequence>
+      <xs:attribute name="requisitionID" type="xs:string"/>
+      <xs:attribute name="requisitionDate" type="xs:dateTime"/>
+      <xs:attribute name="type" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="requisitionVersion" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="PunchOutSetupRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:BuyerCookie"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BrowserFormPost"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierSetup"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SelectedItem"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ItemOut"/>
+      </xs:sequence>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="create"/>
+            <xs:enumeration value="inspect"/>
+            <xs:enumeration value="edit"/>
+            <xs:enumeration value="source"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="BuyerCookie">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SelectedItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ItemID"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SupplierSetup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:URL"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="PunchOutSetupResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:StartPage"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a PunchOut Order Message. This is the data that is sent
+    back to the procurement application from the external system that the
+    PunchOut Request was targeted at.
+  -->
+  <xs:element name="PunchOutOrderMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:BuyerCookie" />
+        <xs:element ref="tns:PunchOutOrderMessageHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ItemIn"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     Header of a PunchOut Order Request. This is the data that is sent from
+     the supplier to transfer the supplier acquired shopping basket back to
+     the buyer system.
+
+     operationAllowed
+          Highest operation allowed on the PunchOut shopping basket.
+          "create" allows only later OrderRequest operations on these items.
+          "inspect" adds a PunchOutSetupRequest with operation="inspect".
+          And, "edit" allows operation="edit" in that later Setup request.
+
+     quoteStatus 
+          "pending"  - Identifies that the transaction is still pending
+      "final" - Identifies that the transaction is complete
+  -->
+  <xs:element name="PunchOutOrderMessageHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SourcingStatus" />
+        <xs:element ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierOrderInfo" />
+      </xs:sequence>
+      <xs:attribute name="operationAllowed" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="inspect" />
+            <xs:enumeration value="edit" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="quoteStatus" default="final">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="pending" />
+            <xs:enumeration value="final" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    Other small Request elements.
+  ==== -->
+  <xs:element name="cxml.statuses" abstract="true" />
+  
+  <!--
+    Request to update the status of an earlier transaction.
+
+    DocumentReference 
+        A reference by payloadID to a cXML document to be updated. This 
+        element can be omitted only when InvoiceStatus is specified and
+        the InvoiceStatus contains InvoiceIDInfo.
+  -->
+  <xs:element name="StatusUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference"/>
+        <xs:element ref="tns:Status"/>
+        <xs:sequence minOccurs="0" maxOccurs="1">
+          <xs:element ref="cxml.statuses"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status Update for Document Status
+
+        DocumentInfo
+            ID of a document entry known to the system. This attribute is used to reference a document in StatusUpdateRequest when DocumentReference is omitted.
+
+    Comments
+        Comments associated with the status update.
+
+    type
+        Type of the document status.
+  -->
+  <xs:element name="DocumentStatus" substitutionGroup="cxml.statuses">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ItemStatus"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  When a StatusUpdateRequest is send with a DocumentStatus, then you could send more detailed information about the original item.
+
+  type
+        Specifies which kind of status that item should have. Possible values are:
+            rejected - that item was not accepted
+            accepted - original ConfirmationItem is accepted as it was send
+
+  code
+        optional code from the backend ERP system
+  
+  parentLineNumber
+        Represents the line number of its parent line number to idenfity this 
+        item's hierarchical parent item in a response message. 
+        
+  ReferenceDocumentInfo
+        contains details of referenced document
+        
+  Comments
+        may be used to have a more user readable description of the code
+  -->
+  <xs:element name="ItemStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:ReferenceDocumentInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+      <xs:attribute name="code" type="xs:string"/>
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a document known to the system.
+    
+    DocumentID
+        The id of a document known to the system.
+    
+    DocumentType
+        The document type.
+    
+    DocumentDate
+        The document date.
+  -->
+  <xs:element name="DocumentInfo">
+    <xs:complexType>
+      <xs:attribute name="documentID" type="xs:string" use="required"/>
+      <xs:attribute name="documentType" type="xs:string" use="required"/>
+      <xs:attribute name="documentDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A reference to an attachment containing cXML document. 
+
+    Attachment
+        A reference to the attachment containing a cXML document. The 
+        attachment must be either a single, complete cXML document or another 
+        MIME envelope containing a single, complete cXML document with 
+        attachments.
+  -->
+  <xs:element name="cXMLAttachment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:Attachment"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Request to forward a cXML document to another party. This Request
+    occurs in multiple DTD files and is used depending on where (in which
+    DTD) the forwarded message resides.
+
+    cXMLAttachment
+        A reference to the attachment containing the cXML document being 
+        forwarded. Refer to cXMLAttachment for more details.
+
+    cXML
+        Deprecated - Do Not Use.
+  -->
+  <!--
+    Attribute processingMode of CopyRequest element specifies whether the
+    cXML document is meant for processing, information only or copy.
+
+    info : The cxml document is for information only
+    process : The recipient of the cxml document should process the document.
+    copy : the cxml document is a copy as a result of Path element with copy type in the source document.
+  -->
+  <xs:element name="CopyRequest">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tns:cXMLAttachment"/>
+        <xs:element ref="tns:cXML"/>
+      </xs:choice>
+      <xs:attribute name="processingMode">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="info"/>
+            <xs:enumeration value="process"/>
+            <xs:enumeration value="copy"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status for a pre-existing sourcing transaction. The textual content indicates
+    the display information. "action" attribute defines the context of this message
+    based on the value.
+
+    approve : Approve the pending transaction
+    deny : deny pending transaction
+    cancel : cancel any preexisting transaction.
+
+  -->
+  <xs:element name="SourcingStatus" substitutionGroup="cxml.statuses">
+    <xs:complexType mixed="true">
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="action">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="approve" />
+                <xs:enumeration value="cancel" />
+                <xs:enumeration value="deny" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>  
+  </xs:element>
+  
+  <!--
+    IntegrationStatus is used to allow external parties to provide document status visibility
+    after the document is processed and delivered by AN.
+    
+    documentStatus indicates document status and could be one of the following values:
+    deliverySuccessful, The document was successfully delivered to the customer (but no processing confirmation has been issued yet)
+    deliveryDelayed, The document is experiencing delays while trying to reach the customer
+    deliveryFailed, The document could not be sent to the customer due to a failure between the gateway and the customer
+    deliveryReady, When sending to the buyer, the document has been queued and is ready for pick-up
+    customerConfirmed, The customer has confirmed that the document has been processed successfully
+    customerReceived, The customer has confirmed that the document has been received successfully
+    customerFailed, The customer has received the document and is reporting a failure in the content
+  -->
+  <xs:element name="IntegrationStatus" substitutionGroup="cxml.statuses">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:IntegrationMessage"/>
+      </xs:sequence>
+      <xs:attribute name="documentStatus" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="deliverySuccessful" />
+            <xs:enumeration value="deliveryDelayed" />
+            <xs:enumeration value="deliveryFailed" />
+            <xs:enumeration value="deliveryReady" />
+            <xs:enumeration value="customerConfirmed" />
+            <xs:enumeration value="customerReceived" />
+            <xs:enumeration value="customerFailed" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    IntegrationMessage indicates the type/result of the message used by
+    external parties.
+    
+    isSuccessful: indicates whether the message result is successful or not
+    type: indicates the message type, for example, 997/824/MDN
+  -->
+  <xs:element name="IntegrationMessage">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="isSuccessful" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="yes"/>
+                <xs:enumeration value="no"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="type" type="xs:string" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    How the shipment will travel on this segment. Each carrier within a
+    segment controlled by a third party logistics provider provides
+    tracking information to that provider externally. The
+    ShipNoticeRequest includes tracking information at the ShipControl
+    level only.
+
+    One Route element may describe only a single mode of travel. If
+    described at all, each mode of a multi-modal route must be described by
+    a separate Route element. It is not necessary to describe every leg of
+    the journey to the buyer's ShipTo location.
+
+    The only Contact roles likely to be sensible in this element are
+    "carrierCorporate" (details the contact information the supplier has
+    about the carrier organization), "shipFrom" and "shipTo". The
+    "carrierCorporate" role would be relevant at this level only when a
+    third party is providing tracking information across multiple carriers.
+    A Contact element with role "shipFrom" must appear in all Route
+    elements after the first. Route elements are not required to describe
+    the entire travel under a specific carrier's control. They may
+    describe a discontinuous stream of events, starting and ending at
+    different times and locations.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    Route element.
+
+    method
+        Qualifier identifying the transportation type code:
+        - ship: transportation by boat (ocean).
+        - rail: transportation by rail
+        - motor: transportation by land motor craft (common carrier)
+        - air: transportation by flight
+        - mail: This code is provided for practical reasons, despite the
+            fact that mail is not a genuine mode of transport. In many
+            countries, the value of merchandise exported and imported
+            by mail is considerable, but the exporter or importer concerned
+            would be unable to state by which mode postal items had passed
+            the national border
+        - multimodal: This code is provided for practical reasons, despite
+            the fact that multimodal transport is not a genuine mode of
+            transport. It can be used when goods are carried by at least
+            two different modes from a place at which the goods are taken
+            in charge by a transport operator to a place designated for
+            delivery, on the basis of one transport contract. (Operations
+            of pick-up and delivery of goods carried out in the performance
+            of a unimodal transport, as defined in such a contract, shall
+            not be considered as multimodal transport.)
+        - fixedTransport: This code applies to installations for continuous
+            transport such as pipelines, ropeways and electric power lines.
+        - inlandWater: This code is used only in such cases where the
+            application of waterborne transport is reported separately
+            than maritime transport.
+        - unknown: This code can be used when the mode is not known or when
+            information on it is not available at the time of issuing the
+            document concerned.
+        - custom: This code can be used whenever a custom code is used for
+            the method. You can put the actual custom code as a text child
+            this element.
+    means
+        Particular vessel, vehicle or other device used for transport of goods.
+        The value of means depends on the value of method. Examples include:
+        
+        When the value of method is "ship", the possible values of means are:
+        - cargoVessel: Vessel designed to carry general cargo.
+        - unitCarrier: Vessel designed to carry unit loads.
+        - bulkCarrier: Vessel designed to carry bulk cargo.
+        - tanker: Vessel solely equipped with tanks to carry cargo.
+        - liquefiedGasTanker: Tanker designed to carry liquefied gas.
+        - otherSpecialTanker: Tanker designed to carry other special liquids.
+        - cargoAndPassengerVessel: Vessel designed to carry cargo and passengers.
+        - otherVessel: Sea-going vessel, not otherwise specified.
+        - fishingBoat: Vessel designed for fishing.
+        - floatingStructure: Any floating structure.
+        
+        When the value of method is "rail", the possible values of means are:
+        - train: One or more rail wagons pulled or pushed by one or more
+                locomotive units, or self-propelled, that move over rail tracks.
+        - freightTrain: Train for carrying freight.
+        
+        When the value of method is "motor", the possible values of means are:
+        - truck: Automotive vehicle designed for hauling loads.
+        - tractor: Automotive vehicle with an engine designed for pulling.
+        - van: Closed automotive vehicle designed for carrying freight.
+        - carCarrier: Automotive vehicle designed for carrying motorcars.
+        - shovelLoader: Automotive vehicle designed for shovelling sand and other bulk material.
+        - straddleCarrier: Automotive vehicle designed for lifting and transporting containers
+        - mobileCrane: Automotive vehicle with cargo crane.
+        - bus: Automotive vehicle designed for carrying more than 8 passengers including the
+                driver.
+        - car: Automotive vehicle designed to carry a small number of passengers.
+        - taxi: Automotive vehicle licensed to ply for hire.
+        
+        When the value of method is "air, the values for means are specified in the
+        IATA (International Air Transport Association) publication Standard Schedules
+        Information Manual (SSIM) under the section "ATA/IATA Aircraft Types". The
+        referenced codes cover all aircraft that are flown, or are soon to be flown,
+        for commercial scheduled or chartered services only, or have been announced
+        by the manufacturer and for which airline orders have been placed.
+
+        When the value of method is "multimodal": as this includes multiple segments,
+        each of which may have different mode and means, the only possible value
+        for means is "unknown".
+        
+        When the value of method is "fixedTransport", the possible values of means are:
+        - unknown: Fixed transport installation of unknown type.
+        - pipeline: A line of one or more pipes for continuous transport of
+                liquid or gas commodity.
+        - powerline: A line of one or more cables or wires for continuous
+                transport of electricity.
+                
+        When the value of method is "inlandWater", the possible values of means are:
+        - unknownVessel: Vessel of unknown type.
+        - motorFreighter: Motorized vessel designed for carrying general cargo.
+        - motorTanker: Motorized vessel designed for carrying liquid cargo.
+        - containerVessel: Vessel designed for carrying containers.
+        - gasTanker: Vessel with tanks designed for carrying gas
+        - tug: Vessel designed to push or pull another vessel.
+        - barge: Lighter designed for carrying general cargo.
+        - pushTow: Vessel designed for pushing/towing, facilitating the movement
+                of one or more cargo barges.
+        - fishingBoat: Vessel designed for fishing.
+        - bunkerShip: Vessel designed for carrying and delivering bunkers.
+
+        When the value of method is either "mail" or "unknown", there are no
+        specific values of means defined.
+        
+    startDate
+        The date and time this shipment started this part of the trip.
+        Required in all Route elements after the first.
+    endDate
+        The date and time this shipment ended this part of the trip. Must
+        be after startDate. If any Route elements follow, the startDate of
+        that element must not precede this value.
+  -->
+  <xs:element name="Route">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="tns:Contact" />
+      </xs:choice>
+      <xs:attribute name="method" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="air" />
+            <xs:enumeration value="motor" />
+            <xs:enumeration value="rail" />
+            <xs:enumeration value="ship" />
+            <xs:enumeration value="mail" />
+            <xs:enumeration value="multimodal" />
+            <xs:enumeration value="fixedTransport" />
+            <xs:enumeration value="inlandWater" />
+            <xs:enumeration value="unknown" />
+            <xs:enumeration value="custom" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="means" type="xs:NMTOKEN" />
+      <xs:attribute name="startDate" type="xs:dateTime" />
+      <xs:attribute name="endDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Additional information for transportation of the shipment.
+    
+    Description
+        Free text description of shipment instructions.
+  -->
+  <xs:element name="ShippingInstructions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The shipping contract number specified for the transportation of the shipment.
+    
+    #PCDATA
+        The contract number specified by the buyer or seller for the transport. 
+  -->
+  <xs:element name="ShippingContractNumber" type="xs:string" />
+  
+  <!--
+    The terms for transportation of the shipment. This specifies that to whom amongst the buyer and seller
+    the title, risk and insurance cost will pass to.
+    
+    value
+        The terms of transportation.
+        Typically this may be Free-Carrier, CostAndFreight, DeliveredAtFrontier etc. or an option to specify a free text.
+        If the value of this attribute is specified as other, specifying
+        a description is mandatory.
+    #PCDATA
+        Free text description of means of transportation. The text desription must be
+        provided if the value "Other" is specified.
+
+  -->
+  <xs:element name="TransportTerms">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="value" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The transport information for the shipment described by the order 
+    and ship notice. This information comes from the order 
+    specified by the buyer and have to be presented in the ship notice
+    so that these can be edited by supplier, if required. This information
+    and possible changes have to be carried back to the buyer.
+
+    Route
+        The method or type of transportation of the shipment.
+    ShippingContractNumber
+        Contract number for the transport specified by the buyer or seller.
+    ShippingInstructions
+        Optional instructions for the shipment.
+  -->
+  <xs:element name="TransportInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Route" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShippingContractNumber" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShippingInstructions" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The mode of payment for order items shipped. This element is mandatory for 
+    specifying terms of delivery.
+
+    value
+        The shipping payment method used for the order. Possible values include the following -
+        Account, AdvanceCollect, AdvancePrepaid, Other etc.
+    #PCDATA
+        Free text description of shipping payment method. The text desription must be
+        provided if the value "Other" is specified.
+  -->
+  <xs:element name="ShippingPaymentMethod">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="value" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element specifies the terms of delivery code. The free text description is optional
+    for an order or a ship notice except for the case when "Other" is specified for value.
+    
+    value
+        The value of the code that specifies terms of delivery. 
+        Indicates whether the terms relate to price conditions, delivery conditions, 
+        transport conditions, or a combination of these, or any other.
+        If the value of this attribute is specified as other, specifying
+        a description is mandatory. Possible values include the following -
+        PriceCondition, DespatchCondition, PriceandDespatchCondition, CollectedByCustomer, 
+        TransportCondition, DeliveryCondition, Other etc.
+    #PCDATA
+        Free text description of terms of delivery code. The text desription must be
+        provided if the value "Other" is specified.
+
+  -->
+  <xs:element name="TermsOfDeliveryCode">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="value" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The terms of delivery for the shipment described by the order 
+    and ship notice. These terms come from the Purchase Order 
+    specified by the buyer and have to be presented in the ship notice
+    so that these can be edited by supplier, if required. These terms
+    and possible changes have to be carried back to the buyer.
+    
+    TermsOfDeliveryCode
+        The code that specifies terms of delivery. Indicates whether the terms relate to price conditions, 
+        delivery conditions, transport conditions, or a combination of these, or any other.
+        One must specify description for this if "Other" is specified as the value.
+    ShippingPaymentMethod
+        The mode of payment for order items shipped. Specifying a mode of payment is a must. Examples include:
+        Account, AdvanceCollect, AdvancePrepaid etc.
+    TransportTerms
+        This specifies that to whom amongst the buyer and seller the title, risk and insurance cost will pass to.
+    Address
+        Location and city specified with the terms.
+    Comments
+        Optional structured comments can be specified here for multiple types:
+        Type "Transport"
+            Additional description of the transport. Examples include:
+            "Delivered To Site / Stores", "OVERNIGHT FIRST CLASS", "To Be Collected by Courier" etc.
+        Type "TermsOfDelivery"
+            Additional delivery instructions can be provided along with
+            the other terms.
+  -->
+  <xs:element name="TermsOfDelivery">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:TermsOfDeliveryCode" />
+        <xs:element ref="tns:ShippingPaymentMethod" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TransportTerms" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Address" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Comments" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SealID
+        A seal is used to preserve integrity of a transport or cargo shipment. 
+        Seals come in different versions and technical approaches with one common characteristic: a unique ID given by the owner or the responsible party. 
+        The SealID is used to internationally track a container, truck, vessel or other cargo property along the route.
+  -->
+  <xs:element name="SealID" type="xs:string"/>
+  
+  <!--
+    SealingPartyCode
+        Is the company code for the party that has given the seal in its ID (usually the owner of the goods or the freight forwarder that loaded the cargo.
+  -->
+  <xs:element name="SealingPartyCode" type="xs:string"/>
+  
+  <!--
+    EquipmentIdentificationCode
+        Mainly for internal transport and storage purposes the packing equipment is or will be marked with unique codes in order to monitor and manage movement and storage location. Coding can be temporarily or permanent (with GUID-like codes or RFID coding, but unique within the local addressing scheme.
+  -->
+  <xs:element name="EquipmentIdentificationCode" type="xs:string"/>
+  
+  <!--
+    The terms for transportation of the shipment. 
+
+    SealID
+        A seal is used to preserve integrity of a transport or cargo shipment. Seals come in different versions and technical approaches with one common characteristic: a unique ID given by the owner or the responsible party. The SealID is used to internationally track a container, truck, vessel or other cargo property along the route.
+    
+    SealingPartyCode
+        Is the company code for the party that has given the seal in its ID (usually the owner of the goods or the freight forwarder that loaded the cargo.
+    
+    EquipmentIdentificationCode
+        Mainly for internal transport and storage purposes the packing equipment is or will be marked with unique codes in order to monitor and manage movement and storage location. Coding can be temporarily or permanent (with GUID-like codes or RFID coding, but unique within the local addressing scheme.
+  -->
+  <xs:element name="TermsOfTransport">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SealID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SealingPartyCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:EquipmentIdentificationCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TransportTerms" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Dimension" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    For information of referenced document.
+
+    DocumentInfo
+    The element provides info (such id, type and date) about a document. 
+    Following are the possible document types:
+    salesOrder - refers to sales order triggering the PO.
+    customerOrder - refers to  the customer order maintained in sales order.
+    freightOrder - refers to order for transportation.
+    productionOrder - refers to order that specifies  which material is to be produced, where it is to be produced, which operations are 
+    required to do this  and on which date production is to take place. It also defines how the order costs are to be settled.
+    purchaseOrder - refers to Orders used to replenish based on Supplier Managed Inventory process.
+    
+    DocumentReference
+        Reference to an earlier document (for example, OrderRequest). 
+
+    DateInfo
+    Information of date associated with the document/item. Following are the possible dates:
+    expectecDeliveryDate - refers to the expected delivery date for the material to be received at the partner location
+    expectedShipmentDate - refers to the expected ship date for the material is used to determine when the supplier is expected to ship the material from their location.
+    productionStartDate - refers to the production start date
+    productionFinishDate - refers to the production finish date
+
+    Contact
+        It is used for contact information for the referenced document
+
+    lineNumber
+        Line number of an item in the referenced document
+
+    scheduleLineNumber
+        Schedule line number of a schedule item in the referenced lineNumber, if this attribute has a value, the lineNumber attribute is mandatory. 
+
+    status
+        Status used to refer to the referenced document. Following are the possible values.
+        created
+        released
+        open
+        completed
+        closed
+        cancelled
+  -->
+  <xs:element name="ReferenceDocumentInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:DocumentInfo"/>
+          <xs:element ref="tns:DocumentReference"/>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:DateInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="scheduleLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="created" />
+            <xs:enumeration value="released" />
+            <xs:enumeration value="open" />
+            <xs:enumeration value="completed" />
+            <xs:enumeration value="closed" />
+            <xs:enumeration value="cancelled" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    For information of date.
+
+    type 
+    Date type
+            expectedShipmentDate refers to the expected ship date for the material is
+                used to determine when the supplier is expected to ship the material
+                from their location
+    productionStartDate refers to the production start date
+    productionFinishDate refers to the production finish date
+
+            requestedPickUpDate refers to the pick up date as requested by the party
+                arranging the transport.
+            expectedPickUpDate refers to the date when the logistic provider expects to
+                pick up the materials.
+            actualPickUpDate refers to the actual pick up date, as it has occurred.
+            
+            requestedDeliveryDate refers to the delivery date as requested by the party
+                arranging the transport.
+            expectedDeliveryDate refers to the expected delivery date for the material
+                to be received at the partner location
+            actualDeliveryDate refers to the actual delivery date of the goods.
+            confirmedDeliveryDate refers to the delivery date that has been confirmed
+                to be delivered by the seller.
+            confirmedShipmentDate refers to the shipment date that has been confirmed by
+                to be shipped by seller.
+    date
+    Date value
+  -->
+  <xs:element name="DateInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="expectedShipmentDate"/>
+            <xs:enumeration value="productionStartDate"/>
+            <xs:enumeration value="productionFinishDate"/>
+            <xs:enumeration value="requestedPickUpDate"/>
+            <xs:enumeration value="expectedPickUpDate"/>
+            <xs:enumeration value="actualPickUpDate"/>
+            <xs:enumeration value="requestedDeliveryDate"/>
+            <xs:enumeration value="expectedDeliveryDate"/>
+            <xs:enumeration value="actualDeliveryDate"/>
+            <xs:enumeration value="confirmedShipmentDate"/>
+            <xs:enumeration value="confirmedDeliveryDate"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="date" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Priority
+    Priority indicator, used to drive the priority of the orders for the suppliers.
+    Example:
+    Level 1 is Very High Priority
+    Level 2 is High Priority 
+    Level 3 is Medium Priority
+    Level 4 is Medium Low Priority
+    Level 5 is Low Priority
+
+    Description
+    Description for priority (such as very high, high, medium, medium low, low).
+
+    level
+    There are 5 levels (1, 2, 3, 4, 5). Level 1 has the highest priority. Level 5 has the lowest priority.
+     
+    sequence
+    An unique secondary order number for prioritizing items with the same priority level. Two items with the same priority level are not allowed to have the same sequence number.
+    
+    inventory_level
+    Inventory level shows the % inventory (buffer) level with respect to target. Possible values 0.0% - 100.0%.
+  -->
+  <xs:element name="Priority">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+      </xs:sequence>
+      <xs:attribute name="level" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="1" />
+            <xs:enumeration value="2" />
+            <xs:enumeration value="3" />
+            <xs:enumeration value="4" />
+            <xs:enumeration value="5" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="sequence" type="xs:unsignedInt" />
+      <xs:attribute name="inventory_level" type="xs:decimal" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ExternalDocumentType is managed in the external systems like ERP. This would be sent for for PO to uniquely identify the document.
+
+    For example,
+    <ExternalDocumentType documentType="ZNB">
+        <Description xml:lang="en">Standard Purchase Order</Description>
+    </ExternalDocumentType>
+  -->
+  <xs:element name="ExternalDocumentType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+      </xs:sequence>
+      <xs:attribute name="documentType" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Industry specific header information  
+
+    ReferenceDocumentInfo 
+    Details of referenced document 
+
+    Priority
+    Priority indicator, it is used to drive the priority of the orders for the suppliers
+
+    QualityInfo
+    The representation of the quality information for the entire OrderRequest.
+  -->
+  <xs:element name="OrderRequestHeaderIndustry">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Priority" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ExternalDocumentType" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInfo" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--   Industry specific item information 
+    ReferenceDocumentInfo 
+    It contains the details of referenced document
+
+    Priority
+    Priority Indicator used to drive the priority of the item ordered by the buyer.
+
+    QualityInfo
+    The representation of the quality information of a line item.
+    
+    SerialNumberInfo
+    The representation of the required serial number information of a line item.
+
+    planningType
+    To specify different production planning strategies. Following are possible strategies:
+    MTO: Make to Order
+    MTS: Make to Stock
+    ATO: Assemble to Order
+    CTO: Configure to Order
+  -->
+  <xs:element name="ItemOutIndustry">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemOutRetail" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Priority" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QualityInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SerialNumberInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BatchInfo" />
+      </xs:sequence>
+      <xs:attribute name="planningType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="MTO" />
+            <xs:enumeration value="MTS" />
+            <xs:enumeration value="ATO" />
+            <xs:enumeration value="CTO" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--    Retails industry item information 
+    PromotionVariantID
+    Used when only one or some variants of an article are promoted
+
+    PromotionDealID 
+    Number assigned by a supplier to a special promotion activity. Promotions affect the forward planning/ordering process (and the related pricing)
+  -->
+  <xs:element name="ItemOutRetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PromotionVariantID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PromotionDealID" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Details about the packaging of this line item.
+
+    Zero or more PackagingCode elements may appear in the Packaging
+    element. Each PackagingCode must contain a single string corresponding
+    to the packaging for this item. When multiple PackagingCode elements
+    appear, all must describe the same packaging in different languages or
+    locales. (No two PackagingCode elements may have the same xml:lang
+    attribute.)  Elements in such a list may appear in any order.
+
+    The dimensions mentioned in the Dimension element list may appear in
+    any order. A particular dimension (Dimension@type attribute value)
+    must not appear more than once in a Packaging element.
+    
+    Description
+        The Package description.
+
+    PackagingLevelCode
+        Describes the level (inner, outer, intermediate) for packages.
+    
+    PackageTypeCodeIdentifierCode 
+        Unique ID of packaging material. This helps receiving side for unloading and storage.
+    
+    ShippingContainerSerialCode
+        Serial number of a package that helps to identify package during transportation and inventory.
+    
+    ShippingContainerSerialCodeReference
+        Reference from a package with shipping code to the shipping code of the next higher package level. It references the parent ShippingContainerSerialCode.
+    
+    PackageID
+        Package related IDs.
+    
+    ShippingMark
+        Information about packaging proposals and packaging hierarchy.
+    
+    OrderedQuantity
+        The quantity ordered in purchase order.
+    
+    DispatchQuantity
+        The dispatch quantity in package.
+    
+    FreeGoodsQuantity
+        Quantities delivered but not charged. 
+    
+    QuantityVarianceNote
+        Quantity Variance Note gives detailed information about partial delivery.
+    
+    BestBeforeDate
+        Gives the best before date for all goods related to food, drugs, chemicals and others.
+
+  -->
+  <xs:element name="Packaging">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:PackagingCode" />
+            <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Dimension" />
+          </xs:sequence>
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Dimension" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PackagingLevelCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PackageTypeCodeIdentifierCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShippingContainerSerialCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShippingContainerSerialCodeReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PackageID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ShippingMark" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:OrderedQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DispatchQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:FreeGoodsQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QuantityVarianceNote" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:BestBeforeDate" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    One language-specific code for the packaging of this item. Values such
+    as "pallet", "skid" and "truck load" may be appropriate (for an
+    English-based locale).
+
+    xml:lang
+        The language or locale in which the PackagingCode content (the
+        value of the code) is written.
+  -->
+  <xs:element name="PackagingCode">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A single dimension for the packaging. It also can be used to define item dimensions.
+    quantity
+        Size in this dimension. Expressed in the units given in the UnitOfMeasure element.
+    type
+        Type of dimension. Supported values include:
+        length - The length of the packaging or item.
+        width - The width of the packaging or item.
+        height - The height of the packaging or item.
+        weight - The weight  or net weight of the packaging or item.
+        volume - The volume or net volume of the packaging or item.
+        stackHeight -The stack height of packaging. This indicates total height of the stacked packages. 
+        grossWeight - The gross weight is the total weight including packaging.
+        grossVolume -The gross volume is the total volume including packaging. 
+        unitGrossWeight  - The unit gross weight of the item.
+        unitNetWeight  -The unit net weight of the item.
+  -->
+  <xs:element name="Dimension">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:UnitOfMeasure" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="length"/>
+            <xs:enumeration value="width"/>
+            <xs:enumeration value="height"/>
+            <xs:enumeration value="weight"/>
+            <xs:enumeration value="volume"/>
+            <xs:enumeration value="stackHeight"/>
+            <xs:enumeration value="grossWeight"/>
+            <xs:enumeration value="grossVolume"/>
+            <xs:enumeration value="unitGrossWeight"/>
+            <xs:enumeration value="unitNetWeight"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Describes the level (inner, outer, intermediate) for packages. It is used in logistics for loading and unloading information. This information qualifies the 
+    packing level within the packing hierarchy. -->
+  <xs:element name="PackagingLevelCode" type="xs:string" />
+  
+  <!-- This is a unique ID of packaging materials like box, container, pallet and rack. This helps receiving side for unloading and storage. This also defines the 
+  maximum load or weight of articles -->
+  <xs:element name="PackageTypeCodeIdentifierCode" type="xs:string" />
+  
+  <!--This identifies a package during transport and in inventory. Serial number of a packaging unit like container, box and rack -->
+  <xs:element name="ShippingContainerSerialCode" type="xs:string" />
+  
+  <!--
+  Reference from a package with shipping code to the shipping code of the next higher package level. It references the parent ShippingContainerSerialCode.
+  -->
+  <xs:element name="ShippingContainerSerialCodeReference" type="xs:string" />
+  
+  <!-- Unique ID for a package. GIAI, numbering scheme of GS1 specifying the ownership of an asset.-->
+  <xs:element name="GlobalIndividualAssetID" type="xs:string" />
+  
+  <!-- The ID that helps supplier with handling of any returned package.-->
+  <xs:element name="ReturnablePackageID" type="xs:string" />
+  
+  <!-- The information to track packages based on an internal numbering scheme of the supplier. -->
+  <xs:element name="PackageTrackingID" type="xs:string" />
+  
+  <!-- Packaging related IDs.-->
+  <xs:element name="PackageID">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:GlobalIndividualAssetID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReturnablePackageID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:PackageTrackingID" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- This contains codes for packaging proposals and packaging hierarchy. 
+  Also can contain marking for containers/packages that need special signing or handling (hazardous goods, explosives and maximum stack size)
+  -->
+  <xs:element name="ShippingMark" type="xs:string"/>
+  
+  <!--This is the ordered quantity from purchase order. -->
+  <xs:element name="OrderedQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- The dispatch quantity in package.-->
+  <xs:element name="DispatchQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--  Quantities delivered but not charged. These can be samples or promotions or just "fill up" articles. 
+  These will not be on the commercial invoice (or marked with value 0.00)  -->
+  <xs:element name="FreeGoodsQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:UnitOfMeasure" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Detailed information about partial delivery. Used for different measurements (1 lot = 500 pieces) -->
+  <xs:element name="QuantityVarianceNote" type="xs:string" />
+  
+  <!-- The best before date helps with in FDA-related deliveries for go/no-go criteria. 
+  This can be used to indicate best before date for all goods related to food, drugs, chemicals etc. -->
+  <xs:element name="BestBeforeDate">
+    <xs:complexType>
+      <xs:attribute name="date" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- The expiry date  can be used to indicate expiry date for all goods related to food, drugs, chemicals etc. -->
+  <xs:element name="ExpiryDate">
+    <xs:complexType>
+      <xs:attribute name="date" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    References a specific item and its relationship with a PO, Invoice and Ship Notice.
+    
+    quantity
+        The quantity included in the document. For example, in TransportRequest,
+        this is the quantity contained of this item in a package.
+    
+  -->
+  <xs:element name="ItemInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Classification"/>
+        <xs:sequence minOccurs="0" maxOccurs="1">
+          <xs:element ref="tns:ManufacturerPartID"/>
+          <xs:element ref="tns:ManufacturerName"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Country"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierBatchID"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo"/>
+        <xs:element ref="tns:UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of the quality information of a line item.
+
+    requiresQualityProcess
+        A value of yes indicates that this item requires quality process.
+    
+    IdReference
+        Use this element to send Quality Material Control Code and Inspection Certificate type information.
+            For Quality Material Control Code, domain is "controlCode".
+            For Inspection Certificate type, domain is "certificateType".
+ 
+    CertificateInfo
+        Use this element to send a certificate information, here you can declare a certificate as optional or mandatory.
+        Each element supports one certificate. 
+  -->
+  <xs:element name="QualityInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:CertificateInfo" />
+      </xs:choice>
+      <xs:attribute name="requiresQualityProcess">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Control whether the batch information is required or not for an item when Supplier
+    creates an order response.
+    requiresBatch
+        A value of 'yes' indicates that this item requires Batch number to be provided by 
+        the supplier in Batch element in ShipNoticeItem/ConfirmationStatus element of the corresponding 
+        ShipNoticeRequest/ConfirmationRequest documents.     
+  -->
+  <xs:element name="BatchInfo">
+    <xs:complexType>
+      <xs:attribute name="requiresBatch">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a certificate information.
+
+    isRequired
+        A value of yes indicates that this certificate is required.
+    
+    IdReference
+        Use this element to send Quality Material Control Code and Inspection Certificate type information.
+            For Quality Material Control Code, domain is "controlCode".
+            For Inspection Certificate type, domain is "certificateType". 
+  -->
+  <xs:element name="CertificateInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:IdReference" />
+      </xs:sequence>
+      <xs:attribute name="isRequired">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The ShipNoticeLineItemReference element provides a clear 
+    reference to the line item  in a prior ShipNoticeRequest document.
+
+    shipNoticeLineNumber
+        The line number of current line item, copied from ShipNoticeRequest. 
+  -->
+  <xs:element name="ShipNoticeLineItemReference">
+    <xs:complexType>
+      <xs:attribute name="shipNoticeLineNumber" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of the serial number information of a line item.
+    
+    requiresSerialNumber
+        A value of 'yes' indicates that this item requires serial number to be provided by the supplier in AssetInfo tags in ShipNoticeItem element of the corresponding Advanced Ship Notice.
+    type
+        Specifies the required serial number, these options are allowed:
+            list: A list of acceptable serial numbers.
+            range: A range of acceptable serial numbers, only valid for numeric ranges.
+            profile: A format of acceptable serial numbers.
+    SerialNumber
+        List of serial numbers, this is mandatory when SerialNumberInfo@type is 'list'.
+    PropertyValue
+        When SerialNumberInfo@type is 'range' a minimum and maximum acceptable
+        limits should be provided in PropertyValue element, in this case PropertyValue@name 
+        should be 'range' and PropertyValue@Characteristic should provide the minimum and maximum values in Characteristic@value attribute with 'minimum' and 'maximum' as domains in Characteristic@domain attribute.
+    
+        When SerialNumberInfo@type is 'profile' a serial number format should be
+        provided in PropertyValue element, in this case PropertyValue@name 
+        should be 'profile' and PropertyValue@Characteristic should provide the format.
+        Characteristic@domain supports 'type', 'minLength' and 'maxLength' as domains to provide these values in Characteristic@value attribute. 
+        When Characteristic@domain is 'type', Characteristic@value supports 'numeric', 'text' and 'numericAndText'
+        to provide the serial number format.
+        When Characteristic@domain is 'minLength', Characteristic@value provides the minimum acceptable length of the serial number.
+        When Characteristic@domain is 'maxLength', Characteristic@value provides the maximum acceptable length of the serial number.
+    
+  -->
+  <xs:element name="SerialNumberInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SerialNumber"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:PropertyValue"/>
+      </xs:sequence>
+      <xs:attribute name="requiresSerialNumber">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="list"/>
+            <xs:enumeration value="profile"/>
+            <xs:enumeration value="range"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines one or more serial numbers for accountable items that are
+    being invoiced.
+  -->
+  <xs:element name="SerialNumber" type="xs:string"/>
+</xs:schema>

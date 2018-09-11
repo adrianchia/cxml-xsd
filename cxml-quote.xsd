@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/schema/Modules/QuoteEntities.mod#3 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-item.xsd"/>
+  <xs:include schemaLocation="cxml-organizationID.xsd"/>
+  
+  <!--
+    The representation of a line item as it needs to be for sending to a
+    supplier.
+
+    quantity
+        How many items are desired. 
+    lineNumber
+        Position (counting from 1) of this item in a QuoteRequest. Used to
+        maintain a reference between items in create and update
+        documents.
+  parentLineNumber
+    Position (counting from 1) of this item's parent in a QuoteRequest. Used to
+        maintain a hierarchical reference between items in documents.
+    requestedDeliveryDate
+        The date this item was requested for delivery.
+    agreementItemNumber 
+        The corresponding Item Number of the Item in the Master Agreement if this is a 'release' order item.
+    itemClassification
+        The service item type. It could either be "material" or "service".
+  itemType
+    Represents if this item is a leaf item or a hierarchical parent item. Used to represent
+    service item hierarchy. It could either be "item" or "composite". 
+  serviceLineType
+    Represents the type of the service line. It could be "standard", "blanket", "contingency", "openquantity", or "information".
+  -->
+  <xs:element name="QuoteItemOut">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemID" />
+        <xs:element ref="ItemDetail" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SpendDetail" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Alternative" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierSelector" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="requestedDeliveryDate" type="xs:dateTime" />
+      <xs:attribute name="itemClassification" type="tns:serviceItemType"/>
+      <xs:attribute name="itemType" type="tns:lineItemType"/>
+      <xs:attribute name="serviceLineType" type="tns:serviceLineType"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of quote items associated with the header.
+  -->
+  <xs:element name="QuoteHeaderInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:LegalEntity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:OrganizationalUnit" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:PaymentTerms" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:FollowUpDocument" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:DocumentReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a line item in a quote.
+
+    type
+        supplier action type.
+    quantity
+        How many items are quoted. 
+    lineNumber
+        Position (counting from 1) of this item in a QuoteRequest. Used to maintain a reference between items in create and update documents. 
+  parentLineNumber
+    Position (counting from 1) of this item's parent in a QuoteRequest. Used to
+        maintain a hierarchical reference between items in documents.
+    requestedDeliveryDate
+        The date this item was requested for delivery.
+    rank 
+        The rank of the bid
+    itemClassification
+        The service item type. It could either be "material" or "service".
+  itemType
+    Represents if this item is a leaf item or a hierarchical parent item. Used to represent
+    service item hierarchy. It could either be "item" or "composite". 
+  serviceLineType
+    Represents the type of the service line, It could be "standard" or "blanket" or "contingency" or "openquantity" or "information"
+  -->
+  <xs:element name="QuoteItemIn">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ItemID" />
+        <xs:element ref="tns:ItemDetail" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SpendDetail" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Alternative" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="accept" />
+            <xs:enumeration value="reject" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="final" />
+            <xs:enumeration value="award" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="requestedDeliveryDate" type="xs:dateTime" />
+      <xs:attribute name="rank" type="xs:decimal" />
+      <xs:attribute name="itemClassification" type="tns:serviceItemType"/>
+      <xs:attribute name="itemType" type="tns:lineItemType"/>
+      <xs:attribute name="serviceLineType" type="tns:serviceLineType"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Header of an QuoteMessage. This is the quote data that is sent to the buyer. 
+    type
+        Supplier action type.
+    quoteID
+        Unique identifier for a quote. 
+    quoteDate
+        The date when the quote is submitted.
+-->
+  <xs:element name="QuoteMessageHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OrganizationID" />
+        <xs:element ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QuoteRequestReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QuoteHeaderInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="accept" />
+            <xs:enumeration value="reject" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="final" />
+            <xs:enumeration value="award" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="quoteID" type="xs:string" use="required" />
+      <xs:attribute name="quoteDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="currency" type="tns:isoCurrencyCode" use="required" />
+      <xs:attribute ref="xml:lang" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A hint to the way to follow up on a QuoteMessage response. The type and category could be set to anything. But, they should
+    be well known strings that can be understood by the ERP system. For example, the type could be set to "Contract" and the
+    category could be set to "WK". This would give a hint to the ERP system that the next step should be to create a WK Contract.
+    Furthermore, this element can also be specified in the header section. This allows the UI of Sourcing to be set appropriately.
+    type
+        Follow up type such as "Contract".
+    category
+        Follow up category such as "WK".
+  -->
+  <xs:element name="FollowUpDocument">
+    <xs:complexType>
+      <xs:attribute name="type" type="xs:string" />
+      <xs:attribute name="category" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="QuoteRequestReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference" />
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:decimal" use="required" />
+      <xs:attribute name="requestDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition for a quote. This is the data that is sent to the buyer.
+  -->
+  <xs:element name="QuoteMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QuoteMessageHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:QuoteItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- QuoteRequest* Elements -->
+  <!--
+      Definition of an request for quote. This is the data that is sent to the supplier
+      to have them submit a quote.
+  -->
+  <xs:element name="QuoteRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:QuoteRequestHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="QuoteItemOut" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Header of an QuoteRequest. This is the data that is sent to the supplier
+    to have them submit a quote. Total
+    represents the total amount of this QuoteRequest.
+
+    requestID
+        The buyer system id for this request. This is an internal
+        Buyer unique number.
+
+    requestDate
+        The date and time the QuoteRequest request was created.
+
+    type
+        The type of the QuoteRequest request. Defaults to "new".
+
+    openDate
+        The date when a QuoteRequest is open for supplier responses.
+    closeDate
+        The date when a QuoteRequest is closed for supplier responses.
+    previewDate
+        The date when a QuoteRequest is viewable by suppliers.
+
+    quoteReceivingPreference
+    Used by the buyer system to identify the preference for
+        receiving QuoteMessage back from the sourcing system.
+    Possible values are:
+        winningOnly - should result in only the winning supplier quotes being sent to the buyer.
+        finalBidsFromAll - should result in  quotes from suppliers being sent after event closes.
+        all - quotes are sent to the buyer system as soon as supplier submits the bid. It does not wait for event closing.     
+  -->
+  <xs:element name="QuoteRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Name" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:SupplierSelector" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:QuoteHeaderInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:string" use="required" />
+      <xs:attribute name="requestDate" type="xs:dateTime" use="required" />
+      <xs:attribute default="new" name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="openDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="closeDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="previewDate" type="xs:dateTime" />
+      <xs:attribute name="templateName" type="xs:string" />
+      <xs:attribute name="currency" type="tns:isoCurrencyCode" use="required" />
+      <xs:attribute ref="xml:lang" use="required" />
+      <xs:attribute name="quoteReceivingPreference">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="winningOnly" />
+            <xs:enumeration value="finalBidsFromAll" />
+            <xs:enumeration value="all" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SupplierSelector is used to define the way suppliers are selected for responding to
+    RFQ.
+    The field is optional. Administrator can configure the default matching type for a given category of commodity. Hence, If no value is provided here, the matching type will be picked up from administrator's configuration. If the value is provided here, then administrator configuration will be ignored. To know more talk to your administrator.
+
+    OrganizationID is used to select explicit suppliers to be invited for bidding
+
+    matchingType:invitationOnly means invite suppliers listed in OrganizationID element(s)
+    matchingType:approvedVendorOnly means any supplier from vendor-master can bid on RFQ. However,
+    the RFQ engine may narrow the suppliers that can bid based on factors such as commodity and territory match.
+    invitationOnly:public means any public supplier can bid on the RFQ. The supplier may already exist in vendor-master.
+    However, the RFQ engine may narrow the suppliers that can bid based on factors such as commodity and territory match.
+  -->
+  <xs:element name="SupplierSelector">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:SupplierInvitation" />
+      </xs:sequence>
+      <xs:attribute name="matchingType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="invitationOnly" />
+            <xs:enumeration value="approvedVendorOnly" />
+            <xs:enumeration value="public" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Supplier invitation represents explicit invitation for a supplier.
+  Supplier can have two different status in buyer system:
+     approved - Supplier exists in buyer system and is approved.
+     contracted - Supplier exists in buyer system and is contracted (and is also approved). Buyer system may give
+                  MasterAgreementIDInfo as well in that case.
+
+  Correspondent is used to supplier's contact information from ERP to network or sourcing system. If the supplier does not
+  already exists in the receiving system this information can be used to create the supplier and contact the supplier.
+
+  OrganizationID will have credential information that can uniquely identify the supplier in the ERP.
+  -->
+  <xs:element name="SupplierInvitation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:OrganizationID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Correspondent" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MasterAgreementIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute default="approved" name="supplierStatus">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="approved" />
+            <xs:enumeration value="contracted" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

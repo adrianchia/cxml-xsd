@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  For cXML license agreement information, please see
+  http://www.cxml.org/home/license.asp
+  
+  $Id: //ariba/cxml/modules/Common.mod#6 $
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-industry.xsd"/>
+  <xs:include schemaLocation="cxml-supplier.xsd"/>
+  <xs:include schemaLocation="cxml-item.xsd"/>
+  <xs:include schemaLocation="cxml-travel.xsd"/>
+  <xs:include schemaLocation="cxml-transaction.xsd"/>
+  <xs:include schemaLocation="cxml-monetary.xsd"/>
+  <xs:include schemaLocation="cxml-spending.xsd"/>
+  <xs:include schemaLocation="cxml-labor.xsd"/>
+  <xs:include schemaLocation="cxml-reference.xsd"/>
+  <xs:include schemaLocation="cxml-profile.xsd"/>
+  <xs:include schemaLocation="cxml-transport.xsd"/>
+  <xs:include schemaLocation="cxml-quote.xsd"/>
+  <xs:include schemaLocation="cxml-organizationID.xsd"/>
+  <xs:include schemaLocation="cxml-contract.xsd"/>
+  <xs:include schemaLocation="cxml-index.xsd"/>
+  <xs:include schemaLocation="cxml-pending.xsd"/>
+  <xs:include schemaLocation="cxml-subscription.xsd"/>
+  <xs:include schemaLocation="cxml-provider.xsd"/>
+  <xs:include schemaLocation="cxml-dataAvailable.xsd"/>
+  <xs:include schemaLocation="cxml-dataRequest.xsd"/>
+  <xs:include schemaLocation="cxml-catalogUpload.xsd"/>
+  <xs:include schemaLocation="cxml-payment.xsd"/>
+  <xs:include schemaLocation="cxml-organization.xsd"/>
+  <xs:include schemaLocation="cxml-organizationPrivate.xsd"/>
+  <xs:include schemaLocation="cxml-approval.xsd"/>
+  <xs:include schemaLocation="cxml-invoiceDetail.xsd"/>
+  <xs:include schemaLocation="cxml-typeDefinition.xsd"/>
+  <xs:include schemaLocation="cxml-logistics.xsd"/>
+  <xs:include schemaLocation="cxml-paymentRemittance.xsd"/>
+  <xs:include schemaLocation="cxml-trade.xsd"/>
+  <xs:include schemaLocation="cxml-fulfill.xsd"/>
+  <xs:include schemaLocation="cxml-timecard.xsd"/>
+  <xs:include schemaLocation="cxml-receipt.xsd"/>
+  <xs:include schemaLocation="cxml-salesOrder.xsd"/>
+  <xs:include schemaLocation="cxml-orderStatusData.xsd"/>
+  <xs:include schemaLocation="cxml-content.xsd"/>
+  <xs:include schemaLocation="cxml-private.xsd"/>
+  <xs:include schemaLocation="cxml-query.xsd"/>
+  <xs:include schemaLocation="cxml-mapsync.xsd"/>
+  <xs:include schemaLocation="cxml-l3Charge.xsd"/>
+  <xs:include schemaLocation="cxml-priceAvailability.xsd"/>
+</xs:schema>

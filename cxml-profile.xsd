@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Profile.mod#1 $
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema xmlns="http://cxml.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://cxml.org" xmlns:tns="http://cxml.org"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  
+  <!--
+    Request for the latest profile from the server. May also be used as
+    a 'ping' transaction (to check if the server is available).
+  -->
+  <xs:element name="ProfileRequest">
+    <xs:complexType />
+  </xs:element>
+  
+  <!--
+    Static profile response describing the transactions supported by this
+    server. The content should not change frequently.
+
+    effectiveDate
+        When these services were first available. Should not be in the
+    future since new clients may need to interact with a server.
+
+    lastRefresh
+        When service information was last received from the end server.
+
+    a-dtype
+        Datatype enumeration for the attributes of this element. May be
+    ignored by most XML parsers (used for documentation purposes).
+  -->
+  <xs:element name="ProfileResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Option"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Transaction"/>
+      </xs:sequence>
+      <xs:attribute name="effectiveDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="lastRefresh" type="xs:dateTime"/>
+      <xs:attribute name="a-dtype" type="xs:NMTOKENS" fixed="effectiveDate dateTime.tz&#xA;                             lastRefresh dateTime.tz"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Value for a defined option (either for the overall service or a
+    specific transaction. At this time, no options are defined at either
+    level.
+
+    name
+        The name of this option. Future versions of cXML will define
+    values for this attribute. This is not intended to be viewed
+    directly (the profile is intended mostly for machine consumption).
+
+    a-dtype
+        Datatype enumeration for the attributes of this element. May be
+    ignored by most XML parsers (used for documentation purposes).
+  -->
+  <xs:element name="Option">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="name" type="xs:string" use="required" />
+          <xs:attribute fixed="name string" name="a-dtype" type="xs:NMTOKENS" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A transaction supported by this server.
+
+    requestName
+        A specific request this server accepts at the given URL. The
+    %cxml.requests entity (defined in transport.mod) contains the
+    possible values for this attribute.
+
+    a-dtype
+        Datatype enumeration for the attributes of this element. May be
+    ignored by most XML parsers (used for documentation purposes).
+  -->
+  <xs:element name="Transaction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:URL"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="tns:Option"/>
+      </xs:sequence>
+      <xs:attribute name="requestName" type="xs:NMTOKEN" use="required"/>
+      <xs:attribute name="a-dtype" type="xs:NMTOKENS" fixed="requestName NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    AuthRequest
+
+    An AuthRequest is used when one party (the "receiver") receives
+    credentials from another party (the "principal") and the receiver
+    needs a trusted third party to validate the credentials.  The
+    receiver should enclose the credentials in an AuthRequest and send
+    them to the trusted third party for validation.
+
+    If the principal attempts to authenticate by revealing the shared
+    secret between itself and the trusted third party (not
+    recommended), the receiver should forward the credentials as they
+    were received, including the shared secret.
+
+    If the principal attempts to authenticate through a client
+    certificate (recommended), the receiver should forward the
+    credentials as well as an X509Data element containing an
+    X509IssuerSerial element describing the certificate used by the
+    principal (the receiver normally obtains this information from its
+    webserver or SSL/TLS implementation).
+
+    If the supplied credential is invalid, the trusted third party
+    should respond with an empty cXML response of status 403
+    (Forbidden).  If the supplied credential is valid, the trusted
+    third party should respond with an AuthResponse that contains the
+    valid credentials.
+  -->
+  <xs:element name="AuthRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="tns:Credential"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="tns:X509Data"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    X509Data
+
+    An X509Data element is constructed to describe an X.509 client
+    certificate being used for authentication.  This element (and its
+    children) are derived from the XML Digital Signature standard ().
+  -->
+  <xs:element name="X509Data">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="1" maxOccurs="unbounded">
+          <xs:element ref="tns:X509IssuerSerial"/>
+          <xs:element ref="tns:X509SKI"/>
+          <xs:element ref="tns:X509SubjectName"/>
+          <xs:element ref="tns:X509Certificate"/>
+        </xs:choice>
+        <xs:element ref="tns:X509CRL"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    X509IssuerSerial
+
+    This element is a container for the serial number and issuer name
+    of the X.509 certificate.
+  -->
+  <xs:element name="X509IssuerSerial">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="tns:X509IssuerName"/>
+        <xs:element ref="tns:X509SerialNumber"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    X509IssuerName
+
+    This element contains the distinguished name of the issuer of the
+    X.509 certificate.  The distinguished name should be a string 
+    representation of an LDAP Distinguished Name, as described in RFC 
+    2253.  For example,
+
+    C=US, O="John Doe Data Security, Inc.", OU=Secure Server
+    Certification Authority
+
+  -->
+  <xs:element name="X509IssuerName" type="xs:string"/>
+  
+  <!--
+    X509 SubjectName
+
+    This element contains the distinguished name of the subject of the
+    X.509 certificate.  This should be a string representation of an 
+    LDAP distinguished name, as described in RFC 2253.
+  -->
+  <xs:element name="X509SubjectName" type="xs:string"/>
+  
+  <!--
+    X509SerialNumber
+
+    This element contains the serial number of the X.509 certificate.
+  -->
+  <xs:element name="X509SerialNumber" type="xs:string"/>
+  
+  <!--
+    X509SKI
+
+    This element contains the Subject Key Identifier of the X.509
+    certificate.
+   -->
+  <xs:element name="X509SKI" type="xs:string"/>
+  
+  <!--
+    X509Certificate
+
+    This element contains a Base 64-encoded X.509v3 certificate.
+  -->
+  <xs:element name="X509Certificate" type="xs:string"/>
+  
+  <!--
+    X509CRL
+
+    This element contains a Base 64-encoded X.509v3 Certificate
+    Revocation List.
+  -->
+  <xs:element name="X509CRL" type="xs:string"/>
+  
+  <!--
+    AuthResponse
+
+    This response returns a list of valid credentials of the person
+    entity in the AuthRequest.  An AuthResponse is returned only for a
+    successful authentication; for failed authentications, an empty
+    response with status 403 (Forbidden) will be returned.
+
+    expirationDate
+        Specifies the time beyond which the information contained in
+        the AuthResponse must be discarded.  In other words, the
+        inclusion of the expirationDate attribute specifies that the
+        receiver of the AuthResponse may cache the information therein
+        until the expirationDate.
+
+        The absence of an expirationDate should be interpreted to
+        forbid caching.
+  -->
+  <xs:element name="AuthResponse">
+    <xs:complexType>
+      <xs:sequence minOccurs="1" maxOccurs="unbounded">
+        <xs:element ref="tns:Credential" />
+      </xs:sequence>
+      <xs:attribute name="expirationDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>  
