@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Query.mod#1 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-typeDefinition.xsd"/>
+  
+    <!-- 
+    ==================================================
+     Request - Search Request
+    ================================================== 
+  -->
+
+  <!-- 
+    Terminal operation elements are used to specify leaf-level query
+    actually to do with the fields.
+  -->
+  <xs:element name="terminalOp" abstract="true"/>
+  
+  <!-- 
+    Non-terminal, or boolean, operation elements are used to combine
+    child operation elements to build an expression tree for the
+    SearchConditions element
+  -->
+  <xs:element name="boolOp" abstract="true"/>
+  
+  <!-- SearchRequest* Elements -->
+  <!--
+    Request to search for catalog items or types. This request
+    defines what to search for, and the query condition of the
+    search. It is sent to the ACSN catalog server, which performs a
+    search and returns the items satisfying the query conditions.
+
+    The TypeIdentiifer element is used to indicate what to search for,
+    it may be:
+
+    Ariba:CatalogItem
+        This includes all the catalog items, both normal catalog items
+        and items with parametric data.
+
+    Type
+        This indicates that the search should return type definitions.
+
+    <Parametric Type Identifier>
+        Only the items that belong to this parametric type will be
+        searched.
+
+  -->
+  <xs:element name="SearchRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TypeIdentifier" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SearchField" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SearchConditions" />
+        <xs:element ref="SearchOptions" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    TypeIdentifier is used to identify a Type. The name attribute
+    for this Element should be set to a fully qualified Type,
+    e.g. "TypeProvider:TypeName". SearchRequest is currently the
+      only transaction using this element; if we reintroduce a
+    TypeRequest/TypeResponse transaction, we should move this
+    definition into Type.mod (currently public)
+  -->
+  <xs:element name="TypeIdentifier">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Field(s) to return. This element indicates to the catalog server
+    what fields to return. One search request may contain multiple
+    search fields, in which case all the requested fields will be
+    returned for each item. Note that for performance reasons, the
+    catalog server may return more fields than those requested.
+
+    Each search field corresponds to one field/search term/attribute
+    on the type being searched. It may be in dotted notation. For
+    example, we can have:
+
+         <SearchField>UnitOfMeasure.Domain</SearchField>
+  -->
+  <xs:element name="SearchField" type="xs:string" />
+  
+  <!--
+    Query conditions of the search. Search results will satisfy these
+    conditions. The conditions must not be empty, it must be specified
+    in one of following three forms:
+
+    FreeText only
+        Only valid when searching for catalog items. Items with the
+        freetext terms in any of its refineable fields will be
+        returned. The results will come back in order of relevance.
+
+    Boolean condition tree only
+        Items that match the conditions specified by the query
+        condition tree will be returned. The Relevance element in the
+        results will be undefined
+
+    FreeText and Boolean condition
+
+        Only valid when searching for catalog items. Search will
+        return items satisfying the query condition tree, as well as
+        containing the free text terms. Results will be in order of
+        relevance
+  -->
+  <xs:element name="SearchConditions">
+    <xs:complexType>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="FreeText" />
+          <xs:choice minOccurs="0" maxOccurs="1">
+            <xs:element ref="terminalOp" />
+            <xs:element ref="boolOp" />
+          </xs:choice>
+        </xs:sequence>
+       <xs:choice>
+         <xs:element ref="terminalOp" />
+         <xs:element ref="boolOp" />
+       </xs:choice>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Freetext terms for the search. Multiple terms may be specified,
+    in which case they are separated by spaces. Results matching one
+    or more of the terms will be returned. Results that match the
+    most terms will have the highest relevance.
+  -->
+  <xs:element name="FreeText" type="xs:string" />
+  
+  <xs:element name="Field" type="xs:string" />
+  <xs:element name="Literal" type="xs:string" />
+  
+  <!--
+    IsEqual evaluates to true when the value of the field is equal to
+    the literal. The field may be one of the the following scalar
+    types:
+
+       - integer
+       - string
+       - literal
+       - double
+       - date
+       - boolean
+       - money
+
+    IsNotEqual is equivalent to the inverse of IsEqual.
+
+    These elements have SQL like semantics insofar as they cannot
+    be used to test for the presence or absence of NULL. IsNull
+    and IsNotNull must be used for this test.
+  -->
+  <xs:element name="IsEqual" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IsNotEqual" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    IsGreaterThan evaluates to true when the value of the field is
+    greater than that of the literal. 
+
+    IsGreaterOrEq evaluates to true when the value of the field is
+    greater than or equal to that of the literal. 
+
+    IsLessThan evaluates to true when the value of the field is less
+    than that of the literal.
+
+    IsLessOrEq evaluates to true when the value of the field is less
+    than or equal to that of the literal.
+
+    The field may be one of the the following scalar types:
+
+       - integer
+       - double
+       - date
+       - money
+
+    These elements have SQL like semantics insofar as they cannot
+    be used to test for the presence or absence of NULL. IsNull
+    and IsNotNull must be used for this test.
+  -->
+  <xs:element name="IsGreaterThan" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IsLessThan" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IsGreaterOrEq" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IsLessOrEq" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element ref="Literal" />
+          <xs:element ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    IsIn evaluates to true when the field is equal to one of the
+    literal values. The field may be one of the the following scalar
+    types:
+
+       - integer
+       - string
+       - literal
+       - double
+       - date
+       - money
+
+    The meaning of the operation is undefined if the list is empty.
+    Also, this element has SQL like semantics insofar as NULL may not be
+    a member of the IN list.
+  -->
+  <xs:element name="IsIn" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+        <xs:choice>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="Literal" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="Money" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    IsNull evaluates to true when the field has a null value. The
+    field may be one of the the following scalar types:
+
+       - integer
+       - string
+       - literal
+       - double
+       - date
+       - boolean
+       - money
+
+    IsNotNull is equivalent to the inverse of IsNull.
+  -->
+  <xs:element name="IsNull" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="IsNotNull" substitutionGroup="terminalOp">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Field" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     AndCondition evaluates to true if all of the children operations
+     evaluates to true.
+  -->
+  <xs:element name="AndCondition" substitutionGroup="boolOp">
+    <xs:complexType>
+      <xs:choice minOccurs="1" maxOccurs="unbounded">
+        <xs:element ref="terminalOp" />
+        <xs:element ref="boolOp" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     OrCondition evaluates to true if at least one of the children
+     operations evaluates to true.
+  -->
+  <xs:element name="OrCondition" substitutionGroup="boolOp">
+    <xs:complexType>
+      <xs:choice minOccurs="1" maxOccurs="unbounded">
+        <xs:element ref="terminalOp" />
+        <xs:element ref="boolOp" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     NotCondition evaluates to true if the child operation evaluates
+     to true; and vice versa.
+  -->
+  <xs:element name="NotCondition" substitutionGroup="boolOp">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="terminalOp" />
+        <xs:element ref="boolOp" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- SearchOptions element -->
+  <!-- 
+    This element specifies options that control the behaviour of the
+    search. Some options can be used to control the result set: for
+    example, they effect the number of results to return, what results
+    to return, the order of results to return etc. Some options effect
+    other parts of the search response.
+
+    batchSize
+        A query produces a certain number of rows in a result set, yet
+        not all rows need necessarily be returned to the client in a 
+        single "SearchResponse."  The batchSize is an integer indicating
+        the maximum number of rows to return to the client for this 
+        interaction. To retrieve more results after this, issue the 
+        same query again and use the "firstRowNum" option.
+
+    distinct
+        A Distinct Search returns results that have exactly one value
+        for a particular field. For example, a distinct search with
+        field SupplierId will return results in such a way that the
+        same SupplierId will appear at most once in the result set.
+
+        Generalized Distinct Search generalizes the concept so that
+        multiple number of results with the same SupplierId will be
+        returned. However, it is still the case that not all the
+        results are returned. Generalized Distinct Search is enabled
+        when the distinctSize option has a value greater than 1.
+
+        If the distinct option value is not an empty string, the
+        search becomes a distinct or generalized distinct search
+        (depending on the value of the "distinctSize" option). This
+        value is the name of the field that should be distinct in the
+        search results.
+
+    distinctSize
+        This option specifies the total number of results that should
+        be returned for a distinct search. For example, if the value
+        is 20, this means at least 20 generalized distinct results
+        will come back. The number will go over 20 only when the total
+        number of distinct groups is more than 20, in which case one
+        result for each group is returned. In the case when the value
+        is 1, exactly one result is returned for each distinct
+        group. This option is ignored unless distinct search is
+        turned on with the Distinct option.
+
+    firstRowNum
+        This option specifies the nth row to be the first returned
+        result. For example, if the value is 20, and "MaxRowsToReturn
+        is 30", this means result #20 to #49 are to be returned. This
+        achieves the effects of "next set of results" when client
+        issues the same query with a non-zero FirstRowNum. The default
+        value is 0 (result #0).
+
+    isSourcing
+        This Boolean option specifies the scope of the search. When it
+        is false, the search only searches the catalogs the client
+        normally accesses for procurement purposes. For example, an
+        procurement client would only search the catalogs that the 
+        procurement subscribes to. When this value is true, the search 
+        searches across all public catalogs on the catalog server for the
+        purpose of "sourcing" - locating the supplier that provides
+        the best deals on the item being searched. This search option
+        is currently not implemented.
+ 
+    maxRowsToReturn
+        This option specifies the maximum number of results that the
+        catalog server should attempt to fetch for the search. This
+        option is different from the batchSize option. The batchSize
+        option controls the number of rows returned in the response, 
+        allowing additional rows resulting from the same query to be 
+        fetched by adjusting "firstRowNum". "maxRowsToReturn" limits 
+        the total number of rows that will be considered regardless of
+        how many "batches" the client divides the result into. So, if 
+        "maxRowsToReturn" is set to N, "firstRowNum" cannot fetch any
+        results beyond result N. In addition, "batchSize" too cannot
+        fetch any results beyond N.
+
+    orderBy
+        This option specifies the field that the results should be
+        sorted on. The sorting is performed on all the search
+        results, regardless of batchSize. For example, if you have
+        500 rows that match your query, and you specify then the first
+        10 you fetch will be the first 10 over all 500 rows, no matter
+        what you specify the batchSize to be. This option only works
+        on fields of the following scalar types:
+
+            - integer
+            - double
+            - date
+            - money
+
+    showInfo
+        This is a boolean flag, when true, this turns on the Info
+        elements in the response. The Info elements may be used by
+        the client for debugging purposes.
+
+        By Default the value is false.
+
+    version
+        This indicates the client version generating the cXML. The
+        Catalog Server is capable of "backward compatibility", in that
+        a new catalog server can take requests from the new as well as
+        the old client. An old catalog server cannot take a request
+        from a new client: this probably won't happen in production,
+        but it can happen during development
+
+   -->
+  <xs:element name="SearchOptions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="batchSize" type="xs:unsignedInt" />
+      <xs:attribute name="distinct" type="xs:string" />
+      <xs:attribute name="distinctSize" type="xs:unsignedInt" />
+      <xs:attribute name="firstRowNum" type="xs:unsignedInt" />
+      <xs:attribute name="isSourcing">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="maxRowsToReturn" type="xs:unsignedInt" />
+      <xs:attribute name="orderBy" type="xs:string" />
+      <xs:attribute name="showInfo">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="version" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- SearchResponse* Elements -->
+  <!-- 
+    Response contains the search results if the search was successful,
+    or error status if not. Note that when the Response is okay, most
+    elements in the response don't have any attribute. The reason for
+    this design is to performance: element-only parser tends to run a
+    lot faster.
+
+    The Comments element serves informational purposes. For example,
+    the catalog server may return performance statistics, debugging
+    information etc in this element. These info messages only get
+    returned when the search option ShowInfo has a 'true' value in the
+    SearchRequest.
+
+    The Status element inside the SearchResponse is used to indicate
+    line-specific errors / warnings. This allows for the return of
+    partial results.
+
+    Note that this is the only element in a SearchResponse that can
+    potentially contain attribute. The rationale behind this: if
+    there were ever an error / warning, it's acceptable to switch to a
+    slower parser to deal with it.
+  -->
+  <xs:element name="SearchResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="NumReturnedResults" />
+        <xs:element ref="NumTotalResults" />
+        <xs:element ref="TypeIdentifier" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SearchField" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Status" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:sequence>
+            <xs:element ref="Type" />
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element ref="Type" />
+              <xs:element ref="Status" />
+            </xs:choice>
+          </xs:sequence>
+          <xs:sequence>
+            <xs:element ref="CatalogItem" />
+            <xs:element ref="Relevance" />
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:sequence>
+                <xs:element ref="CatalogItem" />
+                <xs:element ref="Relevance" />
+              </xs:sequence>
+              <xs:element ref="Status" />
+            </xs:choice>
+          </xs:sequence>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The number of results returned in this response. This number is
+    limited by the batchSize option in the request.
+  -->
+  <xs:element name="NumReturnedResults" type="xs:integer"/>
+  
+  <!--
+    The number of total possible results for the search. This number
+    is always greater than or equal to NumReturnedResults. This
+    number is limited by the MaxRowsToReturn option in the request.
+
+    The "firstRowNum" and "batchSize" options may be combined to fetch
+    more search results for the same query, with this as the upper
+    limit.
+  -->
+  <xs:element name="NumTotalResults"  type="xs:integer"/>
+  
+  <!--
+    The relevance of the preceding CatalogItem with respect to the
+    query. This is a positive integer. This value is meaningful only
+    when a FreeText condition was specified in the SearchConditions of
+    the SearchRequest.
+  -->
+  <xs:element name="Relevance" type="xs:string"/>
+  
+  <!-- 
+    Display/Presentation cXML
+
+    The CatalogItem element here is specified as "ANY" because it is
+    the "Display cXML" which format has not been finalized. The idea
+    is to represent a catalog item in an efficient way, which means:
+
+    - no element contains any attribute
+    - element tags are short (1 - 4 characters) for commonly-used
+      fields
+
+  -->
+  <xs:element name="CatalogItem">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

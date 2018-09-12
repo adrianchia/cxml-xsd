@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/MapSync.mod#1 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!-- 
+    ==================================================
+     MapSyncRequest - Map synchronization request
+    ================================================== 
+  -->
+  <xs:element name="MapSyncRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="MapType" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubOrganizationID" />
+        <xs:choice>
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="ListItem" />
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="MapItem" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Currently implemented map types are:  
+        Currency, ProductCode, SubOrgSupplier and UnitOfMeasure
+  -->
+  <xs:element name="MapType" type="xs:string" />
+  
+  <xs:element name="SubOrganizationID">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    MapItem is used to define an item that performs a map function (such as
+    a Commodity Code of UNSPSC to a canonical form). In this model you have
+    the item[s] your mapping from (Source) to the item[s] your mapping too. 
+  -->
+  <xs:element name="MapItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Source" />
+        <xs:element ref="Target" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Source">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ListItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Target">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ListItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Either we want to sync supplier info and optionally extra data, or you must
+    have a bunch of mapfields.
+  -->
+  <xs:element name="ListItem">
+    <xs:complexType>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="MapField" />
+        </xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="MapField" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="MapField">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="name" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

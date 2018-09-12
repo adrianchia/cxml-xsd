@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Organization.mod#1 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-organizationID.xsd"/>
+  <xs:include schemaLocation="cxml-payment.xsd"/>
+  <xs:include schemaLocation="cxml-organizationPrivate.xsd"/>
+  
+  <!--
+     Organization
+  -->
+  <xs:element name="Organization">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Credential" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OrganizationRole" />
+        <xs:element ref="Address" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="CorporateInformation" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxInformation" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="RelationshipInformation" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Person" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Industry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Commodity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Territory" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentInformation" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    OrganizationDataRequest - Get data about an organization (or multiple
+    organizations).
+
+    The OrganizationID wrapper is used to distinguish between requests
+    about multiple organizations and requests including alias Credentials
+    for the same organization.
+  ==== -->
+  <xs:element name="OrganizationDataRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="OrganizationID"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    OrganizationDataResponse
+
+    Extrinsic elements will be used to pass data about an Org that is not
+    already represented by the Organization element.
+  -->
+  <xs:element name="OrganizationDataResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Organization"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Used to push organization information to another system.
+  -->
+  <xs:element name="OrganizationChangeMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Organization" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="CorporateInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="AnnualRevenue" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="StateOfIncorporation" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OwnershipType" />
+      </xs:sequence>
+      <xs:attribute name="yearFounded" type="xs:unsignedInt"/>
+      <xs:attribute name="numberOfEmployees" type="xs:unsignedInt"/>
+      <xs:attribute name="organizationType" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="StateOfIncorporation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="State" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="AnnualRevenue">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    name can be either minorityOwned, womanOwned, veteranOwned, disabledVeteranOwned,
+    vietnamVeteranOwned for US companies.
+    The list is not enumerated since it can be different for different countries.
+  -->
+  <xs:element name="OwnershipType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        TaxInformation
+
+        Used to list the associated tax information that for example can be
+        used for 1099 purposes.
+  --> 
+  <xs:element name="TaxInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="LegalName" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxID" />
+      </xs:sequence>
+      <xs:attribute name="isExemptFromBackupWithholding">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        Owner of ssn or tin
+  -->
+  <xs:element name="LegalName">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        This contains the actual tin or ssn number. Domain specifies
+        whether it is us social security number or us tax identification
+        number.
+  -->
+  <xs:element name="TaxID">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:NMTOKEN">
+          <xs:attribute name="domain" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="usSSN"/>
+                <xs:enumeration value="usTIN"/>
+                <xs:enumeration value="stateTIN"/>
+                <xs:enumeration value="regionalTIN"/>
+                <xs:enumeration value="vatID"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        This section contains anything that is specific between the
+        requester and requestee
+  --> 
+  <xs:element name="RelationshipInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentRelationshipInformation" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+       This section contains payment information between requester and 
+       requestee. 
+  --> 
+  <xs:element name="PaymentRelationshipInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentProviderInformation"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+       This section contains information about the payment provider who is 
+       going to execute payment between the requester and the requestee. 
+       It has the id of the payment provider payment service as well as 
+       the payment methods that the payment provider supports. 
+  -->
+  <xs:element name="PaymentProviderInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentMethod"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="paymentProviderID" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Person associates a particular individual with the (many) roles they may
+    play on behalf of an organization.
+
+    Note: The Contact element in this context would not include a role
+    attribute since this does not describe a person acting in any particular
+    fashion.
+  -->
+  <xs:element name="Person">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PersonRole" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    PersonRole
+
+    Used to list the possible values the Contact@role attribute may take
+    when the associated Contact appears in a cXML Request (such as
+    ProviderSetupRequest).
+  -->
+  <xs:element name="PersonRole">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:NMTOKEN" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Industry">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Classification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Commodity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Classification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Territory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Classification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="PaymentInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentMethodRemittanceInformation"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="PaymentMethodRemittanceInformation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentMethod" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentMethodPartner"/>
+      </xs:sequence>
+      <xs:attribute name="isDefault">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="preferredPaymentMethod" type="cxml.paymentMethod" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This new tag helps to include the financial information of an organization into the 
+        PaymentMethodRemittance tag.
+    Also, for IdReference tag, we add a new domain receivingCorrspondent. This new role 
+        behaves as the payee for receiving correspondent bank. We need this new role because 
+        in the wire transfer case, the receiving party could have up to two banks: beneficiary 
+        and corresponding banks. Hence, payee role is needed to contain the information about 
+        beneficiary bank account and receivingBank role is needed to contain the information 
+        about the beneficiary bank. Similarly, for the receiving correspondent bank, we have the 
+        roles receivingCorresondent and receivingCorrespondentBank
+  -->
+  <xs:element name="PaymentMethodPartner">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PaymentMethod" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentPartner"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

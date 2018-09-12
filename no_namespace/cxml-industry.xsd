@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- For cXML license agreement information, please see http://www.cxml.org/home/license.asp 
+  $Id: //ariba/cxml/schema/Modules/Industry.mod#1$ -->
+<!-- ==== Allow this module to be built separately from any other DTD file. 
+  ==== -->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+
+  <!-- Characteristic contains detailed information about an item that can 
+    be used across different industries. Can also be used to send material characteristics 
+    to support configurable material process. Domain - Type of Characteristic 
+    Examples: size, sizeCode, color, colorCode , quality, qualityCode, grade, 
+    gradeCode Value - Value for the domain. code - For information such as currency 
+    code and unit of measure -->
+  <xs:element name="Characteristic">
+    <xs:complexType>
+      <xs:attribute name="domain" type="xs:string" use="required" />
+      <xs:attribute name="value" type="xs:string" use="required" />
+      <xs:attribute name="code" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Usage of EANID is deprecated! Use IdReference and proper domain within 
+    ItemID instead. Number assigned to a manufacturer's product according to 
+    the International Article Numbering Association or UPC(Universal Product 
+    Code) for an article. -->
+  <xs:element name="EANID" type="xs:string" />
+
+  <!-- European Waste Catalogue is a unique ID for articles listed in the 
+    EU Waste Catalogue (EWC). It requires special handling -->
+  <xs:element name="EuropeanWasteCatalogID" type="xs:string" />
+
+  <!-- Number assigned by a supplier to a special promotion activity. Promotions 
+    affect the forward planning/ordering process (and the related pricing) -->
+  <xs:element name="PromotionDealID" type="xs:string" />
+
+  <!-- The item number is a promotional variant number. Used when only one 
+    or some variants of an article are promoted -->
+  <xs:element name="PromotionVariantID" type="xs:string" />
+
+  <!-- Total retail value of all products -->
+  <xs:element name="TotalRetailAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Information price, excluding allowances or charges, and taxes. The 
+    price stated is for information purposes only -->
+  <xs:element name="InformationalAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Gross monetary amount paid or to be paid at intervals -->
+  <xs:element name="GrossProgressPaymentAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Deposit amount charged for returnable items (boxes, containers, pallets…) -->
+  <xs:element name="TotalReturnableItemsDepositAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Total amount of goods and services excluding deposits for returnable 
+    goods -->
+  <xs:element name="GoodsAndServiceAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Specific exact amount -->
+  <xs:element name="ExactAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Groups all the additional amounts -->
+  <xs:element name="AdditionalAmounts">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="TotalRetailAmount" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="InformationalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="GrossProgressPaymentAmount" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="TotalReturnableItemsDepositAmount" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="GoodsAndServiceAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ExactAmount" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--Price value per unit (gross price) -->
+  <xs:element name="UnitGrossPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="PriceBasisQuantity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--Information price, excluding allowances or charges, and taxes. The 
+    price stated is for information purposes only -->
+  <xs:element name="InformationalPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="PriceBasisQuantity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Information price, excluding only taxes. The price stated is for information 
+    purposes only -->
+  <xs:element name="InformationalPriceExclTax">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="PriceBasisQuantity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- the Net value of a single unit that has to be corrected (new price). -->
+  <xs:element name="UnitNetPriceCorrection">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="PriceBasisQuantity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines all the item related additional prices -->
+  <xs:element name="AdditionalPrices">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="UnitGrossPrice" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="InformationalPrice" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="InformationalPriceExclTax" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="UnitNetPriceCorrection" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines product/item related indicators domain Specifies the type 
+    of the Indicator. Suggested values are: InvoiceUnitIndicator - Indicator 
+    specifies the unit as basis for invoicing ("price per unit") ConsumerUnitIndicator 
+    - Indicator will be set if the specified unit is used from the consumer/consumption 
+    process (for instance "gallons" or "liters") ReturnableContainerIndicator 
+    - Indicator will be set if the packaging/container shall be returned to the 
+    sender and will be re-used. TradeUnitIndicator - Indicator will be set if 
+    the specified unit is used to describe the trading unit (for instance "barrel" 
+    for oil) DutyIndicator - specifies that the current line item has a special 
+    fee CommisionIndicator - Marks the actual position/line item has a provision 
+    value Value of the Indicator -->
+  <xs:element name="ItemIndicator">
+    <xs:complexType>
+      <xs:attribute name="domain" type="xs:string" use="required" />
+      <xs:attribute name="value" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

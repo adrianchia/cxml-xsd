@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Subscription.mod#1 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-index.xsd"/>
+  <xs:include schemaLocation="cxml-contract.xsd"/>
+  
+  <!--
+    Indicates that something changed in a buyer's content subscription.
+    Since this is a Message, it can come at any time - no explicit Request
+    needs to be sent first.
+  -->
+  <xs:element name="SubscriptionChangeMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Subscription" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A content subscription.
+  -->
+  <xs:element name="Subscription">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="InternalID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubscriptionVersion" />
+        <xs:element ref="Name" />
+        <xs:element ref="Changetime" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Format" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Changetime" type="xs:dateTime" />
+  
+  <xs:element name="Format">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="version" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Requests a complete list of catalog subscriptions for a buyer.
+  -->
+  <xs:element name="SubscriptionListRequest">
+    <xs:complexType />
+  </xs:element>
+  
+  <!--
+    The list of Subscriptions for the given buyer.
+  -->
+  <xs:element name="SubscriptionListResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Subscription"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Requests the contents of a catalog that the buyer is subscribed to.
+  -->
+  <xs:element name="SubscriptionContentRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="InternalID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubscriptionVersion"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The data associated with a particular subscription.
+  -->
+  <xs:element name="SubscriptionContentResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Subscription"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SubscriptionContent"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The actual content associated with a particular subscription.
+
+    Use of the Contract element is deprecated.
+  -->
+  <xs:element name="SubscriptionContent">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="CIFContent"/>
+        <xs:element ref="Index"/>
+        <xs:element ref="Contract"/>
+      </xs:choice>
+      <xs:attribute name="filename" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contents of CIF file in base64 encoding.
+  -->
+  <xs:element name="CIFContent" type="xs:base64Binary"/>
+  
+  <!--
+    Indicates that something has changed in the supplier data for
+    a supplier the buyer has a relationship with. Since this is a message, no
+    Request needs to be sent to receive this Message.
+  -->
+  <xs:element name="SupplierChangeMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Supplier" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Requests for a complete list of suppliers the buyer currently has
+    relationships with.
+  -->
+  <xs:element name="SupplierListRequest">
+    <xs:complexType/>
+  </xs:element>
+  
+  <!--
+    The list of suppliers requested by SupplierListRequest.
+  -->
+  <xs:element name="SupplierListResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Supplier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Requests for a data associated with a particular supplier identified by
+    SupplierID.
+  -->
+  <xs:element name="SupplierDataRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The data associated with the desired supplier.
+  -->
+  <xs:element name="SupplierDataResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Supplier"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Reference to the Subscription Version. To be used with InternalID of a catalog.
+  vesionNumber
+    To uniquely identify a catalog with the given InternalID and versionNumber.
+  -->
+  <xs:element name="SubscriptionVersion">
+    <xs:complexType>
+      <xs:attribute name="versionNumber" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Catalog subscription status from buyer.
+  -->
+  <xs:element name="SubscriptionStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+      </xs:sequence>
+      <xs:attribute name="status" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="received"/>
+            <xs:enumeration value="validation_error"/>
+            <xs:enumeration value="validated"/>
+            <xs:enumeration value="approved"/>
+            <xs:enumeration value="rejected"/>
+            <xs:enumeration value="activated"/>
+            <xs:enumeration value="deactivated"/>
+            <xs:enumeration value="deleted"/>
+            <xs:enumeration value="changed"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SubscriptionStatusUpdateRequest
+    A request to update the subscription status of a Catalog. 
+
+    InternalID
+       ID of the catalog.
+
+    SubscriptionStatus
+       Element representing the status updates to the catalog.
+  -->
+  <xs:element name="SubscriptionStatusUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="InternalID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubscriptionVersion" />
+        <xs:element ref="SubscriptionStatus"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

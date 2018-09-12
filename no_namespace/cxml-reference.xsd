@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Reference.mod#2 $
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  
+  <!--
+    The OrderReference element provides a clear reference to a prior
+    OrderRequest document. While the contained DocumentReference provides
+    an unambiguous reference, the additional attributes of the
+    OrderReference may allow the ConfirmationRequest and ShipNoticeRequest
+    to be viewed independently.
+
+    orderID
+        The buyer system orderID for this request. Basically, what the PO
+        number is today. If present, must be copied directly from the
+        referenced OrderRequest document's OrderRequestHeader.
+    orderDate
+        The date and time the order request was created. If present, must
+        be copied directly from the referenced OrderRequest document's
+        OrderRequestHeader.
+  -->
+  <xs:element name="OrderReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="orderID" type="xs:string"/>
+      <xs:attribute name="orderDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of an order known to the buyer system.
+
+    orderID
+        The id of an order known to the buyer system. Basically,
+        what the PO number is today.
+
+    orderDate
+        The date and time the order was created.
+  -->
+  <xs:element name="OrderIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference"/>
+      </xs:sequence>
+      <xs:attribute name="orderID" type="xs:string" use="required"/>
+      <xs:attribute name="orderDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information related to an order.
+
+        OrderReference
+        The reference to the order being paid.
+
+        OrderIDInfo
+        The buyer system order id of the order.
+  -->
+  <xs:element name="OrderInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="OrderReference"/>
+        <xs:element ref="OrderIDInfo"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The InvoiceReference element provides a clear reference to a prior
+    InvoiceDetailRequest document.
+
+    invoiceID
+        The supplier system invoiceID for this request. Basically, what
+        the Invoice number is today. If present, must be copied
+        directly from the referenced InvoiceDetailRequest document's
+        InvoiceDetailRequestHeader.
+
+    invoiceDate
+        The invoice date.
+  -->
+  <xs:element name="InvoiceReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="invoiceID" type="xs:string"/>
+      <xs:attribute name="invoiceDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of an invoice known to the supplier system.
+
+    invoiceID
+        The id of an invoice known to the supplier system.
+
+    invoiceDate
+        The invoice date.
+  -->
+  <xs:element name="InvoiceIDInfo">
+    <xs:complexType>
+      <xs:attribute name="invoiceID" type="xs:string" use="required"/>
+      <xs:attribute name="invoiceDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a PaymentProposalRequest known to the supplier and buyer system.
+
+    paymentProposalID
+        The id of a PaymentProposalRequest known to the buyer and supplier system.
+  -->
+  <xs:element name="PaymentProposalIDInfo">
+    <xs:complexType>
+      <xs:attribute name="paymentProposalID" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a master agreement known to the buyer system.
+    In InvoiceDetailRequest, this element identifies the master agreement
+    of the release order to be invoiced.
+
+
+    IdReference
+         Additional reference ID for MasterAgreement.
+
+    agreementID
+        The id of a master agreement known to the buyer system. Basically,
+        what the master agreement number is today.
+
+    agreementDate
+        The date and time the master agreement request was created.
+
+    agreementType
+        The type of the master agreement being referenced, for example: Scheduling Agreement
+
+  -->
+  <xs:element name="MasterAgreementIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+      <xs:attribute name="agreementID" type="xs:string" use="required" />
+      <xs:attribute name="agreementDate" type="xs:dateTime" />
+      <xs:attribute name="agreementType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="scheduling_agreement" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a reference to an earlier MasterAgreementRequest document.
+    In InvoiceDetailRequest, this element identifies the master agreement
+    of the release order to be invoiced.
+
+    DocumentReference
+        The reference to an earlier MasterAgreementRequest document.
+
+    agreementID
+        The id of a master agreement known to the buyer system. Basically,
+        what the master agreement number is today.
+
+    agreementDate
+        The date and time the master agreement request was created.
+
+    agreementType
+        The type of the master agreement being referenced, for example: Scheduling Agreement.
+  -->
+  <xs:element name="MasterAgreementReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference" />
+      </xs:sequence>
+      <xs:attribute name="agreementID" type="xs:string" />
+      <xs:attribute name="agreementDate" type="xs:dateTime" />
+      <xs:attribute name="agreementType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="scheduling_agreement" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a reference to an earlier TransportRequest document.
+    
+    DocumentReference
+        The reference to an earlier TransportRequest document.
+    
+    requestID
+        The id of a transport request known to the system of the party that
+        created the TransportRequest. Basically, what the transport request
+        number is today.
+    
+    requestDate
+        The date and time the transport request was created.
+  -->
+  <xs:element name="TransportReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:string"/>
+      <xs:attribute name="requestDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a transport request known to the system of the party
+    that created the TransportRequest.
+
+    IdReference
+         Additional reference ID for TransportRequest.
+
+    requestID
+        The id of a transport request known to the system of the party that
+        created the TransportRequest. Basically, what the transport request
+        number is today.
+
+    requestDate
+        The date and time the transport request was created.
+
+  -->
+  <xs:element name="TransportIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="9" maxOccurs="unbounded" ref="IdReference"/>
+      </xs:sequence>
+      <xs:attribute name="requestID" type="xs:string"/>
+      <xs:attribute name="requestDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Identifies the carrier who will transport a shipment.
+
+    domain
+        Domain in which this value has meaning. Recognized domains
+        include:
+        companyName - The legal name for this company. In some cases, this
+            could also be provided in a Contact element with role
+            "carrierCorporate". That option should be reserved for cases
+            in which additional detail about the carrier appears in this
+            element.
+        SCAC - Standard Carrier Alpha Code (see
+            http://users.erols.com/nmfta/Codes.htm)
+        IATA - International Air Transport Association (see
+            http://www.iata.org)
+        AAR  - Association of American Railroads (see http://www.aar.org/)
+        UIC  - International Union of Railways (see
+            http://www.uic.asso.fr/)
+        EAN  - European Article Numbering (see http://www.ean-ucc.org/)
+        DUNS - D&B's Data Universal Numbering System (see
+            http://www.dnb.com/dnbhome.htm)
+  -->
+  <xs:element name="CarrierIdentifier">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Identifier that appears on a shipment and through which additional
+    detail about the shipment may be retrieved. Defined by the carrier.
+    Has meaning in the domain described by the CarrierIdentifier values.
+    Therefore, CarrierIdentifier and ShipmentIdentifier should normally
+    be used together.
+
+    Conceptually, this is a tracking number. Different carriers have
+    different names for shipment identifiers. Some call it a way bill
+    number, others call it a pro number, and still others call it a bill of
+    lading. They all represent tracking numbers.
+    
+    domain
+        Specifies more precisely what kind of identifier this is.
+        Likely values include trackingNumber, billOfLading. 
+        
+    trackingNumberDate
+        The date when the logistics provider intimates the tracking number 
+        for this shipment. This date is used to find out the efficiency of the
+        supply chain process.
+
+    trackingURL
+        carrier URL that can be used to track the shipment in conjunction with the tracking number
+  -->
+  <xs:element name="ShipmentIdentifier">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string"/>
+          <xs:attribute name="trackingNumberDate" type="xs:dateTime"/>
+          <xs:attribute name="trackingURL" type="URL"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    One language-specific string for the creator of an IdReference,
+    e.g. IRS, BofA, UPS, Cisco, etc.
+
+    xml:lang
+        The language or locale in which the name of the creator is written.
+  -->
+  <xs:element name="Creator">
+     <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines an ID reference. Within the application context (for example,
+    a certain pair of buyer and supplier), the (identifier, domain) pair
+    should be unique.
+
+    Creator
+        The creator of this IdReference, e.g. BofA, UPS, Cisco, etc.
+
+    Description
+        Textual description of the IdReference. For human readability.
+
+    identifier
+        The unique identifier of the IdReference within the domain.
+
+    domain
+        The domain of the IdReference. It should be one of the
+        following:
+        accountID, bankRoutingID, accountPayableID,
+        accountReceivableID, bankAccountID, ibanID, abaRoutingNumber,
+        bankNationalID, isoBicID, swiftID, bankBranchID, federalTaxID,
+        stateTaxID, provincialTaxID, vatID, gstID, and taxExemptionID.
+        supplierTaxID is deprecated and will be treated as federalTaxID.
+        Other possible values could be 1099ID, courtRegisterID, 
+        supplierReference, governmentNumber, documentName, etc.
+  -->
+  <xs:element name="IdReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Creator" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="identifier" type="xs:string" use="required" />
+      <xs:attribute name="domain" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines supplier sales order information related to an order.
+
+    This is also used in PunchOutOrderMessage to indicate that the 
+    supplier has created an order associated with the punchout order message. 
+    The buyer can later cancel the sales order by sending an OrderRequest 
+    of type "delete" that refers to the sales order by including the 
+    SupplierOrderInfo element in the OrderRequestHeader
+
+    orderID
+        Supplier sales order id of this order.
+        
+    orderDate
+        The date and time the sales order was created.
+  -->
+  <xs:element name="SupplierOrderInfo">
+    <xs:complexType>
+      <xs:attribute name="orderID" type="xs:string" use="required" />
+      <xs:attribute name="orderDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    The ShipNoticeReference element provides a clear reference to a prior
+    ShipNoticeRequest document. While the contained DocumentReference provides
+    an unambiguous reference, the additional attributes of the
+    ShipNoticeReference may allow the ReceiptRequest to be viewed independently.
+
+    DocumentReference
+        The reference to an earlier ShipNoticeRequest.
+            
+    shipNoticeID
+        Unique identifier of the referenced ShipNoticeRequest.
+
+    shipNoticeDate
+        Date and time of the referenced ShipNoticeRequest.
+  -->
+  <xs:element name="ShipNoticeReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="shipNoticeID" type="xs:string"/>
+      <xs:attribute name="shipNoticeDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+    Defines ID of a Ship Notice known to the Buyer system.
+ 
+ 
+    IdReference
+    Additional reference ID for shipment related IDs e.g. DispatchAdviceID, ReceivingAdviceID, DeliveryNoteId, ProofOfDeliveryID.
+
+    shipNoticeID
+        Unique identifier of the referenced ShipNoticeRequest.
+
+    shipNoticeDate
+        Date and time of the referenced ShipNoticeRequest.
+  -->
+  <xs:element name="ShipNoticeIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+      <xs:attribute name="shipNoticeID" type="xs:string" use="required"/>
+      <xs:attribute name="shipNoticeDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The OrderStatusRequestReference element provides a clear reference to a prior
+    OrderStatusRequest document.
+
+    orderStatusRequestID
+        The buyer system orderStatusRequestID for this request. If present, must be copied
+        directly from the referenced OrderStatusRequest document's
+        OrderStatusRequestHeader.
+
+    orderStatusRequestDate
+        The order status request date.
+  -->
+  <xs:element name="OrderStatusRequestReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference" />
+      </xs:sequence>
+      <xs:attribute name="orderStatusRequestID" type="xs:string" />
+      <xs:attribute name="orderStatusRequestDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of an order status request known to the buyer system.
+
+    orderStatusRequestID
+        The id of an order status request known to the buyer system.
+
+    orderStatusRequestDate
+        The order status request date.
+  -->
+  <xs:element name="OrderStatusRequestIDInfo">
+    <xs:complexType>
+      <xs:attribute name="orderStatusRequestID" type="xs:string" use="required" />
+      <xs:attribute name="orderStatusRequestDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The ReceiptReference element provides a clear reference to a prior
+    ReceiptRequest document.
+
+    receiptID
+        The buyer system receiptID for this request.
+        If present, must be copied directly from the
+        referenced ReceiptRequest document's ReceiptRequestHeader.
+
+    receiptDate
+        The date and time the receipt request was created. If present, must
+        be copied directly from the referenced ReceiptRequest document's
+        RequestRequestHeader.
+  -->
+  <xs:element name="ReceiptReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="receiptID" type="xs:string"/>
+      <xs:attribute name="receiptDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a receipt known to the buyer system.
+
+    receiptID
+        The id of an receipt known to the buyer system.
+
+    receiptDate
+        The date and time the order was created.
+  -->
+  <xs:element name="ReceiptIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference"/>
+      </xs:sequence>
+      <xs:attribute name="receiptID" type="xs:string" use="required"/>
+      <xs:attribute name="receiptDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a quality inspection request document.
+
+    inspectionID
+        The id of a quality inspection request document.
+
+    inspectionDate
+        The date and time the quality inspection request document was created.
+  -->
+  <xs:element name="QualityInspectionRequestReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="inspectionID" type="xs:string"/>
+      <xs:attribute name="inspectionDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a quality inspection result document.
+
+    inspectionID
+        The id of a quality inspection result document.
+
+    inspectionDate
+        The date and time the quality inspection result document was created.
+  -->
+  <xs:element name="QualityInspectionResultReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="inspectionID" type="xs:string"/>
+      <xs:attribute name="inspectionDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Identifies legal entity in the external system.
+
+    identifier
+         Unique Id for Legal Entity. For example, 3000.
+    domain
+        Domain is the name of the legal entity in the external system.
+        For example, CompanyCode for SAP, BusinessUnit for PSoft.
+
+  -->
+  <xs:element name="LegalEntity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="IdReference"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Identifies Purchase Unit or Purchase group in the external system.
+
+    identifier
+         Unique Id for Purchase Unit or Purchase Group. For example, 3000.
+
+    domain
+        Domain is the name of the purchase unit or Purchase group in the external system.
+        For example, PurchasingOrganization or PurchasingGroup.
+  -->
+  <xs:element name="OrganizationalUnit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="IdReference"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

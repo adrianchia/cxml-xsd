@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/schema/Modules/PriceAvailability.mod#1 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Definition of Price Availability Request. This is the data sent to 
+    external catalog source (e.g., supplier) containing the items for price
+    and availability updates.
+  -->
+  <xs:element name="PriceAvailabilityRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PriceAvailabilityRequestItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a Price Availability Response. This is the data sent 
+    back in response to Price Availability Request.
+  -->
+  <xs:element name="PriceAvailabilityResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PriceAvailabilityResponseItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a line item as it needs to   
+    be for price availability request.
+  -->
+  <xs:element name="PriceAvailabilityRequestItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemOut" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The representation of a line item as it needs to be
+    be for price availability response. 
+
+    available 
+        The requested item is available and
+        the latest price and lead time is the ItemIn.
+    unavailable
+        The requested item is unavailable.
+    temporarilyUnavailable         
+        The requested item is temporarily unavailable, the latest price 
+        and lead time are in the ItemIn.
+    unknown
+        The availability status of the requested item is unknown
+    unrecognized 
+        The requested item is an invalid item and not recognized by the
+        supplier
+    excluded        
+        The requested item is part of the external catalog
+        but is being filtered on the punchout site for the sender 
+        (e.g., procurement system), so it’s not being shown to this sender.
+  -->
+  <xs:element name="PriceAvailabilityResponseItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemIn" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="available" />
+            <xs:enumeration value="unavailable" />
+            <xs:enumeration value="temporarilyUnavailable" />
+            <xs:enumeration value="unknown" />
+            <xs:enumeration value="unrecognized" />
+            <xs:enumeration value="excluded" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+  

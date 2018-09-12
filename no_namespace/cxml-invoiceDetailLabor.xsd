@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    Defines invoice information specific to labor items.
+
+    Contractor
+        The contractor whose work is being invoiced.
+
+    JobDescription
+        Detailed description of the job for this labor line item.
+
+    Supervisor
+        Supervisor of the contractor whose work is being invoiced.
+
+    WorkLocation
+        The work location of the contractor whose work is being invoiced.
+
+    InvoiceTimeCardDetail
+        Invoice details for labor reported on a time card. The pay code for this invoice
+        line item is in the UnitRate of the containing InvoiceDetailServiceItem element.
+  -->
+  <xs:element name="InvoiceLaborDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Contractor" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="JobDescription" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Supervisor" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="WorkLocation" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="InvoiceTimeCardDetail" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    InvoiceTimeCardDetail
+        This element is used to capture details about a timecard related (temp
+        labor) service.
+
+    TimeCardReference
+        The TimeCardReference element provides a clear reference to a prior TimeCard
+        cXML document.
+
+    TimeCardIDInfo
+        Unique ID for the timecard as sent on the TimeCard document during
+        TimeCardInfoRequest or TimeCardRequest messages.
+  -->
+  <xs:element name="InvoiceTimeCardDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="TimeCardReference" />
+          <xs:element ref="TimeCardIDInfo" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="TimeCardReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference" />
+      </xs:sequence>
+      <xs:attribute name="timeCardID" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    TimeCardIDInfo
+        Defines the unique ID of the timecard known to the buyer and supplier systems.
+
+    timeCardID
+      Unique ID for the timecard as sent on the TimeCard document during 
+      TimeCardInfoRequest or TimeCardRequest requests
+  -->
+  <xs:element name="TimeCardIDInfo">
+    <xs:complexType>
+      <xs:attribute name="timeCardID" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

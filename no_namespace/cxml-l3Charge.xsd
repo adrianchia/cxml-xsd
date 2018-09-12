@@ -1,0 +1,1119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    L3Charge mod file
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  
+  <!--
+    cXML request wrapper from level 3 charge file. Each request is
+    guaranteed to be for one realm customer from one bank account. Hence
+    the request would be able to uniquely identify the realm customer
+    that the charge belongs to. Each request may contain activities
+    from multiple charge card accounts.
+
+    AccountActivity
+        This element contains a list of charge transactions belonging
+        to one charge card account.
+  -->
+  <xs:element name="L3ChargeFileRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ChargeVersion" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AccountActivity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines version information for this charge file. Because each
+    charge file can  contain both new ChargeTransactions and updates to  
+    existing ChargeTransactions, the changes in the files have to be
+    applied only if the incoming file is a newer version than the existing
+    version.
+
+    domain
+        Identifies  the domain for processorNumber
+        and sequenceNumber
+    processorNumber
+        Identifies the card processor that sent this file. The
+        processor is a standard industry party in the pcard world.   
+    sequenceNumber
+        The sequence number of the file, among the files send by  
+        the designated processor.
+  -->
+  <xs:element name="ChargeVersion">
+    <xs:complexType>
+      <xs:attribute name="domain" type="xs:string" use="required" />
+      <xs:attribute name="processorNumber" type="xs:string" />
+      <xs:attribute name="sequenceNumber" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a list of charge transactions for a charge card. The charge 
+    transaction may contain information such as product, amount, tax,
+    merchant and detailed itemized items of a transaction.
+    
+    AccountingInfo
+        Account details including the costcenter under which this purchase
+        was made.
+
+    ChargeTransaction
+        This contains detailed information about charge transactions for
+        the given charge card. An AccountActivity may not contain any 
+        ChargeTransaction element. Empty ChargeTransaction is allowed
+        because credit card companies may send us empty content for an
+        AcccountActivity.
+        
+
+    accountNumber
+        Charge card number. This should be used as a unique identification
+        key to look up the user the application as each pcard would 
+        have an assigned user to it.
+        
+  -->
+  <xs:element name="AccountActivity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="AccountingInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ChargeTransaction" />
+      </xs:sequence>
+      <xs:attribute name="accountNumber" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines an Accounting element
+    
+    id
+        The unique key defining the costcenter of the purchase
+  -->
+  <xs:element name="AccountingInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information pertaining to a charge transaction that comes from
+    credit card company. A charge transactions happens whenever a card
+    holder makes a purchase using the credit card.
+
+    ChargeSummary
+        Summary of the charge transaction. It typically includes level 2
+        charge information such as total amount, tax amount, transaction date
+        and so on.
+
+    AddendumItem
+        Associated addenda information. This element typically contains
+        very detailed specific information related to the actual transaction.
+        For example, a Airfare purchase would include detailed information
+        unique to the flight; a hotel purchase would include detailed
+        information unique to hotel reservations.
+
+    Merchant
+        Detailed Merchant information. The merchant is the party by which
+        the transaction is charged. This element contains merchant id, 
+        tax id, vat number, and contact information.
+
+    transactionID
+        Transaction identifier. This is a unique identifier to the charge
+        transaction.
+  -->
+  <xs:element name="ChargeTransaction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ChargeSummary" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AddendumItem" />
+        <xs:element ref="Merchant" />
+      </xs:sequence>
+      <xs:attribute name="transactionID" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines summary of a charge transaction. It typically includes level 2
+    charge information such as total amount, tax amount, transaction date
+    and so on.
+
+    TotalAmountInPostedCurrency
+        Gross amount charged in posted currency. This is the currency in
+        which the merchant charged the purchase to the credit card company.
+        Typically posted currency and billing currency are the same. An
+        example where billing currency and posted currency are different is
+        as follow:
+        Commodity was purchased in Argentina Pesos (TotalAmountInOriginalCurrency)
+        on a Brazilian issued card so it could be posted in US dollars 
+        (Total in posted currency), and then billed to the company on their
+        statement in Reasis (TotalAmountInBillingCurrency)
+
+        Both Total and TotalAmountInOriginalCurrency are needed for
+        the application. This is because the actual purchase receipt is
+        typically in the original currency. However, the amount that the
+        company or individual is responsible for is the amount in posted
+        currency. Although only two values out of the three fields: 
+        Total, TotalAmountInOriginalCurrency and
+        TotalAmountInBillingCurrency are needed to obtain values for all
+        three. However, rounding issues may cause some inaccuracy. It is
+        better to keep all three to mitigate any rounding issues.
+
+    Total
+        Gross amount in original currency. This represents the actual
+        transaction at the point of the sale. This is the currency in which
+        merchant charged the buyer. An example is that an US
+        travels to France, and makes a purchase there using the US credit
+        card. The original currency would be EUR, and the posted currency
+        and billing currency would be in USD.
+        TotalAmountInOriginalCurrency and TotalAmount are related by the
+        conversionRate attribute.
+
+    TotalAmountInBillingCurrency
+        Gross amount in billing currency. This is the currency to which
+        credit card bills the buyer. If specified, customer needs
+        to pay this amount. If not, customer needs to pay the amount
+        described in Total.
+
+    TaxAmount
+        Total tax amount related to this charge transaction in
+        original currency. Tax amount in posted currency can be obtained
+        via the conversionRate attribute. 
+
+    TaxDetail
+        All detailed tax information related to this charge transaction in
+        original currency. This includes detailed breakdown
+        of all taxes such as sales tax, duty tax, VAT tax and so on.
+
+    ShippingAmount
+        Shipping amount on total purchases in original currency. Freight
+        amount in posted currency can be obtained via the conversionRate
+        attribute.
+
+    DiscountAmount
+        Discount amount applied to the transaction in original currency.
+        Discount amount in posted currency can be obtained via the
+        conversionRate attribute.
+
+    OrderIDInfo
+        The PO Number used to make this purchase.
+
+    MasterAgreementIDInfo
+        The ID of the contract under which this purchase falls.
+    
+    transactionDate
+        Actual date transaction took place.
+
+    conversionRate
+        Conversion rate from original to posted currency.
+
+    merchantInvoiceNumber
+        Unique number associated with an card acceptors invoice. This
+        number may be used to link to an existing Invoice.
+
+    buyerVATID
+        Buyer customer corporate VAT number.
+
+    bankReferenceNumber
+        Assigned reference number for buyer customer. This is a unique
+        reference number per transaction assigned by banks as reference
+        identification number.
+        
+    taxAccruedIndicator
+        Indicates whether the Merchant has collected the taxes or not.
+        Possible values include Yes/No/Unknown.
+
+    paymentDueDate
+        The date on which the payment for the charge is due
+  -->
+  <xs:element name="ChargeSummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TotalAmountInPostedCurrency" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalAmountInBillingCurrency" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxDetail" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShippingAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="OrderIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MasterAgreementIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ChargeShippingInfo" />
+      </xs:sequence>
+      <xs:attribute name="transactionDate" type="xs:date" use="required" />
+      <xs:attribute name="conversionRate" type="xs:decimal" />
+      <xs:attribute name="merchantInvoiceNumber" type="xs:string" />
+      <xs:attribute name="buyerVATID" type="xs:string" />
+      <xs:attribute name="bankReferenceNumber" type="xs:string" />
+      <xs:attribute name="taxAccruedIndicator" type="xs:string" />
+      <xs:attribute name="paymentDueDate" type="xs:date" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the shipping information related to this Charge
+
+    Contact
+        The ship from and ship to addresses. Only one ShipFrom and
+        one shipTo can be specified. Allowed contact roles are shipFrom and shipTo
+  -->
+  <xs:element name="ChargeShippingInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Contact" />
+      </xs:sequence>
+      <xs:attribute name="shippingDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains detailed merchant information. The merchant is the party by
+    which the transaction is charge.
+
+    Contact
+        This contains merchant contact personnel and address information.
+        
+    SupplierID
+        This contains the ID of the supplier(merchant) in various domains.
+
+        dunNum can be included as one SupplierID with "duns" being the 
+        domain value.
+
+        merchantId can be included as one SupplierID with "merchantID" being
+        the domain value.
+
+        merchantVATNumber can be included as one SupplierID with "vatID"
+        being the domain value.
+            Supplier merchant VAT number. This is usually for countries that
+            have VAT. It is possible for a merchant to have both VAT number
+            and tax id if the merchant operates in both US and other countries.
+
+        merchantTaxId can be included as one SupplierID with "taxID" being
+        the domain value
+            Supplier merchant tax id. This is usually US centric tax
+            identification number. It is possible for a merchant to have both
+            VAT number and tax id if the merchant operates in both US and other
+            countries.
+  -->
+  <xs:element name="Merchant">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="SupplierID" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines detailed information about one addendum item. It includes
+    total amount, tax amount and other miscellaneous information about an
+    the item.
+
+    Total
+        Gross amount associated with this addendum in original currency.
+        This is optional because card companies may not provide separate
+        amount per addendum. Most of the times, each charge transaction
+        would contain only one addendum. In that case, the Total for the
+        addendum is likely the same as the total for the entire charge
+        transaction.
+
+    TaxAmount
+        Gross amount of tax in original currency.
+        This is optional because card companies may not provide separate
+        tax amount per addendum. Most of the times, each charge transaction
+        would contain only one addendum. In that case, the TaxAmount for the
+        addendum is likely the same as the TaxAmount for the entire charge
+        transaction.
+
+    TaxDetail
+        All detailed tax information related to this charge transaction in
+        original currency. This includes detailed breakdown
+        of all taxes such as sales tax, duty tax, VAT tax and so on.
+
+    DetailAddendum
+        Defines other miscellaneous information specific to a type of
+        addendum.
+  -->
+  <xs:element name="AddendumItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxDetail" />
+        <xs:element ref="DetailAddendum" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines associated addendum information in a charge transaction. This
+    is supplemental information that would provide valuable information that
+    would be helpful to better data analysis and more automation of any
+    reconciliation process.
+
+    BasicAddendum
+        Basic information on the charge transaction. This exists only
+        if addendum for the specific expense type is not necessary.
+
+    CarRentalAddendum
+        Addendum information for car rental charge. This contains detailed
+        information about different terms of the rental, and the various
+        fees charged for the rental.
+
+    LodgingAddendum
+        Addendum information for lodging charge. This contains detailed
+        spend on at a hotel, such as room rates, taxes, meals, gifts etc.
+
+    TelecommunicationServicesAddendum
+        Addendum information for telecommunication service charge such as
+        telephone, cellphone bills. This contains detailed
+        information about telephone usage including telephone numbers,
+        time called, call locations etc.
+
+    TransportAddendum
+        Addendum information for transportation charge. Transport charges
+        usually refer to Airfare purchases and rail purchases. It contains
+        detailed information about carrier provider, travel segments etc.
+  -->
+  <xs:element name="DetailAddendum">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="BasicAddendum" />
+        <xs:element ref="CarRentalAddendum" />
+        <xs:element ref="LodgingAddendum" />
+        <xs:element ref="TelecommunicationServicesAddendum" />
+        <xs:element ref="TransportAddendum" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines basic information on the charge transaction. This exists only
+    if addendum for the specific expense type is not necessary.
+
+    DetailLineItem
+        Basic line item details information.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+  -->
+  <xs:element name="BasicAddendum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DetailLineItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines itemized line item details information of a charge transaction.
+
+    Rate
+        This defines the rate information for this itemized line item.
+        It specifies the unit price, quantity, unit of measure, item
+        description, and item extend amount (unit price * quantity)
+
+    ProductCode
+        Product Code of the individual item purchased. In expense, this
+        code may be mapped to the ExpenseType
+
+    Classification
+        Classification provides the Identifier assigned by the card acceptor
+        that best categorizes the items being purchased in a standardized
+        commodity group.
+
+    DiscountAmount
+        Gross amount of discount in original currency.
+
+    TaxAmount
+        Total amount of all taxes calculated for this item in original currency.
+
+    TaxDetail
+        Additional tax related detail information.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+
+    lineItemNumber
+        Line item number.
+
+    subLineItemNumber
+        If none zero, this is a sub line Item number for the line Item detail.
+
+    purchaseDate
+        Date of item purchase transaction.
+
+    customerCode
+        Code used by the merchant to identify the buyer customer.
+        This is proprietary number that each merchant uses in house.
+
+    poLineNumber
+        Line number, for reference, on Purchase Order. This can be used
+        during PO reconciliation process to better identify the actual
+        charge versus original amount on the purchase order.
+
+    vatInvoiceReferenceNumber
+        Value-added Tax(VAT) Invoice or tax receipt number.
+  -->
+  <xs:element name="DetailLineItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Rate" />
+        <xs:element ref="ProductCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxDetail" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="lineItemNumber" type="xs:unsignedInt" />
+      <xs:attribute name="subLineItemNumber" type="xs:unsignedInt" />
+      <xs:attribute name="purchaseDate" type="xs:date" />
+      <xs:attribute name="customerCode" type="xs:string" />
+      <xs:attribute name="poLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="vatInvoiceReferenceNumber" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines product Code of the individual item purchased, this
+    indicates the type of expense. The values of product codes come
+    from vendors. For MasterCard, if the identifier is CC, and it is
+    for a lodging expense, then the code value is restricted by a list
+    of values.
+
+    #PCDATA
+        The value of the product code of the item purchased. The code
+        convention is based on the identifier.
+
+    identifier
+        Qualifier or domain for the product code. This identifier should
+        also be used to identify the credit card company so that the right
+        mapping table can be selected on the application side.
+        MasterCard provides three values:
+              MCBP = Buyer's part number
+              MCVP = Vendor's part number
+              MCCC = Industry Commodity Code
+  -->
+  <xs:element name="ProductCode">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines line item addendum information for transport expenses. Transport
+    expenses typically are typically used for air or rail travel.
+
+    TripType
+        Type of trip. This may be one roundtrip, one way or multi leg.
+        Default to round trip.
+
+    FeeAmount
+        Gross amount of the fee associated with this transport in original
+        currency. This is optional because card companies may not provide
+        total fee amount. Typically, the sum of Total from all TransportLeg
+        should equal to the Total here.
+
+    TransportLeg
+        Leg information for transport type. Air or rail travel may have
+        multiple segments in one trip such as a stop over. Each leg
+        represents one segment of the trip.
+
+    MiscellaneousCharge
+        Miscellaneous charges related to transport.
+        The types of the charges can be ExchangeFee and so on.
+
+    Classification
+        Classification provides the Identifier assigned by the card acceptor
+        that best categorizes the items being purchased in a standardized
+        commodity group.
+
+    DetailLineItem
+        Basic line item details information.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+
+    ticketNumber
+        Ticket number.
+
+    passengerName
+        Passenger name.
+
+    numberOfLegs
+        Total number of legs for this trip.
+
+    travelAgency
+        Travel agency name.
+
+    exchangeTicketNumber
+        New Ticket Number issued when a ticket is exchanged.
+
+    issueDate
+        The date the ticket was issued to the customer.
+
+    issueCarrierCode
+        IATA Code for the carrier issuing the ticket. On each transport
+        leg segment, there is a separate carrierCode which may or may not
+        be the same as the issueCarrierCode. Since this code value comes
+        from IATA standard, there is a mapping table that maps the code
+        to a more user-friendly display name.
+
+    refundIndicator
+        Boolean value to indicate whether this is a ticket refund.
+  -->
+  <xs:element name="TransportAddendum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TripType" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="FeeAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportLeg" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="MiscellaneousCharge" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DetailLineItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="ticketNumber" type="xs:string" />
+      <xs:attribute name="passengerName" type="xs:string" />
+      <xs:attribute name="numberOfLegs" type="xs:decimal" />
+      <xs:attribute name="travelAgency" type="xs:string" />
+      <xs:attribute name="exchangeTicketNumber" type="xs:string" />
+      <xs:attribute name="issueDate" type="xs:date" />
+      <xs:attribute name="issueCarrierCode" type="xs:string" />
+      <xs:attribute name="refundIndicator">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines leg information for transport type.
+
+    LegOrigin
+        City, airport or railway code where trip or leg originated.
+
+    LegDestination
+        City, airport or railway code where trip or leg ends.
+
+    BookingClassCode
+        Airline or Rail booking class code. For airline, this is
+        the de-facto airline standard. For example,
+
+        F, FN, P, R, A      - first class
+        C, CN, D, J, I, Z   - business class.
+        Y, YN, B, BN, M, H, V, VN, O, Q, QN, S, 
+            K, KN, L, U, T, W - coach class.
+
+    Total
+        Gross amount of the ticket (per trip leg) in original currency.
+
+    FeeAmount
+        Gross amount of the fee associated with the ticket (per trip leg) in original currency.
+
+    TaxAmount
+        Gross amount of Tax associated with the transaction in original currency.
+
+    legNumber
+        Indication of which trip leg a detail an addendum represents.
+
+    carrierCode
+        IATA Code that identifies the airline servicing this leg.
+        Since this comes from IATA standard, there is a mapping table
+        that maps the code to a more user-friendly display name.
+
+    travelDate
+        The date of the travel. This field is needed because the departureTime
+        and arrivalTime only have time information.
+
+    departureTime
+        Time of departure HH:MM:SS (HH = 00-23, MM = 00-59, SS = 00-59)
+        This is stored as string because there is no timezone information
+        supplied.
+
+    arrivalTime
+        Time of arrival HH:MM:SS (HH = 00-23, MM = 00-59, SS = 00-59)
+        This is stored as string because there is no timezone information
+        supplied.
+
+    exchangeTicketNumber
+        New Ticket Number issued when a ticket is exchanged.
+
+    flightNumber
+        Flight number.
+
+    fareBaseCode
+        The code that carriers assign to the particular ticket type.
+  -->
+  <xs:element name="TransportLeg">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="LegOrigin" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="LegDestination" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="FeeAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxAmount" />
+      </xs:sequence>
+      <xs:attribute name="legNumber" type="xs:decimal" use="required" />
+      <xs:attribute name="carrierCode" type="xs:string" />
+      <xs:attribute name="travelDate" type="xs:date" />
+      <xs:attribute name="departureTime" type="xs:string" />
+      <xs:attribute name="arrivalTime" type="xs:string" />
+      <xs:attribute name="exchangeTicketNumber" type="xs:string" />
+      <xs:attribute name="flightNumber" type="xs:string" />
+      <xs:attribute name="fareBaseCode" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines line item addendem information for lodging expenses.
+
+    UnitRate
+        Daily room rate in original currency
+
+    RoomTaxAmount
+        Total tax amount applied to the entire room stay in original currency
+
+    MiscellaneousCharge
+        A list of miscellaneous charges in original currency incurred during
+        hotel stay. These charges are all charges other than room charges.
+        Type of non-room charge in original currency. For example, AudioVisual,
+        Banquet, BusinessCenter, ConferenceRoom, EarlyDeparture, GiftShop,
+        Gratuity, HealthClub, InternetAccess, LaundryDryClean, MiniBar,
+        Movie, Restaurant, RoomService, Telephone, Transportation, Valet, etc.
+        If it's not specified, default to "other"
+
+    TotalMiscAmount
+        The gross amount of miscellaneous charges occurred during hotel
+        stay.
+
+    MiscTaxAmount
+        Total tax amount on all miscellaneous charges occurred during hotel
+        stay.
+
+    Classification
+        Commodity code provides the Identifier assigned by the card acceptor
+        that best categorizes the items being purchased in a standardized
+        commodity group.
+
+    DetailLineItem
+        Basic line item details information.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+
+    checkinDate
+        Date of arrival for lodging stay.
+
+    checkoutDate
+        Date of departure.
+
+    carrierCode
+        IATA code of the lodging provider.
+        Since this comes from IATA standard, there is a mapping table
+        that maps the code to a more user-friendly display name.
+
+    numberOfNights
+        Total number of nights a room was contracted during a lodging stay.
+  -->
+  <xs:element name="LodgingAddendum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitRate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="RoomTaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="MiscellaneousCharge" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalMiscAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MiscTaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DetailLineItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="checkinDate" type="xs:date" />
+      <xs:attribute name="checkoutDate" type="xs:date" />
+      <xs:attribute name="carrierCode" type="xs:string" />
+      <xs:attribute name="numberOfNights" type="xs:unsignedInt" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines room rate in original currency.
+  -->
+  <xs:element name="RoomRateAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines total gross amount of tax on room related charges
+    in original currency.
+  -->
+  <xs:element name="RoomTaxAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines total gross amount on all non-room related charges
+    in original currency.
+  -->
+  <xs:element name="TotalMiscAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines total gross amount on taxes on non-room related charges
+    in original currency.
+  -->
+  <xs:element name="MiscTaxAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines line item addendum information for car rental expenses.
+
+    CarRentalPickup
+        City or airport where the vehicle was rented.
+
+    CarRentalDropoff
+        City or airport where car is scheduled to be returned.
+
+    CarRentalRateInfo
+        Information on rate of car rental.
+
+    MiscellaneousCharge
+        Miscellaneous charges related to car rental.
+        Types of fees typically contains the following:
+          extraMileage - Vehicle Rental charge for miles in excess of
+                         those provided free of charge
+          fuel - Gasoline charges
+          insurance - Car insurance
+          lateFee - Penalty if the car is returned late
+          dropOffCharge - Drop off charges, usually due to one-way
+          regularMileage - Mileage based rental
+          telephone - For usage of telephone installed in the car
+          towing - Towing fee
+          other - Other charges
+
+    DetailLineItem
+        Basic line item details information.
+
+    Classification
+        Classification provides the Identifier assigned by the card acceptor
+        that best categorizes the items being purchased in a standardized
+        commodity group.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+
+    pickupDate
+        Date of Vehicle rental.
+
+    dropoffDate
+        Date Vehicle is scheduled to be returned.
+
+    daysRented
+        Indicates the total number of days the vehicle was rented.
+
+    carClass
+        Class of Vehicle Rental. The values for this field are not
+        restricted by a pre-defined set of list as it doesn't follow
+        any standard, and the values could very well change over time.
+
+    renterName
+        Name of Person Renting the Vehicle.
+
+    rentalAgreementNumber
+        Vehicle Rental Agreement Number.
+
+    reservationNumber
+        Number assigned to reservation.
+  -->
+  <xs:element name="CarRentalAddendum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="CarRentalPickup" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="CarRentalDropoff" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="CarRentalRateInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="MiscellaneousCharge" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DetailLineItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="pickupDate" type="xs:date" />
+      <xs:attribute name="dropoffDate" type="xs:date" />
+      <xs:attribute name="daysRented" type="xs:unsignedInt" />
+      <xs:attribute name="carClass" type="xs:string" />
+      <xs:attribute name="renterName" type="xs:string" />
+      <xs:attribute name="rentalAgreementNumber" type="xs:string" />
+      <xs:attribute name="reservationNumber" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information on rate of car rental.
+
+    UnitRate
+        Rate for Car Rental per period specified in day, week, or month
+        in original currency. The likely rate type would have the following
+        mapping to UnitRate.UnitOfMeasure:
+        D: DAY
+        W: WEE
+        M: MON
+
+    DistanceRate
+        Rate per distance applied to rental charges in original currency and
+        the distance traveled
+  -->
+  <xs:element name="CarRentalRateInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitRate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DistanceRate" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines car rental rate based on per unit distance rate and the distance
+    traveled. The per unit distance rate is in original currency.
+  -->
+  <xs:element name="DistanceRate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitRate" />
+      </xs:sequence>
+      <xs:attribute name="distance" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines line item addendum information for telecommunication services
+    expenses such as telephone and cellular phone.
+
+    StatementPeriod
+        Defines time period that this addendum is for.
+
+    BillingItem
+        Telecommunication service call details.
+
+    DetailLineItem
+        Basic line item details information.
+
+    Extrinsic
+        Additional information related to this addendum. Should not
+        duplicate anything in DetailLineItem.
+  -->
+  <xs:element name="TelecommunicationServicesAddendum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="StatementPeriod" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="BillingItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DetailLineItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines time period that this charge transaction is for.
+
+    startDate
+        The start date this charge transaction is for.
+
+    endDate
+        The end date this charge transaction is for.
+  -->
+  <xs:element name="StatementPeriod">
+    <xs:complexType>
+      <xs:attribute name="startDate" type="xs:string" use="required" />
+      <xs:attribute name="endDate" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a connection details. This usually applies to some sort of 
+    phone call services.
+
+    CallFromPhoneInfo
+        Information on where the call is placed and on what number.
+
+    CallToPhoneInfo
+        Information on where the call is made to and to what number.
+
+    ConnectionDetail
+        Information on connection details.
+  -->
+  <xs:element name="BillingItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="CallFromPhoneInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="CallToPhoneInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ConnectionDetail" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information on where the call is placed and on what number.
+
+    PhoneInfo
+        Phone information.
+  -->
+  <xs:element name="CallFromPhoneInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PhoneInfo" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information on where the call is made to and to what number.
+
+    PhoneInfo
+        Phone information.
+  -->
+  <xs:element name="CallToPhoneInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PhoneInfo" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines phone information.
+
+    Number
+        Telephone number.
+
+    City
+        City for the phone number.
+
+    StateOrProvince
+        State or province for the phone number.
+
+    Country
+        Country for the phone number.
+  -->
+  <xs:element name="PhoneInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Number" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="City" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="State" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Country" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information on connection details.
+
+    Description
+        Call description.
+
+    Total
+        Call charge gross amount in original currency.
+
+    MiscellaneousCharge
+        Miscellaneous expense related to call charge.
+
+    duration
+        Length of time billed for call in seconds.
+  -->
+  <xs:element name="ConnectionDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="MiscellaneousCharge" />
+      </xs:sequence>
+      <xs:attribute name="duration" type="xs:duration" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines miscellaneous charges and fees.
+
+    type
+        Type of charge and fees in original currency. If it's not specified,
+        default to "other".
+        Depending on the elements that use MiscellaneousCharge, the most likely
+        values would change.
+
+        A list of miscellaneous charges in original currency incurred during
+        hotel stay. These charges are all charges other than room charges.
+        Type of non-room charge in original currency. For example, AudioVisual,
+        Banquet, BusinessCenter, ConferenceRoom, EarlyDeparture, GiftShop,
+        Gratuity, HealthClub, InternetAccess, LaundryDryClean, MiniBar,
+        Movie, Restaurant, RoomService, Telephone, Transportation, Valet, etc.
+        If it's not specified, default to "other"
+
+        Miscellaneous charges related to car rental.
+        Types of fees typically contains the following:
+          extraMileage - Vehicle Rental charge for miles in excess of
+                         those provided free of charge
+          fuel - Gasoline charges
+          insurance - Car insurance
+          lateFee - Penalty if the car is returned late
+          dropOffCharge - Drop off charges, usually due to one-way
+          regularMileage - Mileage based rental
+          telephone - For usage of telephone installed in the car
+          towing - Towing fee
+          other - Other charges
+  -->
+  <xs:element name="MiscellaneousCharge">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+      <xs:attribute default="other" name="type" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

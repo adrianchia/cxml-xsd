@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/modules/Item.mod#19 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  <xs:include schemaLocation="cxml-industry.xsd" />
+  <xs:include schemaLocation="cxml-reference.xsd" />
+
+  <!-- Type of a line item. -->
+  <xs:simpleType name="lineItemType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="composite" />
+      <xs:enumeration value="item" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Type of a composite line item. -->
+  <xs:simpleType name="compositeItemType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="groupLevel" />
+      <xs:enumeration value="itemLevel" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Type of a service line item. -->
+  <xs:simpleType name="serviceItemType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="material" />
+      <xs:enumeration value="service" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Choice of type of a service line item. serviceLineType This entity 
+    represents the type of the service line. The following are the different 
+    types of service lines. standard This is the standard line type, and is the 
+    system default. blanket You do not specify a quantity for blanket lines. 
+    The system defines the default quantity one to service lines with this line 
+    type. It is settled as a lump sum. contingency This line type describes a 
+    service that is not absolutely necessary to perform the order. This service 
+    is only used when required. openquantity If the sold-to party requires that 
+    the bidder offers the quantity for a specific partial service, the service 
+    line can be indicated by Line with open quantity. You can only use this line 
+    type in the following documents: Purchase requisitions and RFQs in Purchasing 
+    (MM Services) Inquiries with BOS in Sales information This line type does 
+    not describe a service. It is purely documentary in nature. You select this 
+    line type if you want to use the service line to store additional text. -->
+  <xs:simpleType name="serviceLineType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="standard" />
+      <xs:enumeration value="blanket" />
+      <xs:enumeration value="contingency" />
+      <xs:enumeration value="openquantity" />
+      <xs:enumeration value="information" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Choice of alternativeTypes No Alternative This line type describes 
+    a service that cannot be performed in alternative ways. Basic Line This line 
+    type describes a service that can be performed in alternative ways. There 
+    are one or more alternative lines for each basic line. The value of a basic 
+    line is included in the total value of the service specifications. Alternate 
+    Line An alternative line describes a different way of performing a service 
+    or doing work than that set out in the associated basic line. The value of 
+    an alternative line is not included in the total value of the service specifications. 
+    Example If flooring is to be renewed, you may want to enter one service line 
+    for parquetry flooring and an alternative line for ceramic tiles. -->
+  <xs:simpleType name="alternativeType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="noAlternative" />
+      <xs:enumeration value="basicLine" />
+      <xs:enumeration value="alternativeLine" />
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- 
+    Alternative
+        Type with which a service line item can be identified to its alternative item. 
+
+    alternativeType
+        This represents the alternative type of a service line item. 
+    basicLineNumber
+        When an alternative type is set as Alternate Line, the line number of the Service Line which whose alternative type set as Basic Line will be set here. This enables this service line item to identify for which service line item this is alternative to. 
+  -->
+  <xs:element name="Alternative">
+    <xs:complexType>
+      <xs:attribute name="alternativeType" type="alternativeType" use="required"/>
+      <xs:attribute name="basicLineNumber" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ID with which the item's manufacturer identifies the item.
+  -->
+  <xs:element name="ManufacturerPartID" type="xs:string" />
+  
+  <!--
+    Name of the item's manufacturer.
+    
+    xml:lang
+        The language in which the ManufacturerName is written. This
+    attribute will be required in a future version of cXML. (Leaving it
+    out is deprecated.)
+  -->
+  <xs:element name="ManufacturerName">
+    <xs:complexType mixed="true">
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Classification is used to group items into similar categories.
+    
+    domain
+        "name" of classification, ie., SPSC
+            Domain can be "MaterialGroup" and "MaterialGroup" refers to a grouping of materials and services according to their characteristics in SAP.
+    
+        code
+        identification for a classification
+    
+  -->
+  <xs:element name="Classification">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" use="required" />
+          <xs:attribute name="code" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    LeadTime specifies, in days, the amount of time required to
+    receive the item.
+  -->
+  <xs:element name="LeadTime" type="xs:unsignedInt"/>
+  
+  <!--
+    SupplierBatch is the batch ID provided by the supplier at the line item quantity level
+    to identify  the batch in which the item or the product was produced. The batch id is helpful in traceability.
+
+    Batch numbers (also call "lot number", "variant") are used in several industries to uniquely identify  items produced together.
+  -->
+  <xs:element name="SupplierBatchID" type="xs:string" />
+
+  <!--
+    How the supplier identifies an item they sell.
+
+    If SupplierPartID does not provide a unique key to identify the item,
+    then the supplier should generate a key which identifies the part
+    uniquely when combined with the SupplierID and SupplierPartID. The
+    key is called SupplierPartAuxiliaryID.
+
+
+    An example is where a Supplier would use the same PartID for an
+    item but have a different price for units of "EA" versus "BOX".
+    In this case, the ItemIDs should be:
+    <ItemID>
+        <SupplierPartID>pn12345</SupplierPartID>
+        <SupplierPartAuxiliaryID>EA</SupplierPartAuxiliaryID>
+    </ItemID>
+    <ItemID>
+        <SupplierPartID>pn12345</SupplierPartID>
+        <SupplierPartAuxiliaryID>
+           <foo>well formed XML here</foo>
+        </SupplierPartAuxiliaryID>
+    </ItemID>
+    In this case, the "foo" element must be defined in an internal subset
+    sent with the cXML document. Otherwise, parsers will not be able to
+    validate that document.
+
+    In a preferred approach, the sending application may escape the contained
+    XML using CDATA sections. This would appear as:
+       ...
+       <SupplierPartAuxiliaryID>
+           <![CDATA[<foo>well formed XML here</foo>]]>
+       </SupplierPartAuxiliaryID>
+       ...
+
+    Finally, the angle brackets could be escaped using XML character
+    entities. This might be a bit harder for humans to read. For example:
+       ...
+       <SupplierPartAuxiliaryID>
+           &lt;foo&gt;well formed XML here&lt;/foo&gt;
+       </SupplierPartAuxiliaryID>
+       ...
+
+    revisionID     
+       Also known as Material Revision Level. "Revision" is the most widely-used
+       term for referring to that attribute which distinguishes one closely-
+       related design iteration from another. A revision represents a change to
+       an object, or a modification to a part such that the part remains
+       interchangeable with its previous iteration.
+       As part of engineering change management the supplier uses the revision
+       level to uniquely identify the version of a product, of an article or of
+       a part.
+     
+  -->
+  <xs:element name="SupplierPartID">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="revisionID" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SupplierPartAuxiliaryID">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   BuyerPartID represents an item in buyer system. This identifier is specified by the buyer
+  -->
+  <xs:element name="BuyerPartID" type="xs:string"/>
+  
+  <!--
+    A unique identification of an item. SupplierID is not required since
+    ItemIDs never travel alone.
+
+    ItemIDs used to define a Supplier/Commodity level Blanket Order Item should
+    use Empty SupplierPartID tag. These type of items do not have specific part numbers
+    at the time of placing the Blanket Order. There will be subsequent release orders
+    or invoices that will define the SupplierID.
+
+    IdReference
+    Defines an ID reference. Within the application context (for example,
+    certain pair of buyer and supplier), the (identifier, domain) pair should be unique.
+-->
+  <xs:element name="ItemID">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SupplierPartID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SupplierPartAuxiliaryID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BuyerPartID"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        ItemDetail contains detailed information about an item. All the data that
+        a user would want to see about an item instead of the bare essentials
+        that are represented in the ItemID.
+    
+        LeadTime
+        Time in days to receive the item.
+    
+    Dimension
+    
+        Item dimensions.
+    
+    
+    ItemDetailIndustry
+    
+        Industry specific item detail information.
+    
+    OverallLimit
+    
+        OverallLimit will hold the maximum value that the total of all unplanned services 
+        (or the value of the material) covered by this item may not exceed. This limit, 
+        which represents a budget for unplanned services, must not be exceeded. 
+        This limit can be used in service lines and the items of blanket purchase orders.
+        At service item level (top level service item), this field captures limit for the 
+        total of all unplanned services (or the value of the material). 
+        At service outline level, it captures the sub-limits (the budget for that item). 
+    
+    
+    ExpectedLimit
+    
+        ExpectedLimit is value that the unplanned services (or the material) covered by 
+        this item are not expected to exceed. It is a figure buyer assumes to be the 
+        final amount payable. It is entered only for top level service item.
+        Whereas the overall limit field (at top level) captures the maximum allowed 
+        value (max amount that can be spent), the expected limit is used to capture the 
+        planned/expected value and is mainly used for analysis purposes and determining 
+        total value of item.
+    
+    
+    PlannedAcceptanceDays
+    Number of days the buyer schedules for the inspection of goods after receiving them.
+    
+  -->
+  <xs:element name="ItemDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitPrice" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="OverallLimit"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ExpectedLimit"/>
+        <xs:element ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PriceBasisQuantity"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ManufacturerPartID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ManufacturerName" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="URL" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="LeadTime" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Dimension" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ItemDetailIndustry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AttachmentReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PlannedAcceptanceDays" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Item details specific for items that describe blanket purchase order items. 
+    This element should only be used for items in a purchase order of 
+    type "blanket"  or "regular".
+  -->
+  <xs:element name="BlanketItemDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxContractAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAdhocAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PriceBasisQuantity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ItemDetailIndustry contains detailed information about an item for a specific industry.
+    
+        isConfigurableMaterial
+        A value of yes indicates that this item is defined as a configurable purchase and has material characteristics associated with it. 
+  -->
+  <xs:element name="ItemDetailIndustry">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ItemDetailRetail"/>
+      </xs:sequence>
+      <xs:attribute name="isConfigurableMaterial">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ItemDetailIndustry contains detailed information about an item for a retail industry. 
+    
+    EANID
+        Deprecated, use '<IdReference domain="EAN-13">' within 'ItemID' instead.
+  -->
+  <xs:element name="ItemDetailRetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="EANID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="EuropeanWasteCatalogID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Characteristic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    An identifier for a subcontracting component within the procurement process.
+  -->
+  <xs:element name="ComponentID" type="xs:string" />
+  
+  <!--
+    An element contains product information of subcontracting component (such as buyer product id, supplier product id, standard product id, internal product id, etc.).
+
+    SupplierPartID
+        It represents a product in supplier system. This identifier is specified by the supplier.
+
+    SupplierPartAuxiliaryID
+        If SupplierPartID does not provide a unique key to identify the item, then the supplier should generate a key which identifies the product uniquely when combined with the SupplierID and SupplierPartID. The key is called SupplierPartAuxiliaryID.
+
+    BuyerPartID
+        It represents a product in buyer system. This identifier is specified by the buyer.
+
+    IdReference
+        ID reference is within the application context (for example, standard id for a product), the (identifier, domain) pair should be unique.
+  -->
+  <xs:element name="Product">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SupplierPartID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SupplierPartAuxiliaryID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BuyerPartID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A sequential number that is assigned when changes are made to component.
+  -->
+  <xs:element name="ProductRevisionID" type="xs:string" />
+  
+  <!--
+    An element carrying batch information for material or goods  produced in a single manufacturing run.
+
+    BuyerBatchID
+        An identifier from buyer to identify the material/goods produced in a single manufacturing run
+
+    SupplierBatchID
+        An identifier from supplier to identify the material/goods produced in a single manufacturing run
+
+    PropertyValuation
+        It consists of the property to be valuated and the associated values
+
+    productionDate
+        Date on which when a batch of material or goods is produced
+
+    expirationDate
+        Date on which when a batch of material/goods becomes expired
+
+    inspectionDate 
+        Date on which when a batch of material/goods will be inspected
+
+    shelfLife 
+        Duration that a product is expected to remain within its approved product specification after production date.
+        This attribute is used for information purposes only.
+        
+
+    originCountryCode
+        Country of origin for a batch of material or goods
+        
+    batchQuantity
+        Quantity for a batch of material or goods.
+  -->
+  <xs:element name="Batch">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BuyerBatchID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SupplierBatchID"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PropertyValuation"/>
+      </xs:sequence>
+      <xs:attribute name="productionDate" type="xs:dateTime" />
+      <xs:attribute name="expirationDate" type="xs:dateTime" />
+      <xs:attribute name="inspectionDate" type="xs:dateTime" />
+      <xs:attribute name="shelfLife" type="xs:duration" />
+      <xs:attribute name="originCountryCode" type="isoCountryCode" />
+      <xs:attribute name="batchQuantity" type="xs:decimal" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    An identifier from buyer to identify the material/goods produced in a single manufacturing run.
+  -->
+  <xs:element name="BuyerBatchID" type="xs:string" />
+  
+  <!--
+    PropertyValuation consists of the property to be valuated and the associated values
+
+    PropertyReference:
+        The property being valuated
+
+    ValueGroup:
+        Contains a group of values pertaining to a property
+  -->
+  <xs:element name="PropertyValuation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PropertyReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ValueGroup"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    PropertyReference is a reference to the property being valuated
+
+    IdReference
+        ID reference is within the application context (for example, id for a property), the (identifier, domain) pair should be unique.
+  -->
+  <xs:element name="PropertyReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ValueGroup contains a group of values pertaining to a property.
+
+    IdReference
+        ID reference is within the application context (for example, id of value group), the (identifier, domain) pair should be unique.
+
+    ParentID
+        For Structured property, ParentID is an identifier of its parent
+
+    PropertyValue
+        Values for valuating property
+  -->
+  <xs:element name="ValueGroup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ParentID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PropertyValue" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    For Structured property, ParentID is an identifier of its parent
+  -->
+  <xs:element name="ParentID" type="xs:string" />
+  
+  <!--
+    PropertyValue consists of values for valuating a property.
+        Example:    QuantitySpecification: valuating properties whose data types are in units, for example, 5 pieces, 7 kg
+        IntegerSpecification: valuating non-dimensional, integer properties, for example, codes, indexes, and sequential numbers
+        DateTimeSpecification: valuating date time properties, for example requirement date, production date, and expiration date
+
+    PropertyCharacteristic
+        It has the detailed information about a value that can be used for valuation of property
+
+    Name
+        Name of PropertyValue
+  -->
+  <xs:element name="PropertyValue">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Characteristic" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ControlKeys
+        Are used to override default business rules as configured in the commerce network hub.
+  -->
+  <xs:element name="ControlKeys">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="OCInstruction"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ASNInstruction"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="InvoiceInstruction"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SESInstruction"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    May be used to specify more precisely how to deal with OrderConfirmation creation.
+    
+    value works as follows:
+        allowed            - allows to send OrderConfirmation for this line item, regardless of current rule settings.
+        notAllowed         - does not allow to send OrderConfirmation for this line item.
+        requiredBeforeASN  - requires OrderConfirmation before ASN could be created.
+  -->
+  <xs:element name="OCInstruction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Lower"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Upper"/>
+      </xs:sequence>
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="allowed"/>
+            <xs:enumeration value="notAllowed"/>
+            <xs:enumeration value="requiredBeforeASN"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ASNInstruction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Lower"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Upper"/>
+      </xs:sequence>
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="allowed"/>
+            <xs:enumeration value="notAllowed"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+
+    Its purpose is to specify if an Invoice Item could be created or not for a line item.
+    
+    allowed            - allows to create an Invoice Item for this line item, regardless of current rule settings.
+    
+    notAllowed         - does not allow to create an Invoice Item for this line item, regardless of current rule settings.
+
+    verificationType   - goods receipt based invoice verification
+        The buyer can decide at order item level whether to activate goods-receipt-based invoice verification.
+        If goods-receipt-based invoice verification is active for a particular order item, each invoice item can then be matched up uniquely with the goods receipt item. It makes sense to work with goods-receipt-based invoice verification when you expect a delivery to be made and posted in several parts.
+
+    unitPriceEditable - Specifies whether buyer or supplier is allowed to update unit price while creating Invoice.
+        "yes"   - Buyer or Supplier is allowed to edit unit price and the new price should be within price tolerance.
+        "no"    - The unit price is not editable irrespective of the transaction rule defined in network.
+    If unitPriceEditable attribute is not present in the InvoiceInstruction,System should honour the default transaction rules defined in the network. 
+  -->
+  <xs:element name="InvoiceInstruction">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TemporaryPrice"/>
+      </xs:sequence>
+      <xs:attribute name="value">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="isERS"/>
+            <xs:enumeration value="isNotERS"/>
+            <xs:enumeration value="allowed"/>
+            <xs:enumeration value="notAllowed"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="verificationType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="goodsReceipt"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="unitPriceEditable">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This flag indicates if pricing information is temporary or final. 
+    If set to true at the order item level, pricing for the item is considered temporary and the supplier cannot invoice the line item.
+    If set to true at the order header level, pricing is considered temporary for the entire purchase order and the supplier cannot invoice against any item on the order.
+  -->
+  <xs:element name="TemporaryPrice">
+    <xs:complexType>
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+
+    Its purpose is to specify if a SES Item could be created or not for a line item.
+    
+    allowed            - allows to create SES Item for this line item, regardless of current rule settings.
+    
+    notAllowed         - does not allow to create SES Item for this line item, regardless of current rule settings.
+
+    unitPriceEditable - Specifies whether buyer or supplier is allowed to update unit price while creating Service Sheet.
+        "yes"   - Buyer or Supplier is allowed to edit unit price and the new price should be within price tolerance.
+        "no"    - The unit price is not editable irrespective of the transaction rule defined in network.
+    If unitPriceEditable attribute is not present in the SESInstruction,System should honour the default transaction rules defined in the network.
+    
+  -->
+  <xs:element name="SESInstruction">
+    <xs:complexType>
+      <xs:attribute name="value" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="allowed"/>
+            <xs:enumeration value="notAllowed"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="unitPriceEditable">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Either or both a textual description and codes about a hazard inherent
+    in an item or for the overall order or shipment. The overall hazards
+    may be due either to identical hazards for all items or hazards
+    inherent in shipping various products together.
+
+    The contained Description element list (if provided) should include
+    detailed handling requirements. Elements in this list may appear in
+    any order. A description locale (Description@xml:lang attribute value)
+    must not appear more than once in a Hazard element. When more than one
+    Description element is present, all must contain translations of a
+    common description.
+
+    Classification elements may appear in any order. A classification
+    domain (Classification@domain attribute value) must not appear more
+    than once in a Hazard element.
+
+    All listed Classification elements and the Description (if provided)
+    must relate to a single hazard. Additional hazards must use separate
+    Hazard elements.
+
+    The following Classification domains are expected in this context:
+        UNDG - United Nations Dangerous Goods
+        IMDG - International Marine Organization Dangerous Goods
+        NAHG - North American Hazardous Goods
+  -->
+  <xs:element name="Hazard">
+    <xs:complexType>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="Description"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification"/>
+        </xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Classification"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- PlannedAcceptanceDays: Number of days the buyer schedules for the inspection of goods after receiving them. -->
+  <xs:element name="PlannedAcceptanceDays" type="xs:decimal" />
+</xs:schema>

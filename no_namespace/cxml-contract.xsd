@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  For cXML license agreement information, please see
+  http://www.cxml.org/home/license.asp
+
+  $Id: //ariba/cxml/modules/Common.mod#6 $
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-organizationID.xsd"/>
+  <xs:include schemaLocation="cxml-quote.xsd"/>
+
+  <!--
+    Definition of a contract. This is the data that is sent from the Buyer to an external buyer system.
+  -->
+  <xs:element name="ContractRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ContractRequestHeader" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ContractItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Header of a Contract. This is the header level information in the Contract.
+
+    contractID
+        The source buyer system contractID for this request.
+        For example, Contract ID in the sourcing system.
+
+    type
+        Identifies if this is a Value based contract or quantity based Contract.
+
+    createDate
+        The date and time the contract was created/published.
+
+    agreementDate
+        The date and time the contract was created.
+        This is different from the effective and expiry date of the Contract.
+
+    effectiveDate
+        Date the Contract is available for ordering/releases.
+
+    expirationDate
+        Date the Contract is no longer available.
+
+    operation:
+        "new" operation identifies a new Contract transaction.
+        "update" operation identified an update to an existing transaction.
+        the DocumentInfo attribute can be used to indicate the Document information
+        in the external system.
+        "delete" operation will be used to cancel an existing Contract, the
+        assumption here is that the delete request will be an exact replica of the
+        original request.
+
+    LegalEntity
+        Legal entity defined in the external system. Smallest organizational unit of external accounting for which a complete,
+        self-contained set of accounts can be created. This includes the entry of all transactions that must be posted and
+        the creation of all items for legal individual financial statements, such as the balance sheet and the profit and loss statement.
+        For example, Company Code for SAP.
+
+    OrganizationalUnit
+        Purchase Unit or Purchase group defined in the external system.
+        Purchase Unit is an organizational unit within Logistics. Almost all business transactions related to
+        procurement are carried out in a purchase unit.
+        A purchasing group corresponds to a buyer or group of buyers who perform the following
+        purchasing activities:
+    - Procuring certain articles or merchandise categories
+    - Acting as the contact for vendors.
+        For example, Purchasing Organization or Purchasing Group.
+            <OrganizationalUnit domain="PurchasingOrganization">
+                 1001
+            </OrganizationalUnit>
+            <OrganizationalUnit domain="PurchasingGroup">
+                 10101
+            </OrganizationalUnit>
+
+    DocumentInfo
+        Contract Id managed in the external system. This would be sent for "update" operation.
+        For example,
+        <DocumentInfo documentID="55000000" documentType="Contract"/>
+
+    ParentContractInfo
+        Parent contract Id if the current contract is a part of an hierarchy.
+
+    QuoteRequestReference
+        If the contract is referencing to QuoteRequest originated from the external system, send requestId and requestDate.
+
+    TermsOfDelivery
+        Optional shipping terms (incoTerms) as defined by the International Chamber of
+        Commerce. These terms inform the buyer which portion of the shipping charges are their responsibility.
+        For example,
+        <TermsOfDelivery>
+            <TermsOfDeliveryCode value="TransportCondition"/>
+            <ShippingPaymentMethod value ="Other"/>
+            <TransportTerms value="FOB">Free on board vessel</TransportTerms>
+        </TermsOfDelivery>
+
+    Note:
+        Use "Contact" element to supply any additional Address or Location information.
+  -->
+  <xs:element name="ContractRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="LegalEntity" />
+        <xs:element ref="OrganizationID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OrganizationalUnit" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentTerm" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="QuoteRequestReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxReleaseAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinReleaseAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ParentContractInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="contractID" type="xs:string" use="required" />
+      <xs:attribute default="value" name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="value" />
+            <xs:enumeration value="quantity" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="createDate" type="xs:dateTime" />
+      <xs:attribute name="agreementDate" type="xs:dateTime" />
+      <xs:attribute name="effectiveDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="expirationDate" type="xs:dateTime" />
+      <xs:attribute ref="xml:lang" use="required" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The representation of a contract line item to be sent to external system.
+
+    TermsOfDelivery
+        Optional item level incoTerms.
+
+    ReferenceDocumentInfo
+        Optional reference document info for this line item.
+        For example, Requisition or RFQ in the external system.
+        <ReferenceDocumentInfo lineNumber = "1">
+            <DocumentInfo documentID = "RFQ12345"
+                          documentType = "RFQ"
+                          documentDate = "2005-11-07T07:03:34-05:00">
+            </DocumentInfo>
+        </ReferenceDocumentInfo>
+
+    Note:
+        The lineNumber attribute in the <ItemIn> will be used to specify the corresponding
+        lineNumber on the contract in the source buyer system.
+        At an implementation, level checks should be made to validate this.
+
+    Note:
+        itemClassification attribute in the <ItemIn> will be used to specify whether the current line item is material or service.
+
+    Note:
+        The external system Id of PaymentTerm can be sent as an extrinsic inside of <PaymentTerm>
+        For example,
+         <PaymentTerm payInNumberOfDays="30">
+             <Extrinsic name="Id">Net30</Extrinsic>
+         </PaymentTerm>
+
+    Note:
+         Address in ShipTo will be used specify Location (Plant or StorageLocation for SAP) of the line item.
+         For example,
+         <ShipTo>
+             <Address
+                  addressID="3000"
+                  addressIDDomain="buyerLocationID"
+                  isoCountryCode="US">
+                 <Name xml:lang="en">Plant 3000</Name>
+             </Address>
+          </ShipTo>
+
+
+    Note:
+        <IdReference> in <ItemID> will be used to send the corresponding line number of the
+        contract in the external system. For example, domain = 'SAPLineNumber', identifier='0100'
+
+    Note:
+        The quantity attribute in the ItemIn tag should be set to target quantity. If the line item is amount based,
+        it could be set to one.
+
+    Note:
+        The UnitsOfMeasure of Min/MaxQuantity and Min/MaxReleaseQuantity is same as the one in ItemDetail.
+
+    Note:
+        The MaxReleaseAmount/Quantity and MinReleaseAmount/Quantity at an item level
+        indicate the item level amounts and quantities per release (purchase order).
+
+    Note:
+        <Modifications> in <UnitPrice> will be used to send Discount amount/percent, Surcharges, Tax, etc.
+        For example,
+        <UnitPrice>
+            <Money currency="USD">1000.00</Money>
+            <Modifications>
+                 <Modification>
+                     <AdditionalDeduction type="DISCOUNT">
+                         <DeductionAmount>
+                             <Money currency="USD">10.00</Money>
+                         </DeductionAmount>
+                     </AdditionalDeduction>
+                 </Modification>
+            </Modifications>
+        </UnitPrice>
+
+     Note:
+         The Alternative at an item level indicates if this is a service line, if there are any alternatives for this line.
+         Alternative line in contracts is used in case of customer doing negotiation to get pricing on alternate lines with a supplier.
+
+  operation
+    Represents the state of the Contract line item that is being sent to the external system.
+    new - Represents new contract line item sent to External system.
+    update - Represents update to an existing contract line item.
+    delete - Represents instruction to delete this contract line item in external system.
+
+    itemType
+    Represents if this item is a leaf item or a hierarchical parent item. Used to represent
+    service item hierarchy. It could either be "item" or "composite".
+
+  serviceLineType
+    Represents the type of the service line. It could be "standard", "blanket", "contingency", "openquantity", or "information".
+  -->
+  <xs:element name="ContractItemIn">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxReleaseAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinReleaseAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxReleaseQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinReleaseQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermsOfDelivery" />
+        <xs:element ref="ItemIn" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Alternative" />
+      </xs:sequence>
+      <xs:attribute name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="itemType" type="lineItemType"/>
+      <xs:attribute name="serviceLineType" type="serviceLineType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Identifies Parent contract Id if the current contract is a part of an hierarchy.
+  -->
+  <xs:element name="ParentContractInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentInfo" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The representation of a contract status including line items.
+
+    Status
+        The status whether a contract is created/updated successfully. It contains code and text.
+        code: 200 - succeeded, 406 - failed.
+        For example,
+
+        <Status xml:lang="en-US" code="200" text="OK">Succeeded</Status>
+
+        <Status code="406" text="Not Acceptable">Failed. Invalid Plant 1234.</Status>
+  -->
+  <xs:element name="ContractStatusUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Status" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ContractStatus" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Status Update for Contract Status
+
+    ContractIDInfo
+        The ID info of a contract created/updated in the source buyer system.
+        For example, Contract Id in the sourcing system.
+
+    Comments
+        Comments associated with the status update.
+
+    type
+        Type of the contract status. for example, 'created'
+  -->
+  <xs:element name="ContractStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ContractIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ContractItemStatus" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the ID of a contract known to the source buyer system.
+
+
+    IdReference
+         Additional reference ID for Contract. For example, SAP AgreementId.
+
+    contractID
+        The id of a contract known to the source buyer system.
+
+    contractDate
+        The date and time the contract request was created or updated.
+
+    contractType
+        The type of the contract being referenced, for example: Scheduling Agreement
+  -->
+  <xs:element name="ContractIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+      <xs:attribute name="contractID" type="xs:string" use="required" />
+      <xs:attribute name="contractDate" type="xs:dateTime" />
+      <xs:attribute name="contractType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="scheduling_agreement" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+  The representation of a line item in a contract status update request.
+
+  Note:
+     "type" attribute in <ItemStatus> specifies which kind of status that item should have. For example "created"
+     "lineNumber" attribute in <ItemInfo> specifies the line number of current line item in the source buyer system.
+     For example, item number in a sourcing contract.
+
+  IdReference:
+      The reference to a line item of the contract in the external system.
+      For example, domain = 'SAPLineNumber', identifier='0100'
+
+  Comments
+        may be used to have a more user readable description of the code
+  -->
+  <xs:element name="ContractItemStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemStatus" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Use of the Contract element is deprecated
+
+    A  mechanism for sending static contract pricing information.
+  -->
+  <xs:element name="Contract">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ItemSegment"/>
+      </xs:sequence>
+      <xs:attribute name="effectiveDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="expirationDate" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Use of the ItemSegment element is deprecated.
+
+    Defines an item segment for the index. An item segment is an
+    overlay for index items, allowing suppliers to override certain
+    item attributes on a per-contract basis.
+
+    Items may be segmented by some agreed-upon user-specific key that
+    is used to determine who is eligible for these particular overlaid
+    attributes (such as reduced or different prices). Omitting the
+    segmentKey indicates that the supplier wishes to set the given
+    contract price system wide (for all users).
+
+    segmentKey      - optional agreed-upon string used to segment
+                      custom prices
+  -->
+  <xs:element name="ItemSegment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ContractItem"/>
+      </xs:sequence>
+      <xs:attribute name="segmentKey" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Use of the ContractItem element is deprecated
+
+    A particular (custom) item overlay for a index item. The item is
+    referenced by the supplierPartID.
+
+    ItemID - ID for the part to be overlaid.
+    UnitPrice - Contract price for item
+    Extrinsic - Named overlay. The Extrinsic should be named with the
+    item field name it is to overlay. The Extrinsic must contain a
+    <value> element which supplies the replacement value for the item
+    field.
+    For example:
+    <ContractItem>
+      <ItemID>
+           <SupplierPartID>123456</SupplierPartID>
+      </ItemID>
+      <Extrinsic name="URL">http://www.newaddress.com</Extrinsic>
+    </ContractItem>
+  -->
+  <xs:element name="ContractItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemID"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitPrice"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

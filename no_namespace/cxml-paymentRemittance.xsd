@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+    PaymentProposalRequest
+
+    Specifies payment proposal information of a payable.
+
+    PayableInfo
+        The reference information of the invoice, order, or master agreement 
+        to be paid.
+
+    PaymentMethod
+        The method of payment. Must be provided if isNetworkPayment is true.
+
+    PaymentPartner
+        All partners involved in payment, including payer, payee,
+        originating bank, receiving bank, remitTo, etc. The number of payment
+        partners required depends on the payment method used. The remitTo
+        element must be provided if isNetworkPayment is true.
+
+    PaymentTerms
+        The PaymentTerms specified by buyer to supplier.
+        This includes the payment term code and individual payment term as defined in ERP.
+
+    GrossAmount
+        Sum of subtotal, taxes, special handling
+        charges, and shipping charges, before discounts.
+
+    DiscountBasis
+        The DiscountBasis for the payable. DiscountBasis is the GrossAmount excluding Tax.
+
+    DiscountAmount
+        The discount applied in this PaymentProposalRequest. This DiscountAmount is
+        the discount given only on the DiscountBasis and not on the Taxes.
+
+    AdjustmentAmount
+        The total of various adjustment amounts for the payable.
+        The adjustment amount can be positive indicating a decrease
+        in payment amount, or negative indicating an increase in
+        payment amount (for late charges, penalties etc).
+        PaymentProposalRequest can contain multiple AdjustmentAmount, 
+    for example, one with type withholdingTax and one for generic.
+
+    Tax
+        The Tax for the payable. Tax element is added to pass the Tax details to the payable
+        which can be used to calculate appropriate adjustments on the taxes.
+
+    TaxAdjustment
+        The Adjustment for the tax for the payable. This is used for outbound PPR's and used
+        to specify the adjustment given on a particular tax category.
+
+    NetAmount
+        The net amount for the payable. If GrossAmount is provided, then
+        NetAmount = GrossAmount - DiscountAmount - AdjustmentAmount - TaxAdjustment.
+        If NetAmount is negative, then it indicates a credit to the buyer.
+        In this case, except for paymentProposalID, operation, and
+        PayableInfo, NetAmount, all other attributes and sub-elements
+        of PaymentProposalRequest will be ignored.
+
+    Comments
+        This field contains user comments when the status is changed. For
+        example, if the status is changed to hold, the user can enter
+        a reason which would be included in this field. Only update, hold,
+        and delete operations can have comments.
+
+    paymentProposalID
+        A buyer-generated identifier for this payment proposal. For any update
+        to an existing payment proposal, the same paymentProposalID is used.
+
+    operation
+        Defines the operation to be performed:
+            new - Creates a new payment proposal.
+            update - Updates an existing payment proposal identified by 
+                paymentProposalID.
+            delete - Cancels an existing payment proposal identified by 
+                paymentProposalID. All optional attributes and sub-elements 
+                of PaymentProposalRequest will be ignored.
+            hold - Puts on hold an existing payment proposal identified by 
+                paymentProposalID. All optional attributes and sub-elements 
+                of PaymentProposalRequest will be ignored.
+
+    isNetworkPayment
+        True if this payment proposal is paid via a network commerce hub.
+        By default it is false.
+
+    companyCode
+        The buyer’s paying company code for this payment proposal        
+  -->
+  <xs:element name="PaymentProposalRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PayableInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentMethod"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentPartner"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentTerms"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="GrossAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountBasis"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountAmount"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AdjustmentAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxAdjustment"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="NetAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="paymentProposalID" type="xs:string" use="required"/>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+            <xs:enumeration value="delete"/>
+            <xs:enumeration value="hold"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isNetworkPayment" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="paymentDate" type="xs:dateTime"/>
+      <xs:attribute name="companyCode" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines adjustment applied.
+
+    Money
+        The adjustment in dollar (or other currency) amount. When there are multiple Modification elements inside the Modifications element, 
+        Money is:
+           Money = sum of all AdditionalDeduction - sum of all AdditionalCost
+    
+    Description
+        Textual explanation of the reason for adjustment.
+
+    Modifications
+        Details of AdjustmentAmount. There can be multiple "Modification" elements inside. 
+
+    type
+        Type of adjustment amount, for example withholdingTax
+  -->
+  <xs:element name="AdjustmentAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Modifications"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines remittance detail of a specific payable that is paid.
+
+    PayableInfo
+        The reference information of the payable.
+
+    NetAmount
+        The net amount for this payable. It should be equal to
+        GrossAmount minus DiscountAmount, and every AdjustmentAmount.
+        NetAmount = GrossAmount - DiscountAmount - AdjustmentAmount
+
+    GrossAmount
+        The gross payment amount for this payable.
+
+    DiscountAmount
+        The discount info for this payable.
+
+    AdjustmentAmount
+        The total of various adjustment amounts for this payable, if any.
+        The adjustment amount can be positive indicating an decrease
+        in payment amount, or negative indicating an increase in
+        payment amount (for late charges, penalties etc). 
+        RemittanceDetail can contain multiple AdjustmentAmount, 
+    for example, one for withholdingTax and one for generic.
+
+    lineNumber
+        The line number.
+
+    referenceDocumentNumber
+        The reference document number of this remittance detail in the ERP system. 
+    For example, it can be the FI document number for the invoice.
+
+    paymentProposalID
+        The corresponding payment proposal ID for the invoice if exists.
+  -->
+  <xs:element name="RemittanceDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PayableInfo"/>
+        <xs:element ref="NetAmount"/>
+        <xs:element ref="GrossAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountAmount"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AdjustmentAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required"/>
+      <xs:attribute name="referenceDocumentNumber" type="xs:string"/>
+      <xs:attribute name="paymentProposalID" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The PaymentReference element provides a clear reference to a prior
+    PaymentRemittanceRequest document.
+
+    paymentRemittanceID
+        The paymentRemittanceID of the request. Do not use the
+    transaction identification number such as check number etc.
+
+    paymentDate
+        The payment date.
+  -->
+  <xs:element name="PaymentReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference"/>
+      </xs:sequence>
+      <xs:attribute name="paymentRemittanceID" type="xs:string"/>
+      <xs:attribute name="paymentDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the ID of a payment made by buyer. This ID should uniquely
+    identify the payment made in the buyer system.
+
+    paymentRemittanceID
+        The id of the payment. Do not use the transaction
+        identification number such as check number etc.
+
+    paymentDate
+        The payment date.
+  -->
+  <xs:element name="PaymentIDInfo">
+    <xs:complexType>
+      <xs:attribute name="paymentRemittanceID" type="xs:string" use="required"/>
+      <xs:attribute name="paymentDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines information related to an earlier payment made by the
+    buyer.
+
+    PaymentReference
+        Reference to earlier PaymentRemittanceRequest. If the earlier
+        payment was made via cxml, this element is required.
+
+    PaymentIDInfo
+        The reference to the payment id (in the Buyer system).
+  -->
+  <xs:element name="PaymentReferenceInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="PaymentReference"/>
+        <xs:element ref="PaymentIDInfo"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the summary information of a PaymentRemittanceRequest.
+
+    NetAmount
+        The total net payment amount. It should satisfy the following
+    equation:
+        NetAmount = GrossAmount - DiscountAmount - AdjustmentAmount.
+
+    GrossAmount
+        The total gross amount.
+
+    DiscountAmount
+        The total discount amount.
+
+    AdjustmentAmount
+        The total adjustment amount.
+  -->
+  <xs:element name="PaymentRemittanceSummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="NetAmount" />
+        <xs:element ref="GrossAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DiscountAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="AdjustmentAmount" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines the header information of a PaymentRemittanceRequest.
+
+    PaymentMethod
+        The method of payment.
+
+    PaymentPartner
+        All partners involved in payment, including payer, payee,
+        originating bank, receiving bank, etc. The number of payment
+        partners required depends on the payment method used. Almost
+        all of the forms of electronic payment (ACH, SWIFT, etc)
+        requires all the four parties - "payer", "payee",
+        "originatingBank", and "receivingBank".
+
+    PaymentReferenceInfo
+        Reference to an earlier payment.
+
+    Comments
+        Textual comments for this document.
+
+    Extrinsic
+        Additional information related to this payment. Should not
+        duplicate anything in PaymentRemittanceRequest.
+
+    paymentRemittanceID
+        A buyer-generated identifier for this PaymentRemittance.
+
+    paymentDate
+        Date and time this Payment or Remittance transaction was
+        created (should be earlier than the document's timestamp).
+
+    isPayment
+        Indicates whether this request is intended for making payment
+        or remittance advice only.
+
+        If the attribute is set to 'yes', then this request is for
+        payment purposes, and it may include remittance advice
+        information. If it is not specified, then it is assumed to be
+        for remittance purposes only.
+
+    paymentReferenceNumber
+        Indicates a payment transaction reference or payment identification
+        number. For example, it is the check number for check payments,
+        or an electronic reference or confirmation number for
+        electronic payments.
+
+    status
+        status of the payment remittance. Can be new or void. If not passed in, status will be new.
+
+    companyCode
+        company code of the buyer
+  -->
+  <xs:element name="PaymentRemittanceRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PaymentMethod" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentPartner" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentReferenceInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="paymentRemittanceID" type="xs:string" use="required" />
+      <xs:attribute name="paymentDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="isPayment">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="paymentReferenceNumber" type="xs:string" />
+      <xs:attribute name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="void" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="companyCode" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    PaymentRemittanceRequest
+
+    Specifies payment and/or remittance details.
+
+    PaymentRemittanceRequestHeader
+        The header information of this request.
+
+    PaymentRemittanceSummary
+        The summary information of this request.
+
+    RemittanceDetail
+        The line level information with details. If present, it sum of
+        payment amounts specified in RemittanceDetail should be equal
+        to that specified in PaymentRemittanceSummary.
+  -->
+  <xs:element name="PaymentRemittanceRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PaymentRemittanceRequestHeader" />
+        <xs:element ref="PaymentRemittanceSummary" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="RemittanceDetail" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of PaymentBatchRequest related elements
+  -->
+  <!--
+    Defines the header information of a PaymentBatchRequest.
+
+    PaymentMethod
+        Payment method of the batch. If exists, the payment method at each individual payment remittance will be ignored.
+
+    batchID
+        Unique identifier of a batch
+
+    paymentDate
+        The date that the network hub should initiate payment. This date has impact only if buyer is 
+    configured to hold payments for the automated payment method. If not, payment is initiated right away.
+
+    creationDate
+        Date and time this payment batch was created.
+  -->
+  <xs:element name="PaymentBatchRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentMethod" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="batchID" type="xs:string" use="required" />
+      <xs:attribute name="paymentDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="creationDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    ControlSum
+        The sum of netamount of all payment remittance without currency.
+  -->
+  <xs:element name="ControlSum" type="xs:decimal" />
+  
+  <!--
+    NumberOfPayments
+        The total number of payments in the payment batch.
+  -->
+  <xs:element name="NumberOfPayments" type="xs:decimal" />
+  
+  <!--
+    Defines the summary information of a PaymentRemittanceRequest.
+
+    ControlSum
+        The total net payment amount without currency in the batch.
+
+    NumberOfPayments
+        Number of payment remittances in the batch.
+  -->
+  <xs:element name="PaymentBatchSummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ControlSum" />
+        <xs:element ref="NumberOfPayments" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    PaymentBatchRequest
+
+    Specifies a payment batch and the payment remittances included in the batch
+
+    PaymentBatchRequestHeader
+        The header information of this request.
+
+    PaymentBatchSummary
+        The summary information of this request.
+
+    PaymentRemittanceRequest
+        A payment remittance that contains the details of a payment from a buyer to a supplier.
+
+  -->
+  <xs:element name="PaymentBatchRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="PaymentBatchRequestHeader" />
+        <xs:element ref="PaymentBatchSummary" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="PaymentRemittanceRequest" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status details of a payment transaction specified by an existing
+    PaymentRemittanceStatusDetail. If present, the element content 
+    describes specifics of a problem.
+
+    code
+        Payment transaction status code provided by the payment provider.
+
+    description
+        Textual description of the status code (not specific issue).
+
+    xml:lang
+        The language in which the text attribute and element content are
+        written. 
+  -->
+  <xs:element name="PaymentRemittanceStatusDetail">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="code" type="xs:string" use="required" />
+          <xs:attribute name="description" type="xs:string" use="required" />
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status for a payment transaction specified by an existing 
+    PaymentRemittanceRequest.
+
+    PaymentRemittanceStatusDetail
+        The status details of the payment transaction.
+
+    type
+        The status type of the payment transaction.
+            failed - The payment transaction failed.
+            paid - The payment transaction completed successfully.
+            paying - The payment transaction is in progress.
+
+    paymentReferenceNumber
+        Indicates check number for check payment, or a unique number
+        for electronic payments.
+  -->
+  <xs:element name="PaymentRemittanceStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PaymentRemittanceStatusDetail" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="paid" />
+            <xs:enumeration value="paying" />
+            <xs:enumeration value="failed" />
+            <xs:enumeration value="canceled" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="paymentReferenceNumber" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    PaymentRemittanceStatusUpdateRequest
+
+    A request to update the status of an existing PaymentRemittanceRequest.
+
+    DocumentReference
+        Reference to the existing PaymentRemittanceRequest.
+
+    PaymentRemittanceStatus
+        The updated status of the existing PaymentRemittanceRequest.
+  -->
+  <xs:element name="PaymentRemittanceStatusUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference" />
+        <xs:element ref="PaymentRemittanceStatus" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

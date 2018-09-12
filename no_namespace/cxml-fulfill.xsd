@@ -1,0 +1,2010 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Fulfill.mod#6 $
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"   xmlns:ds="http://www.w3.org/2000/09/xmldsig#" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+
+  <!-- ====
+      Common to both of the documents listed below.
+  ==== -->
+
+
+  <!-- ====
+      Confirmation* transaction forwards confirmation data in the Request.
+      No specific Response document is required for this transaction.
+      Servers must respond to a ConfirmationRequest with a generic Response
+      document.
+  ==== -->
+
+<!-- OrderStatusRequest Elements -->
+
+  <!--
+    Definition of an order status request. This is the data that is sent to the supplier to ask
+    for information regarding a previously sent PO such as the status of the order, delivery date
+    or current location of a shipped product.
+  -->
+  <xs:element name="OrderStatusRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrderStatusRequestHeader"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OrderStatusRequestItem"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderStatusRequestHeader Elements -->
+  <!--
+      Header of an order status request. It contains the reference to the orderStatusRequest
+      (OrderStatusRequestID, OrderStatusRequestDate) from the buyer side.
+
+      OrderStatusRequestID
+          The buyer system ID for this status request. This is an internal buyer unique number.
+
+      OrderStatusRequestDate
+          date and time when the order status request was created.
+
+  -->
+  <xs:element name="OrderStatusRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="OrderReference"/>
+          <xs:element ref="OrderIDInfo"/>
+        </xs:choice>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Contact"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="orderStatusRequestID" type="xs:string" use="required"/>
+      <xs:attribute name="orderStatusRequestDate" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderStatusRequestItem* Elements -->
+  <!--
+     Represent an item on the Order Status Request.
+     Priority
+     Priority indicator, used to drive the priority of the orders for the suppliers.
+       The Priority of the Order is to indicate the current Build priority associated to the PO line item .It is not meant to update the priority in the PO.
+
+     rescheduleRequest
+       Reschedule request information is derived by MRP to suggest possible changes to the Delivery Date. The proposed changes could be result ins the status Reschedule In, Reschedule Out, or Cancellation request for the Order.
+       in – MRP proposal to reschedule the Delivery date prior to the current delivery date
+       out- MRP proposal to reschedule the Delivery date post the current delivery date
+       cancel – MRP proposal to cancel the PO line item.
+
+     rescheduleDate
+       The MRP proposed rescheduled date is captured in the date field .The Reschedule date is with reference to the delivery date.
+  -->
+  <xs:element name="OrderStatusRequestItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemReference"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Priority"/>
+      </xs:sequence>
+      <xs:attribute name="rescheduleRequest">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="in"/>
+            <xs:enumeration value="out"/>
+            <xs:enumeration value="cancel"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="rescheduleDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Request to add confirmation information to the data known about an
+    order at the receiving server.
+
+    While multiple confirmations may be sent for one order, each
+    confirmation must mention a line item once. And, a line item must not
+    be mentioned in more than one confirmation. Multiple confirmations are
+    allowed (and sensible) only when each has type="allDetail" or
+    type="detail". Only one (original) confirmation per order of
+    type="accept", type="except" or type="reject" is allowed. When a
+    confirmation with one of these types arrives, the receiving system must
+    discard any and all previous confirmations for the order.
+
+    OrderStatusRequestReference or OrderStatusRequestIDInfo can be optionally added to
+    explicitly reference to the Order Status Request that originated the confirmation.
+
+    ConfirmationItem elements may appear in any order within the
+    ConfirmationRequest. Of course, an easily-readable order such as by
+    increasing lineNumber value is preferred. Again, no line item
+    (Confirmation@lineNumber attribute value) may appear more than once
+    within a ConfirmationRequest element.
+  -->
+  <xs:element name="ConfirmationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ConfirmationHeader"/>
+        <xs:element ref="OrderReference"/>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="OrderStatusRequestReference"/>
+          <xs:element ref="OrderStatusRequestIDInfo"/>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ConfirmationItem"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Information about this confirmation that's common to all contained
+    items.
+
+    The contained DocumentReference element may appear in a document only
+    when the operation is "update". In that case, the DocumentReference is
+    required and it must reference the most recent ConfirmationRequest
+    document for this particular confirmation (usually also indicated by a
+    common confirmID). For example when a confirmation is created, updated
+    and then updated again, the final document must contain a
+    DocumentReference referring to the previous ConfirmationRequest with
+    operation="update". That document must, in turn, refer to the original
+    (operation="new") ConfirmationRequest document.
+
+    Tax and Shipping amounts may be updated (included in the confirmation
+    with new values) without corresponding line item information
+    (additional information in the ConfirmationItem list). Total should
+    not be included with a different value from the OrderRequest document
+    unless a ConfirmationItem describes a new UnitPrice or quantity. It is
+    not necessary to copy this information from the OrderRequest document:
+    Total, Tax and Shipping should not be included if they match those
+    amounts in the original order.
+
+    Contact roles may usefully include: technicalSupport, customerService,
+    sales, shipFrom (starting point for shipments related to this order),
+    shipTo (echoing the ShipTo element from the OrderRequest document),
+    payTo (where payment for this order should be sent), billTo (echoing
+    the BillTo element from the OrderRequest document), buyerCorporate
+    (details the supplier has about the buying organization) and
+    supplierCorporate. It is not necessary to copy this information from
+    the OrderRequest document: The Contact element should be used primarily
+    to add information to that known about an order or to describe the
+    sender of this particular confirmation.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    ConfirmationHeader element.
+
+    Elements in the Hazard list may appear in any order. The same hazard
+    should not be listed more than once in a ConfirmationHeader. Each
+    hazard listed at this level (in a ConfirmationHeader element) should
+    apply to the entire order or all items mentioned in this confirmation.
+    A ConfirmationRequest which updates the status of a single line item
+    should not include Hazard elements in the ConfirmationItem element.
+
+    The Comments element list may contain additional information about the
+    status of the overall order (or the portion described in this
+    confirmation) such as payment terms, additional detail on shipping
+    terms and clarifications of the status. For the last type of
+    information, terms such as "backordered", "shipped" and "invalid" may
+    be sensible. All such data must be intended for human use. The text
+    in this list should describe this particular confirmation and not
+    repeat Comments appearing in the OrderRequest.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about the order for application consumption. These
+    elements may include pre-defined keywords and values affecting workflow
+    in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a ConfirmationHeader element. A type may not be mentioned both
+    in this list and in a particular ConfirmationStatus element. (The
+    ConfirmationHeader must not contain a default extrinsic value
+    overridden at the lower level.)
+
+    confirmID
+        An (optional) identifier for this particular confirmation assigned
+        by the supplier. A user-visible and secondary (to the payloadID
+        attribute of the cXML element) identifier for this document. This
+        value does not vary as a particular confirmation is updated. That
+        is, operation="update" documents describing the status of the same
+        items in the same order would share a confirmID with the original
+        operation="new" ConfirmationRequest.
+
+        When the confirmID does not appear in an operation="new"
+        ConfirmationRequest, it must not appear in a corresponding
+        operation="update" document. Links between these documents must be
+        deduced using the DocumentReference element contained in the
+        update's ConfirmationHeader and the payloadID attribute of the
+        original or previous update.
+    operation
+        The (optional) operational mode of the confirmation document.
+        Defaults to "new".
+
+        An "update" confirmation allows a supplier to correct an error in a
+        confirmation or to add additional information learned later. In
+        either case, an "update" document must be complete: All data from
+        the original confirmation or a previous update should be discarded
+        by the recipient. A ConfirmationRequest document does not provide
+        default data for a subsequent operation="update" document. (This
+        applies in particular to Hazard and Extrinsic elements, which
+        should appear at either the header or item levels but not both.)
+
+        The "completeness" requirement allows the information contained in
+        a ConfirmationRequest to expand. No restrictions are placed on
+        including additional items that have not yet been referenced in a
+        ConfirmationRequest in a operation="update" ConfirmationRequest.
+        However, added items must not have been mentioned in another
+        ConfirmationRequest unless all items from that (other) confirmation
+        are now described in the consolidated document. This protocol
+        supports neither splitting confirmations (sending an
+        operation="update" ConfirmationRequest document describing a subset
+        of the items in an earlier version) nor partial consolidations of
+        confirmations (sending an operation="update" ConfirmationRequest
+        document that contains a subset of the information from another
+        confirmation).
+
+        An operation="update" ConfirmationRequest must contain the same
+        confirmID (if any) as the previous version of the confirmation.
+        When included, this attribute provides an unambiguous and direct
+        connection between all versions of the confirmation.
+
+        An operation="update" ConfirmationRequest must also include a
+        DocumentReference element in the ConfirmationHeader. (See above
+        for more information on this element.)  This effectively sequences
+        multiple versions of a confirmation and may provide the only link
+        between those versions. (See above under confirmID for more on the
+        implications of leaving out that attribute.)  Other confirmations
+        discarded through consolidations as described above are not
+        explicitly referenced by the new, larger ConfirmationRequest
+        document.
+
+        A confirmation may not be deleted; the protocol does not include an
+        operation="delete" option for this request. Suppliers must replace
+        incorrect or invalid confirmations with correct information. A
+        type="unknown" ConfirmationStatus will reset such information to
+        its original state. This covers the case of an error in accepting
+        or rejecting an item that has not been researched.
+    type
+        The type of confirmation:
+        accept
+            The entire order is accepted as described in the referenced
+            OrderRequest document.
+
+            A document of this type may contain ConfirmationItem elements.
+            If ConfirmationItem elements are present in the
+            ConfirmationRequest document, they must contain only
+            ConfirmationStatus elements of type="accept".
+        allDetail
+            This confirmation updates only those line items described in
+            the following ConfirmationItem elements. Line items not
+            mentioned specifically in this document retain their current
+            status. Unlike the "detail" type (below), a confirmation of
+            this type includes all information known by the supplier,
+            whether or not it differs from the data provided in the
+            original OrderRequest document.
+
+            This type is provided for compatibility with current EDI and
+            order entry tools (which commonly send the buyer a snapshot of
+            an order in the supplier's systems). Due to the reconciliation
+            issues caused by confirmations of this type, it is recommended
+            that use of this type be considered a "bridge" strategy
+            suitable only for the short term.
+
+            A document of this type must contain ConfirmationItem elements.
+            The contained ConfirmationStatus elements must have types
+            "allDetail", "reject" or "unknown". "accept" , "detail"
+            or "backordered". status types are not allowed because they
+            conflict with the requirements of this document type.
+        detail
+            This confirmation updates only those line items described in
+            the following ConfirmationItem elements. Line items not
+            mentioned specifically in this document retain their current
+            states. A confirmation of this type should include only
+            information which differs from that in the original
+            OrderRequest document.
+
+            Later ConfirmationRequest documents that restore information
+            provided in the OrderRequest should not include the variations
+            described in an earlier ConfirmationRequest. For example, the
+            Tax element may appear in a ConfirmationStatus of one
+            ConfirmationRequest and not in an update to that confirmation.
+            This signifies that the original OrderRequest actually
+            contained the correct charge.
+
+            A document of this type must contain ConfirmationItem elements.
+            The contained ConfirmationStatus elements may have any type
+            except "allDetail".
+
+        backordered
+            The entire order is backordered.
+
+            A document of this type may contain ConfirmationItem elements.
+            If ConfirmationItem elements are present in the
+            ConfirmationRequest document, they must contain only
+            ConfirmationStatus elements of type="backordered".
+
+        except
+            The entire order is accepted as described in the referenced
+            OrderRequest document with exceptions listed in the following
+            ConfirmationItem elements. Line items not mentioned
+            specifically in this document are accepted without change.
+
+            A document of this type must contain ConfirmationItem elements.
+            The contained ConfirmationStatus elements may have any type
+            except "allDetail".
+        reject
+            The entire order is rejected. No further (line item) detail is
+            provided beyond the reason described in the Comments element.
+
+            A document of this type must not contain ConfirmationItem
+            elements.
+
+        requestToPay
+            This type of confirmation is for the supplier to request the
+            initiation of payment transactions for either the whole
+            order or some line items.
+
+            If the request contains no ConfirmationItem elements, the intent
+            will be to initiate payment transaction on the total amount of
+            all line items in the order, except those being rejected.
+
+            If the request contains ConfirmationItem elements, payment
+            transaction will be initiated against the specified items and
+            quantities.
+
+            A ConfirmationItem in this type of request does not have to
+            describe the complete line item. It should only contain
+            "requestToPay" ConfirmationStatus elements for new payment
+            transactions.
+
+        replace
+            The entire order is replaced. This is used by supplier to
+            perform a wholesale replacement of the order. In the case
+            that a changed order is sent from Buyer before this
+            OrderConfirmation is received by Buyer, Supplier should
+            accept the new changed order. ConfirmationItems in this
+            type of request must contain ConfirmationStatus elements
+            only of type "detail", and each ConfirmationStatus element
+            must include an ItemIn element.
+
+    noticeDate
+        The date and time this confirmation was created.
+    invoiceID
+        An optional supplier-generated identifier for an Invoice associated
+        with the items described in this confirmation. Identical to the
+        Invoice Number which appears at the top of a physical Invoice.
+    incoTerms
+        Optional shipping terms as defined by the International Chamber of
+        Commerce. These terms inform the buyer which portion of the
+        shipping charges are their responsibility. Allowed values include:
+            cfr - Cost and freight
+            cif - Cost, insurance and freight
+            cip - Carriage and insurance paid to
+            cpt - Carriage paid to
+            daf - Delivered at frontier
+            ddp - Delivered duty paid
+            ddu - Delivered duty unpaid
+            deq - Delivered ex quay (duty paid)
+            des - Delivered ex ship
+            exw - Ex works
+            fas - Free alongside ship
+            fca - Free carrier
+            fob - Free on board vessel
+    version
+        The version number for this confirmation. It should start with 1 and
+        should be incremented by 1 for each subsequent version (2,3,4...).
+    IdReference
+        Internal Reference Number/Supplier Reference Number can be one of the following
+                Internal supplier number - This is the most common scenario; it represents the document number created by the internal supplier ERP system.
+                Contract - The contract number can be used to identify that a specific outbound document is related to a specific contract.
+                Internal criteria - Sometimes the supplier can enter a customized value in the field Supplier Reference Number. Example: It can be the name of the person in charge of the follow-up of the transaction.
+  -->
+  <xs:element name="ConfirmationHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Total"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Shipping"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="confirmID" type="xs:string"/>
+      <xs:attribute name="operation" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+            <xs:enumeration value="update"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="accept"/>
+            <xs:enumeration value="allDetail"/>
+            <xs:enumeration value="detail"/>
+            <xs:enumeration value="backordered"/>
+            <xs:enumeration value="except"/>
+            <xs:enumeration value="reject"/>
+            <xs:enumeration value="requestToPay"/>
+            <xs:enumeration value="replace"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="noticeDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="invoiceID" type="xs:string"/>
+      <xs:attribute name="incoTerms">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="cfr"/>
+            <xs:enumeration value="cif"/>
+            <xs:enumeration value="cip"/>
+            <xs:enumeration value="cpt"/>
+            <xs:enumeration value="daf"/>
+            <xs:enumeration value="ddp"/>
+            <xs:enumeration value="ddu"/>
+            <xs:enumeration value="deq"/>
+            <xs:enumeration value="des"/>
+            <xs:enumeration value="exw"/>
+            <xs:enumeration value="fas"/>
+            <xs:enumeration value="fca"/>
+            <xs:enumeration value="fob"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="version" type="xs:unsignedInt"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Information about a specific line item. Must completely describe the
+    status of the referenced line item. For example, two
+    ConfirmationRequest documents may be necessary to update the status of
+    an entire order. However, a particular item must be mentioned in only
+    one of these documents.
+
+    A particular line item from an order must not be mentioned in more than
+    one ConfirmationItem element.
+
+    Any Contact elements provided at this level describe contacts specific
+    to this item. The ConfirmationHeader description mentions roles
+    appropriate at this level as well. A particular Contact role must not
+    appear in both the ConfirmationItem and ConfirmationHeader elements.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    ConfirmationItem element.
+
+    Elements in the Hazard list may appear in any order. The same hazard
+    should not be listed more than once in a ConfirmationItem. Each hazard
+    listed at this level (in a ConfirmationItem element) must apply to the
+    this specific line item. A ConfirmationRequest which updates the
+    status of a single line item should not include Hazard elements in the
+    ConfirmationItem element.
+
+    The list of ConfirmationStatus elements may appear in any order.
+    However, the described quantities must sum to the quantity of the
+    containing ConfirmationItem element (after any conversions required by
+    use of different UnitOfMeasure scales at each level). This ensures the
+    status of a particular line item is completely described in a
+    ConfirmationRequest document.
+
+    quantity
+        Number of this line item which was ordered. Expressed in the units
+        given in the UnitOfMeasure element. Copied directly from the
+        corresponding line item (ItemOut) in the document referenced in the
+        OrderReference element.
+    lineNumber
+        Position (counting from 1) of this item in an order. Copied
+        directly from the corresponding line item (ItemOut) in the document
+        referenced in the sibling OrderReference element.
+    parentLineNumber
+        lineNumber of the parent line item in the order confirmation request.
+    itemType
+        specify whether the line item contains child line items or acts as a child item
+  compositeItemType
+    specify type of parent line item(lot/box)
+  -->
+  <xs:element name="ConfirmationItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ConfirmationStatus"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required"/>
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt"/>
+      <xs:attribute name="itemType" type="lineItemType"/>
+      <xs:attribute name="compositeItemType" type="compositeItemType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Confirmation status of a specific line item or portion thereof.
+    Quantities at this level must sum to that in the containing
+    ConfirmationItem. Documents should use a consistent UnitOfMeasure in
+    ConfirmationItem and contained ConfirmationStatus elements. A
+    substitution (replacement item) may use a different UnitOfMeasure in
+    the ItemDetail contained within the ItemIn element.
+
+    In the normal case (for simple acceptance or rejection of this item),
+    the ConfirmationStatus element would contain only a UnitOfMeasure
+    element and the quantity and type attributes. ItemIn appears in this
+    element if and only if the supplier is recommending a substitution or
+    the type is "allDetail". In that case, the quantity of the ItemIn
+    element must match that of the containing ConfirmationStatus unless the
+    UnitOfMeasure is different. ItemDetail must appear inside ItemIn
+    whenever ItemIn appears in this context. That is, an ItemIn element in
+    a ConfirmationStatus element must contain an ItemDetail element.
+
+    UnitPrice, Tax and Shipping amounts may be updated (included in the
+    ConfirmationStatus element with new values) without a complete part
+    substitution. It is not necessary to copy this information from the
+    OrderRequest document: UnitPrice, Tax and Shipping should not be
+    included if they match that in the original ItemOut element. The
+    addition of tax or shipping amounts not mentioned in the original order
+    may appear when the type is "accept", "allDetail" or "detail". The
+    "accept" type should be used if these additions are the only changes
+    from the order. The "detail" type implies a substitution (presence of
+    the ItemIn element), price change (presence of the UnitPrice element)
+    or delayed shipment (presence of the deliveryDate attribute).
+    Unfortunately, the "allDetail" type requires reconciliation software to
+    determine what has changed since the original order.
+
+    The Comments element list may contain additional information about the
+    status of this portion of the item such clarifications of the type
+    attribute. Terms such as "backordered", "shipped" and "invalid" may be
+    sensible. All such data must be intended for human use.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about this particular item portion for application
+    consumption. These elements may include pre-defined keywords and
+    values affecting workflow in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a ConfirmationStatus element. A type may not be mentioned both
+    in this list and in the overall ConfirmationHeader element. (The
+    ConfirmationHeader must not contain a default extrinsic value
+    overridden at this lower level.)
+
+    SupplierBatchID
+        SupplierBatch is the batch ID provided by the supplier at the line item quantity level
+        to identify  the batch in which the item or the product was produced. The batch id is helpful in tracebility.
+        Batch numbers (also call "lot number", "variant") are used in several industries to uniquely identify  items produced together.
+
+    ComponentConsumptionDetails
+        Contains detailed information about consumption of components in the manufacturing of final product.
+
+    quantity
+        Number of this line item which has this status. Expressed in the
+        units given in the UnitOfMeasure element.
+    type
+        The status of this particular portion of the order:
+        accept
+            This portion of the line item is accepted as described in the
+            referenced ItemOut element.
+
+            This type is allowed in documents with overall
+            (ConfirmationHeader) types "accept", "detail" or "except".
+        allDetail
+            This portion of the line item is accepted as detailed in the
+            contents of this ConfirmationStatus element. These contents
+            completely describe what will be shipped. Unlike the "detail"
+            type (below), a confirmation of this type includes all
+            information known by the supplier, whether or not it differs
+            from the data provided in the original OrderRequest document.
+
+            This type is provided for compatibility with current EDI and
+            order entry tools (which commonly send the buyer a snapshot of
+            an order in the supplier's systems). Due to the reconciliation
+            issues caused by confirmations of this type, it is recommended
+            that use of this type be considered a "bridge" strategy
+            suitable only for the short term.
+
+            This type is allowed only in documents with overall
+            (ConfirmationHeader) type "allDetail".
+        detail
+            This portion of the line item is accepted with the changes
+            detailed in the contents of this ConfirmationStatus element.
+            At least one of the UnitPrice, Shipping, Tax or ItemIn elements
+            or the deliveryDate attribute must be present.
+
+            This type is allowed in documents with overall
+            (ConfirmationHeader) types "detail", "except" or "replace".
+
+        backordered
+            This portion of the line item is backordered.
+
+            This type is allowed in documents with overall
+            (ConfirmationHeader) types "backordered", "detail" ,"except",
+            and "allDetail". "shipmentDate" and "deliveryDate" attributes for
+            this type of ConfirmationStatus are optional. The rest of elements
+            for this type of ConfirmationStatus are ignored.
+
+        reject
+            This portion of the line item is rejected.
+
+            This type is allowed in documents with overall
+            (ConfirmationHeader) types "allDetail", "detail" or "except".
+        requestToPay
+            A requestToPay is being asked about this portion of the line
+            item. Request-to-pay will initiate a request to the financial
+            institution to begin the settlement process of the portion of
+            the line item.
+
+            This type is allowed in documents with overall request
+            (ConfirmationHeader) type "requestToPay".
+        unknown
+            The status of this portion of the line item is not known at
+            the time of this confirmation. This line item status may
+            provide a "placeholder" while the supplier does further
+            research. Update confirmations may also reset the status of a
+            line item portion to "unknown" when an earlier confirmation
+            (incorrectly) accepted or rejected that portion.
+
+            This type is allowed in documents with overall
+            (ConfirmationHeader) types "allDetail", "detail" or "except".
+    shipmentDate
+        The date and time this shipment is expected to leave the supplier.
+        A ConfirmationStatus element should include this information if the
+        type is "accept", "allDetail" or "detail".
+    deliveryDate
+        The date and time this shipment is expected to arrive. Should not
+        be included if the value matches that of the requestedDeliveryDate
+        attribute (if any) in the corresponding OrderRequest document.
+        Otherwise, a ConfirmationStatus element should include this
+        information if its type is "accept", "allDetail" or "detail".
+  -->
+  <xs:element name="ConfirmationStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure"/>
+        <xs:choice>
+          <xs:element ref="ItemIn"/>
+          <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" ref="UnitPrice"/>
+            <xs:element minOccurs="0" maxOccurs="1" ref="Tax"/>
+            <xs:element minOccurs="0" maxOccurs="1" ref="Shipping"/>
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SupplierBatchID"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ComponentConsumptionDetails"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="accept"/>
+            <xs:enumeration value="allDetail"/>
+            <xs:enumeration value="detail"/>
+            <xs:enumeration value="backordered"/>
+            <xs:enumeration value="reject"/>
+            <xs:enumeration value="unknown"/>
+            <xs:enumeration value="requestToPay"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="shipmentDate" type="xs:dateTime"/>
+      <xs:attribute name="deliveryDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- ====
+    ShipNotice* transaction forwards ship notice data in the Request. No
+    specific Response document is required for this transaction. Servers
+    must respond to a ShipNoticeRequest with a generic Response document.
+  ==== -->
+
+  <!--
+      Request to add shipment information to the data known about an order at
+      the receiving server.
+
+      Shipments with multiple responsible carriers may be described in one of
+      two ways:
+      1. A single carrier (or third-party logistics provider) creates a
+         tracking identifier that may be used to retrieve information about
+         the entire trip. Suppliers send such information in a single
+         ShipControl element. Optionally, they may use Route elements to
+         describe lower-level carriers.
+      2. Separate tracking numbers are required for each segment. Suppliers
+         send such information with one ShipControl element per segment.
+
+      ShipControl elements must appear in the order the shipment will travel.
+      The first such element must not have an explicit starting date (the
+      ShipControl@startDate attribute must not be present) and that carrier's
+      control must begin at the shipment's origination time
+      (ShipNoticeHeader@shipmentDate attribute value). All later ShipControl
+      elements must have increasing (later) starting dates
+      (ShipControl@startDate attribute value).
+
+      ShipNoticePortion elements may appear in any order. A particular order
+      (ShipNoticePortion/OrderReference/DocumentReference@payloadID attribute
+      value) must not appear more than once in a ShipNoticeRequest element.
+
+      Note: Many elements and attributes in the ShipNoticeRequest and
+      ShipNoticeHeader elements are optional only for the operation="delete"
+      case. For other operations, one or more ShipControl and
+      ShipNoticePortion elements must appear in a ShipNoticeRequest element.
+  -->
+  <xs:element name="ShipNoticeRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ShipNoticeHeader"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ShipControl"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ShipNoticePortion"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Information about this ship notice that's common to all contained
+    items.
+
+    One or more ServiceLevel elements must appear in all ShipNoticeRequest
+    documents except when operation="delete" is specified. Each
+    ServiceLevel must contain a single string corresponding to the level of
+    service (such as "overnight") provided by the carrier for this
+    shipment. When multiple ServiceLevel elements appear, all must
+    describe the same level of service in different languages or locales.
+    (No two ServiceLevel elements may have the same xml:lang attribute.)
+    Elements in such a list may appear in any order.
+
+    The contained DocumentReference element may appear in a document only
+    when the operation is "update" or "delete". In that case, the
+    DocumentReference is required and it must reference the most recent
+    ShipNoticeRequest document for this particular ship notice (also
+    indicated by a common shipmentID). For example when a ship notice is
+    created, updated and then updated again, the final document must
+    contain a DocumentReference referring to the previous ShipNoticeRequest
+    with operation="update". That document must, in turn, refer to the
+    original (operation="new") ShipNoticeRequest document.
+
+    Contact roles may usefully include: technicalSupport, customerService,
+    sales, shipFrom (starting point for this shipment), shipTo (should echo
+    the ShipTo element from the OrderRequest documents), buyerCorporate
+    (details the supplier has about the buying organization) and
+    supplierCorporate. It is not generally necessary to copy information
+    from the various OrderRequest documents: The Contact element should be
+    used primarily to add information to that known about an order.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    ShipNoticeHeader element.
+
+  LegalEntity and OrganizationalUnit elements are intended to include
+  the company code and purchasing organization respectively. Currently
+  only used for Ship Notices coming from buyer to supplier (Component or
+  Return Ship Notice).
+
+    Elements in the Hazard list may appear in any order. The same hazard
+    should not be listed more than once in a ShipNoticeHeader. Each hazard
+    listed at this level (in a ShipNoticeHeader element) should apply to
+    the entire shipment or all items contained in this shipment. A
+    ShipNoticeRequest for a single line item should not include Hazard
+    elements in the ShipNoticeItem element.
+
+    The Comments element list may contain additional information about the
+    shipment. In this context (the ShipNoticeHeader), that information
+    must be common to all contained items and routes. All such data must
+    be intended for human use. This information could also include a reason
+    for shipment to indicate rush orders for example.
+
+    The Comments element list may also contain structured comments with
+    type as "ReasonForShipment" to describe any specific reason for this shipment
+    and with type as "TransitDirection" to specify transit direction.
+    Reason for shipment is typically specified with replace/partial shipments to
+    let the buyer know about the need of the shipment.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about the shipment for application consumption. These
+    elements may include pre-defined keywords and values affecting workflow
+    in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a ShipNoticeHeader element. A type may not be mentioned both in
+    this list and in a particular ShipControl or ShipNoticePortion element.
+    (The ShipNoticeHeader must not contain a default extrinsic value
+    overridden at either lower level.)
+
+    ReferenceDocumentInfo
+        Additional document reference information.
+
+    shipmentID
+        An identifier for this particular shipment assigned by the
+        supplier. A user-visible and secondary (to the payloadID attribute
+        of the cXML element) identifier for this document. This value does
+        not vary as a particular ship notice is updated. That is,
+        operation="update" or operation="delete" documents describing the
+        same shipment must share a shipmentID with the original
+        operation="new" ShipNoticeRequest.
+    operation
+        The (optional) operational mode of ship notice document. Defaults
+        to "new".
+
+        An "update" ship notice allows a supplier to correct an error in a
+        ship notice or to add additional information learned later. In
+        either case, an "update" document must be complete: All data from
+        the original should be discarded by the recipient.
+
+        A "delete" ship notice removes the changes described in the
+        previous ShipNoticeRequest (either operation="new" or a previous
+        update) from the state of the shipment. This operation should be
+        used only when the supplier discards a planned shipment or
+        incorrectly sends a ShipNoticeRequest about a shipment that will
+        not take place.
+
+        An "update" or "delete" ship notice must have the same shipmentID
+        as the previous version of the notice. This provides an
+        unambiguous and direct connection between all versions of the ship
+        notice.
+
+        If the operation is not "new" (explicitly or by default), the
+        ShipNoticeRequest must also include a DocumentReference element in
+        the ShipNoticeHeader. (See above for more information on this
+        element.)  This effectively sequences multiple versions of a ship
+        notice.
+    noticeDate
+        The date and time this ship notice was created.
+    shipmentDate
+        The date and time this shipment left the supplier. This attribute
+        must appear in all ShipNoticeRequest documents except when
+        operation="delete" is specified. This can be an actual or an estimated
+        date based on shipmentType attribute.
+    deliveryDate
+        The date and time this shipment is expected to arrive. While this
+        value may default to the requestedDeliveryDate of a single order,
+        that attribute is optional in an OrderRequest document and the
+        ShipNoticeRequest may refer to multiple OrderRequest documents.
+        This attribute must appear in all ShipNoticeRequest documents
+        except when operation="delete" is specified. This can be an actual
+        or an estimated date based on shipmentType attribute.
+    shipmentType
+        The type of this shipment. The value can be "actual" or "planned"
+        depending on whether this notice is being created for actual shipment
+        or an estimated one. This attribute also decides whether shipmentDate
+        and deliveryDate attributes hold actual or estimated dates.
+    fulfillmentType
+        The type of fulfillment, for which this shipment notice is created.
+        The value of this attribute can be "partial" if all the items are
+        not being shipped and "complete" if the whole order is being shipped.
+    requestedDeliveryDate
+        The date on which the items were requested to be delivered.
+    reason
+        The (optional) reason for ship notice.
+        Valid value:
+            "return": is only valid for return shipments
+            associated to return items.
+  -->
+  <xs:element name="ShipNoticeHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ServiceLevel" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="LegalEntity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OrganizationalUnit" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TermsOfTransport" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Packaging" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo" />
+      </xs:sequence>
+      <xs:attribute name="shipmentID" type="xs:string" use="required" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="noticeDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="shipmentDate" type="xs:dateTime" />
+      <xs:attribute name="deliveryDate" type="xs:dateTime" />
+      <xs:attribute name="shipmentType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="actual" />
+            <xs:enumeration value="planned" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="fulfillmentType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="partial" />
+            <xs:enumeration value="complete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="requestedDeliveryDate" type="xs:dateTime" />
+      <xs:attribute name="reason">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="return" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    One language-specific string for the service level code. Each
+    ServiceLevel must contain a string (in the specified language)
+    corresponding to the level of service (such as "overnight") provided by
+    the carrier for this shipment.
+
+    xml:lang
+        The language or locale in which the ServiceLevel content (the name
+        of the service level) is written.
+  -->
+  <xs:element name="ServiceLevel">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Carrier responsible for some portion of the shipment. The shipment
+    will be tracked using the identifiers provided at this level. Those
+    identifiers should be valid from the startDate of one ShipControl
+    element or the shipment's shipmentDate until the startDate of the next.
+
+    The CarrierIdentifier list may include multiple identifiers for the
+    same carrier. Elements in this list may appear in any order. A
+    particular identification domain (CarrierIdentifier@domain attribute
+    value) must not appear more than once in a ShipControl element. The
+    identification provided by all elements of the CarrierIdentifier list
+    must correspond to the same company.
+
+    If present, Route elements must be in the order the shipment will
+    travel.
+
+    The only Contact roles likely to be sensible in this element are
+    "carrierCorporate" (details the contact information the supplier has
+    about the carrier organization) and "shipFrom". A Contact element with
+    role "shipFrom" must appear in all ShipControl elements after the
+    first. This role must not appear in the first ShipControl element
+    since it would duplicate that role in the overall ShipNoticeHeader
+    element. Since a Contact with role "shipTo" would always duplicate
+    information in the following ShipControl element or that role in the
+    ShipNoticeHeader, such a Contact must not appear in this element. In
+    essence, control passes from one carrier to another at a particular
+    location and (estimated) time.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    ShipControl element.
+
+    The Comments element list may contain additional information about the
+    shipment while under the control of this carrier. In this context (the
+    ShipControl element), that information must be common to all contained
+    routes or make it clear which Route is affected. All such data must be
+    intended for human use.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about this carrier or their period of responsibility
+    for application consumption. These elements may include pre-defined
+    keywords and values affecting workflow in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a ShipControl element. A type may not be mentioned both in this
+    list and in the overall ShipNoticeHeader element. (The
+    ShipNoticeHeader must not contain a default extrinsic value overridden
+    at this lower level.)
+
+    startDate
+        The date and time this shipment started this part of the route.
+        Required for all ShipControl elements after the first. This
+        attribute must not appear in the first ShipControl element since it
+        would duplicate the ShipNoticeHeader's shipmentDate attribute.
+-->
+  <xs:element name="ShipControl">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="CarrierIdentifier" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ShipmentIdentifier" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PackageIdentification" />
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="Route" />
+          <xs:element ref="TransportInformation" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="startDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Identifiers which appear on the containers, skids, boxes or packages
+    that constitute the shipment. The range of numbers described is
+    inclusive at both extremes.
+
+    rangeBegin
+        Earliest number appearing on the separate elements in this
+        shipment.
+    rangeEnd
+        Highest number appearing on the separate elements in this
+        shipment. Must be greater than or equal to rangeBegin.
+  -->
+  <xs:element name="PackageIdentification">
+    <xs:complexType>
+      <xs:attribute name="rangeBegin" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="rangeEnd" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Purchase order and item data. Answers the question: What's coming in
+    this shipment?
+
+    A particular OrderRequest (via the OrderReference element) must not be
+    mentioned in more than one ShipNoticePortion element. While multiple
+    shipments may be sent for one order, a ship notice must mention each
+    order only once.
+
+    MasterAgreementReference or MasterAgreementIDInfo can be used to identify
+    the corresponding scheduling agreement if the ship notice is generated
+    from a scheduling agreement release.
+
+    Any Contact elements provided at this level describe contacts specific
+    to this order. The ShipNoticeHeader description mentions roles
+    appropriate at this level as well, though shipFrom, shipTo,
+    buyerCorporate and supplierCorporate information should not vary at
+    this level. A particular Contact role must not appear in both the
+    ShipNoticePortion and ShipNoticeHeader elements. Therefore, roles such
+    as technicalSupport, customerService and sales are most appropriate
+    within the ShipNoticePortion.
+
+    Elements in the Contact list may appear in any order. A contact role
+    (Contact@role attribute value) must not appear more than once within a
+    ShipNoticePortion element.
+
+    The Comments element list may contain additional information about the
+    order in this shipment. In this context (the ShipNoticePortion
+    element), that information must be common to all contained items or
+    make it clear which ShipNoticeItem is affected. All such data must be
+    intended for human use.
+
+    Elements in the Comments list may appear in any order. The xml:lang
+    attribute may have the same value in multiple Comments elements in the
+    list. The set of Comments with a particular xml:lang value should
+    contain similar content to that for any other xml:lang value present in
+    the list.
+
+    On the other hand, the Extrinsic element list may be used to insert
+    additional data about this order for application consumption. These
+    elements may include pre-defined keywords and values affecting workflow
+    in the receiving system.
+
+    Elements in the Extrinsic list may appear in any order. An extrinsic
+    type (Extrinsic@name attribute value) must not appear more than once
+    within a ShipNoticePortion element. A type may not be mentioned both
+    in this list and in the overall ShipNoticeHeader element. (The
+    ShipNoticeHeader must not contain a default extrinsic value overridden
+    at this lower level.)
+
+    If a ShipNoticePortion element contains no ShipNoticeItem elements, the
+    entire referenced order is included in the shipment. Note: This
+    simplifying option prevents inclusion of hazard and packaging
+    information.
+
+    ReferenceDocumentInfo
+        Additional document reference information.
+  -->
+  <xs:element name="ShipNoticePortion">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrderReference" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="MasterAgreementReference" />
+          <xs:element ref="MasterAgreementIDInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ShipNoticeItem" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Portion of a specific line item that is part of this shipment.
+
+    A line item from an order must not be mentioned in more than one
+    ShipNoticeItem element. While additional quantities of an item may be
+    shipped separately, a single ship notice must describe each item only
+    once.
+
+    Elements in the Hazard list may appear in any order. The same hazard
+    should not be listed more than once in a ShipNoticeItem. Each hazard
+    listed at this level (in a ShipNoticeItem element) must apply to this
+    specific line item. A ShipNoticeRequest for a single line item should
+    not include Hazard elements in the ShipNoticeItem element.
+
+    ShipNoticeItemDetail contains detailed information about an item. All the data that
+    a user would want to see about an item instead of the bare essentials.
+    In a ship notice the item details are inherited from the purchase order
+    that is referenced. For ship notices without order reference the item details
+    can be retrieved from this section.
+
+    Batch
+    An element carrying batch information for material or goods  produced
+    in a single manufacturing run.
+    There could be a situation that for each ASN line item there could be multiple batches
+    which could be produced on same day and will have same expiry date.
+    Each batch can have specific quantities, the sum of these quantity will be equal to
+    ASN line item quantity.
+
+    SupplierBatchID
+        SupplierBatch is the batch ID provided by the supplier at the line item quantity level
+        to identify  the batch in which the item or the product was produced. The batch id is helpful in traceability.
+        Batch numbers (also call "lot number", "variant") are used in several industries to uniquely identify  items produced together.
+
+    ComponentConsumptionDetails
+        Contains detailed information about consumption of components in the manufacturing of final product.
+
+    ReferenceDocumentInfo
+        Additional document reference information.
+
+    Comments
+        This element contains the ship notice item specific comments.
+
+        Could be used to attach quality certificates that were required in OrderRequest.
+        In this case, one comment will be provided by attachment,
+        the certificate type will be provided in Comments@type attribute.
+
+    quantity
+        Number of this line item which was shipped. Expressed in the units
+        given in the UnitOfMeasure element.
+    lineNumber
+        Position (counting from 1) of this item in an order. Copied
+        directly from the corresponding line item (ItemOut) in the document
+        referenced in the sibling OrderReference element.
+    parentLineNumber
+        lineNumber of the parent line item in the ship notice.
+    shipNoticeLineNumber
+       holds the ship notice line number, used in contexts where there are multiple ship notice line items for a single purchase order line items
+    itemType
+        specify whether the line item contains child line items or acts as a child item
+  compositeItemType
+    specify type of parent line item(lot/box)
+  -->
+  <xs:element name="ShipNoticeItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ItemID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipNoticeItemDetail" />
+        <xs:element ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Packaging" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard" />
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="Batch" />
+          <xs:element ref="SupplierBatchID" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AssetInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermsOfDelivery" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="OrderedQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipNoticeItemIndustry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ComponentConsumptionDetails" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="parentLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="shipNoticeLineNumber" type="xs:unsignedInt" />
+      <xs:attribute name="itemType" type="lineItemType"/>
+      <xs:attribute name="compositeItemType" type="compositeItemType"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    ShipNoticeItemDetail contains detailed information about an item. All the data that
+    a user would want to see about an item instead of the bare essentials
+    that are represented in the ItemID.
+
+    In a ship notice the item details are inherited from the purchase order that is referenced. For ship notices without order reference the item details can be retrieved from this section.
+
+    UnitPrice
+        Price per unit of item. Optional Modifications
+        (changes due to discounts or fixed amount) may be provided.
+
+    Description
+        Description is a string which describes something.
+
+    UnitOfMeasure
+       Must be a UN/CEFACT (Recommendation 20) unit of measure code.
+
+    PriceBasisQuantity
+        Define the quantity as quoted in the UnitPrice
+
+    Classification
+        Classification is used to group items into similar categories.
+
+    ManufacturerPartID
+        ID with which the item's manufacturer identifies the item.
+
+    ManufacturerName
+        Name of the item's manufacturer.
+
+    Dimension
+        Item dimensions.
+
+    ItemDetailIndustry
+        Industry  specfic item detail information.
+    -->
+  <xs:element name="ShipNoticeItemDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitPrice" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PriceBasisQuantity" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ManufacturerPartID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ManufacturerName" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Dimension" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ItemDetailIndustry" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the header information of a ServiceEntryRequest.
+
+    PartnerContact
+        All parties involved in this service entry sheet, including fieldContractor,
+        fieldEngineer and requester.
+
+    DocumentReference
+      The DocumentReference is optional and, if it is provided, it must reference
+      the ServiceEntryRequest which is related to the current ServiceEntryRequest.
+
+    DocumentInfo
+          ID of a document entry known to the system. This attribute is used to reference
+      a document when DocumentReference is omitted. If both DocumentReference and
+      DocumentInfo are provided, they must refer to the same ServiceEntryRequest.
+
+      ServiceEntryDetailLineIndicator
+          Header level indicators indicating certain information is
+          provided at SES line level (in ServiceEntryItem).
+
+      ServiceEntryDetailShipping
+          The shipping details related with SES(auto-generate invoice). It will be ignored if
+          isShippingInLine is true.
+
+    ShipNoticeIDInfo
+         References shipment related document identifiers.
+
+    PaymentTerm
+          This defines the payment terms for this invoice.
+
+      Period
+          The total time period during which all the services specified in this service
+          entry sheet were rendered. Period at the header level does not imply anything
+          about the Period at the line level.
+
+      Comments
+          Comment text for this service entry sheet.
+
+          Could be used to attach quality certificates that were required in a service PO.
+          In this case, one comment will be provided by attachment,
+          the certificate type will be provided in Comments@type attribute.
+
+      Extrinsic
+          Additional information related to this service entry sheet. Extrinsic should not
+          duplicate any information in ServiceEntryRequestHeader or ServiceEntryRequest.
+
+      serviceEntryDate
+          The date and time when this service entry sheet was created, which should be
+          earlier than the document's timestamp.
+
+      serviceEntryID
+          A supplier-generated identifier for this service entry sheet, identical to the
+          SES Number which appears at the top of a physical service entry sheet.
+
+      supplierReferenceNumber
+      An internal reference to the supplier of this service entry sheet..
+
+  operation
+          How this document is acting on the service entry sheet:
+          new - This document creates a new service entry sheet.
+          delete - This document cancels an existing service entry sheet. That existing
+          service entry sheet must be specified as DocumentReference.
+          By default, it is "new".
+
+      IdReference
+          Internal Reference Number/Supplier Reference Number can be one of the following
+                  Internal supplier number - This is the most common scenario; it represents the document number created by the internal supplier ERP system.
+                  Contract - The contract number can be used to identify that a specific outbound document is related to a specific contract.
+                  Internal criteria - Sometimes the supplier can enter a customized value in the field Supplier Reference Number. Example: It can be the name of the person in charge of the follow-up of the transaction.
+
+    isFinal
+          A value of yes set by supplier indicates that this item is closed, it means that no more deliveries are expected for this item.
+
+  -->
+  <xs:element name="ServiceEntryRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PartnerContact" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="DocumentReference" />
+          <xs:element ref="DocumentInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailLineIndicator" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailShipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipNoticeIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PaymentTerm" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Period" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="serviceEntryDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="serviceEntryID" type="xs:string" use="required" />
+      <xs:attribute name="supplierReferenceNumber" type="xs:string" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isFinal">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines information related to a purchase order.
+
+    The various content options for ServiceEntryOrderInfo are in order
+    of preference. For example, OrderReference is strongly recommended.
+    If OrderReference is not available, OrderIDInfo should be used in that order.
+
+    OrderReference
+        The reference to the purchase order for the service.
+
+    OrderIDInfo
+        The buyer system order ID for the purchase order for the service.
+  -->
+  <xs:element name="ServiceEntryOrderInfo">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="OrderReference" />
+        <xs:element ref="OrderIDInfo" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines all references related to a line item in this service entry sheet.
+
+    ItemID
+    The service part number.
+
+    IdReference
+    Unique reference to part number.
+
+    Classification
+        The classification code for of the service.
+
+    Description
+        Textual description of the item.
+
+    lineNumber
+        The line number of the current line item referred to in OrderRequest.
+        For planned item, this refers to the corresponding item in purchase order.
+        For unplanned item, this refers to the parent item in purchase order.
+  -->
+  <xs:element name="ItemReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines a line item in the ServiceEntryRequest.
+
+    UnitRate
+        The rate at which the service item is charged.
+        Use of the UnitRate element is recommended over the plain (UnitOfMeasure, UnitPrice)
+        pair, since the UnitRate element includes the rate code. For some services such as
+        temporary labor services, UnitRate is required.
+
+    UnitOfMeasure
+        The unit of measure.
+
+    UnitPrice
+        The unit price.
+
+    PriceBasisQuantity
+          The price basis quantity.
+
+      ItemReference
+          The references related to this line item.
+
+      MasterAgreementReference
+          The reference to the corresponding contract master agreement if
+          the order for the service is a release purchase order.
+
+      MasterAgreementIDInfo
+          The buyer's system ID for the corresponding contract master agreement if
+          the order for the service is a release purchase order.
+
+      Period
+          The time period during which the service was rendered.
+
+      SubtotalAmount
+          The subtotal of the current item = unit price x serviced quantity.
+
+    Tax
+          The tax info for this line item. It will be ignored if isTaxInLine
+          is false.
+
+    GrossAmount
+          The SubtotalAmount plus taxes, shipping, and special handling
+          charges.
+
+    ServiceEntryDetailLineSpecialHandling
+          The special handling info for this line item. It will be ignored
+          if isSpecialHandlingInLine is false.
+
+      ServiceEntryDetailLineShipping
+          The shipping info for this line item. It will be ignored if
+          isShippingInLine is false.
+
+      ShipNoticeIDInfo
+         References shipment related document identifiers.
+
+    ServiceEntryDetailDiscount
+          The discount info for this line item. It will be ignored if
+          isDiscountInLine is false.
+
+    ServiceEntryItemModifications
+          the additional Charges, Allowances and their Taxes that are
+          incurred for the total landed cost of the goods and service
+          contained in this SES item.
+
+    TotalCharges
+          The total sum of all the charges applied on the goods and
+          services at the line item level in an SES.
+
+      TotalAllowances
+          The total sum of all the allowances applied on the goods and
+          services at the line item level in an SES.
+
+      TotalAmountWithoutTax
+          The total sum of the SubTotal, Charges (including special handling
+          charges and shipping charges), Allowances (including discounts)
+          applied at the line item level in an SES. This does not include taxes.
+
+      NetAmount
+          The GrossAmount minus discount amount.
+
+      Distribution
+          Accounting distribution information, including cost center, GL#, etc.
+
+      Comments
+          Comment text for this line item.
+
+      Extrinsic
+          Additional information related to this line item. Extrinsic should not
+          duplicate anything in ServiceEntryItem or ServiceEntryOrder.
+
+      serviceLineNumber
+          The supplier-defined ID for the current service line, which should be
+          unique for each service line in the same ServiceEntryRequest.
+
+      quantity
+          The quantity serviced for the current line item.
+
+      type
+          Specifies whether the current line item is material or service.
+          Valid values are material and service.
+
+      isAdHoc
+          Indicates the item does not exist in the reference document or contract master agreement.
+  -->
+  <xs:element name="ServiceEntryItem">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemReference" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="MasterAgreementReference" />
+          <xs:element ref="MasterAgreementIDInfo" />
+        </xs:choice>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="UnitRate" />
+          <xs:sequence>
+            <xs:element ref="UnitOfMeasure" />
+            <xs:element ref="UnitPrice" />
+            <xs:element minOccurs="0" maxOccurs="1" ref="PriceBasisQuantity" />
+          </xs:sequence>
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Period" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubtotalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="GrossAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailLineSpecialHandling" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailLineShipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipNoticeIDInfo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailDiscount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryItemModifications" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalCharges" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalAllowances" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalAmountWithoutTax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="NetAmount" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Distribution" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="serviceLineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="referenceDate" type="xs:dateTime" />
+      <xs:attribute name="inspectionDate" type="xs:dateTime" />
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="material" />
+            <xs:enumeration value="service" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isAdHoc">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the service information for a purchase order or contract master agreement
+    with item details.
+
+    In this case, a line in a service entry sheet is a ServiceEntryItem and its
+    line number is ServiceEntryItem@serviceLineNumber.
+
+    ServiceEntryOrderInfo
+        The reference information for the purchase order or contract master agreement.
+
+    ServiceEntryItem
+        The information for an item in the purchase order.
+  -->
+  <xs:element name="ServiceEntryOrder">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ServiceEntryOrderInfo" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ServiceEntryItem" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the summary information for a ServiceEntryRequest.
+
+    SubtotalAmount
+        The sum of amounts for all quantities.
+    Tax
+          Tax info.
+
+    SpecialHandlingAmount
+          Special handling charge.
+
+      ShippingAmount
+          Shipping charge.
+
+    GrossAmount
+          Sum of subtotal, taxes, special handling
+          charges, and shipping charges, before discounts.
+
+    ServiceEntryDetailDiscount
+          The total discount applied in this ServiceEntryRequest.
+          Its contained percentageRate attribute will be ignored
+          if isDiscountInLine is true.
+
+    ServiceEntryHeaderModifications
+          the additional Charges, Allowances and their Taxes that are incurred
+          for the total landed cost of the goods and services within SES
+          header. This value specified at the header-level is not the aggregated
+          value towards the charges or allowances available for the line items.
+
+    ServiceEntrySummaryLineItemModifications
+      Summary of all modifications applied on the goods and services at the line item level in an service entry.
+
+    TotalCharges
+          The total sum of all the charges applied on the goods and services at
+          the header-level and line item level in SES.
+
+      TotalAllowances
+          The total sum of all the allowances applied on the goods and services
+          at the header-level and  line item level in SES.
+
+      TotalAmountWithoutTax
+          The total sum of the SubTotal, Charges (including special handling charges
+          and shipping charges), Allowances (including discounts) applied at the
+          header-level and  line item level in SES. This does not include taxes.
+
+    NetAmount
+          Gross amount minus discounts.
+
+    DepositAmount
+          Total deposit/prepayment amount.
+
+      DueAmount
+          Total amount due and payable. It equals NetAmount minus
+          DepositAmount. If ServiceEntryRequest@purpose is
+          "creditMemo" or "lineLevelCreditMemo", this amount must be
+          negative. If ServiceEntryRequest@purpose is
+          "debitMemo", this amount must be positive.
+  -->
+  <xs:element name="ServiceEntrySummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SubtotalAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SpecialHandlingAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShippingAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="GrossAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryDetailDiscount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntryHeaderModifications" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ServiceEntrySummaryLineItemModifications" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalCharges" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalAllowances" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TotalAmountWithoutTax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="NetAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DepositAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="DueAmount" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    ServiceEntryRequest
+    Transmits a service entry sheet request to a buyer, providing purchase order
+    references, line item references, partners involved, etc.
+
+    Suppliers can use a ServiceEntryRequest to send a service entry sheet for
+    any or all selected line items from a purchase order.
+
+    This document must be sent to the location specified in the buyer's
+    ProfileResponse.
+
+    ServiceEntryRequestHeader
+        The header information for this service entry sheet.
+
+    ServiceEntryOrder
+        The service entry sheet information for a purchase order with item details.
+
+    ServiceEntrySummary
+        The summary information for this service entry sheet.
+  -->
+  <xs:element name="ServiceEntryRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ServiceEntryRequestHeader" />
+        <xs:element ref="ServiceEntryOrder" />
+        <xs:element ref="ServiceEntrySummary" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Retail specific elements are now grouped under this new element structure.
+
+    BestBeforeDate
+      The best-before-date helps with in FDA-related deliveries for go/no-go criteria. This is a common element and hence can be found in the common proposal.
+
+    ExpiryDate
+      ExpiryDate is used mainly in retail industries for FDA-related deliveries for go/no-go criteria.
+
+    FreeGoodsQuantity
+        Quantities delivered but not charged for; those can be samples or promotions or just "fill up" articles; has financial impact because those will not be on the commercial invoice (or marked with value 0.00)
+
+      PromotionDealID
+        Number assigned by a supplier to a special promotion activity. Promotions affect the forward planning/ordering process (and the related pricing). The definition can be found in the common proposal.
+
+      PromotionVariantID
+        Promotional variance info associated with the ship notice item.
+  -->
+  <xs:element name="ShipNoticeItemRetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BestBeforeDate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ExpiryDate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="FreeGoodsQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PromotionDealID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PromotionVariantID" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Industry specific elements are now grouped under this new element structure.
+  -->
+  <xs:element name="ShipNoticeItemIndustry">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipNoticeItemRetail" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines discount applied.
+
+    Money
+        The total discount in dollar (or other currency) amount.
+
+    percentageRate
+        The discount rate in percentage.
+  -->
+  <xs:element name="ServiceEntryDetailDiscount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+      <xs:attribute name="percentageRate" type="xs:decimal" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    ServiceEntryItemModifications represents the additional Charges and Allowances
+    that are incurred for the total landed cost of the goods and service
+    contained in this SES item.
+
+    Modification
+        provides the details of a Charge or an Allowance.
+  -->
+  <xs:element name="ServiceEntryItemModifications">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Modification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the shipping information related to SES (auto-generated invoice).
+
+    Contact
+        The ship from and ship to addresses. Both ship from and ship to
+        must be specified. Allowed contact roles are shipFrom, shipTo and
+        carrierCorporate.
+
+    CarrierIdentifier
+        This list may include multiple identifiers for the same carrier.
+        Elements in this list may appear in any order. A particular
+        identification domain (CarrierIdentifier@domain attribute
+        value) must not appear more than once in an ServiceEntryDetailShipping
+        element. The identification provided by all elements of the
+        CarrierIdentifier list must correspond to the same company.
+
+    ShipmentIdentifier
+        The tracking number of this shipment or a bill of lading number,
+        depending on the domain attribute.
+
+    DocumentReference
+        The reference to an earlier ShipNoticeRequest.
+
+    shippingDate
+        The date and time this shipment leaves the supplier.
+  -->
+  <xs:element name="ServiceEntryDetailShipping">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Contact" />
+        <xs:sequence minOccurs="0" maxOccurs="1">
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="CarrierIdentifier" />
+          <xs:element minOccurs="1" maxOccurs="unbounded" ref="ShipmentIdentifier" />
+        </xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DocumentReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    ServiceEntryHeaderModifications represents the additional Charges, Allowances
+    that are incurred for the total landed cost of the goods and services within
+    the SES header. This value specified at the header-level is not the aggregated
+    value towards the charges or allowances available for the line items.
+
+    Modification
+        provides the details of a Charge or an Allowance.
+  -->
+  <xs:element name="ServiceEntryHeaderModifications">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Modification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines SES line level indicators indicating certain
+    information is provided at SES line level (in ServiceEntryDetailItem).
+    By default, all indicators are false.
+
+    If an indicator indicates certain information (e.g. tax, shipping, etc.)
+    will be provided at SES line level, for SES lines which do
+    not provide such information, they will be assumed to have values of
+    zero, or "not available", whichever is appropriate, for that information.
+
+    isTaxInLine
+        True if tax info (Tax) is provided at SES line level.
+
+    isSpecialHandlingInLine
+        True if special handling info is provided at SES line level.
+
+    isShippingInLine
+        True if shipping info is provided at SES line level.
+
+    isDiscountInLine
+        True if discount info (ServiceEntryDetailDiscount) is provided
+        at SES line level.
+
+    isAccountingInLine
+        True if accounting distribution info (Distribution) is provided at
+        SES line level.
+  -->
+  <xs:element name="ServiceEntryDetailLineIndicator">
+    <xs:complexType>
+      <xs:attribute name="isTaxInLine">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isSpecialHandlingInLine">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isShippingInLine">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isDiscountInLine">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isAccountingInLine">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines special handling information of the current SES line.
+
+    Description
+        Textual description of the special handling.
+
+    Money
+        The special handling amount.
+  -->
+  <xs:element name="ServiceEntryDetailLineSpecialHandling">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines shipping information of the current SES line.
+
+    ServiceEntryDetailShipping
+        The shipping details.
+
+    Money
+        The shipping amount.
+  -->
+  <xs:element name="ServiceEntryDetailLineShipping">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ServiceEntryDetailShipping" />
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines information related to a summary of line modifications(allowances/charges) in Service Entry Sheet.
+
+    Modification
+        Summary of one modification.
+  -->
+  <xs:element name="ServiceEntrySummaryLineItemModifications">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Modification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,1248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- For cXML license agreement information, please see http://www.cxml.org/home/license.asp
+  $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Base.mod#2 $ -->
+<!-- This file defines the basic elements used to build higher level constructs
+  in cXML. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-transaction.xsd"/>
+  <xs:include schemaLocation="cxml-monetary.xsd"/>
+  <xs:include schemaLocation="cxml-reference.xsd" />
+
+  <!-- ISO 3166-2:2013 Country Subdivision (State) Code -->
+  <xs:simpleType name="isoStateCode">
+    <xs:restriction base="xs:NMTOKEN" />
+  </xs:simpleType>
+
+  <!-- ISO 3166 Country Code -->
+  <xs:simpleType name="isoCountryCode">
+    <xs:restriction base="xs:NMTOKEN" />
+  </xs:simpleType>
+
+  <xs:simpleType name="isoCurrencyCode">
+    <xs:restriction base="xs:NMTOKEN" />
+  </xs:simpleType>
+
+  <xs:simpleType name="URL">
+    <xs:restriction base="xs:anyURI" />
+  </xs:simpleType>
+
+  <!-- Basic Name/Data Elements -->
+  <!-- Name is used to provide an identifier for other elements. xml:lang
+    The language in which the name is written. -->
+  <xs:element name="Name">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- An Extrinsic is an element which can be used to extend the data associated
+    with known elements. Since this Element is of type ANY, it could contain
+    any arbitrary XML document within itself, or a binary ![CDATA[]] document.
+    name Name used to identify this extrinsic. -->
+  <xs:element name="Extrinsic">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Description is a string which describes something. Though text may
+    be interspersed with ShortName elements in this content model, placing the
+    ShortName at the beginning or end of the element is much preferred. At most
+    one ShortName element is allowed per Description. The intended content model
+    would be more like (( ShortName, #PCDATA ) | ( #PCDATA | ShortName? )) if
+    DTD syntax supported it. xml:lang The language in which the description is
+    written. type The qualifier of the description. -->
+  <xs:element name="Description">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="ShortName" />
+      </xs:choice>
+      <xs:attribute ref="xml:lang" use="required" />
+      <xs:attribute name="type" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- A short string which describes something in fewer characters than
+    the entire Description. This should be used when limited space is available.
+    For example, a table of elements might show the ShortName's of each. A linked
+    "details" view would show the entire Description (including the ShortName).
+    Without a ShortName, the user interface must default to a truncation of the
+    Description. This element does not require an xml:lang attribute since it
+    appears only within a Description element. The language of the ShortName
+    must match that of the surrounding Description. -->
+  <xs:element name="ShortName" type="xs:string" />
+
+  <!-- Telephone Number Elements -->
+  <!-- International ITU dial code for the country code in question. This
+    code would be entered after any escape code necessary to begin International
+    dialing. That is, the escape code does not appear in the content of this
+    element. isoCountryCode The ISO 3166 2-letter country code for the dial code
+    in question. -->
+  <xs:element name="CountryCode">
+    <xs:complexType mixed="true">
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="isoCountryCode" use="required"
+            type="isoCountryCode" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- The areacode or city code within a CountryCode. -->
+  <xs:element name="AreaOrCityCode" type="xs:unsignedInt" />
+
+  <!-- The local number part of a telephone number. -->
+  <xs:element name="Number" type="xs:string" />
+
+  <!-- An extension within relative to the Number element. This element has
+    no meaning without an associated Number element. -->
+  <xs:element name="Extension" type="xs:unsignedInt" />
+
+  <!-- TelephoneNumber represents international telephone numbers. -->
+  <xs:element name="TelephoneNumber">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="CountryCode" />
+        <xs:element ref="AreaOrCityCode" />
+        <xs:element ref="Number" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Extension" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Phone is a "named" TelephoneNumber. name specifies an identifier which
+    indicates the type of phone number. US examples would include "work","home",
+    etc. -->
+  <xs:element name="Phone">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TelephoneNumber" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Fax number. -->
+  <xs:element name="Fax">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="TelephoneNumber" />
+        <xs:element ref="URL" />
+        <xs:element ref="Email" />
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- URL. A string which represents a URL -->
+  <xs:element name="URL">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="name" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- An email address. Address must conform to RFC 821 (SMTP Standard).
+    preferredLang optional language that the email owner prefers to receive emails
+    in. Refer to the definition of xmlLangCode entity. -->
+  <xs:element name="Email">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="name" type="xs:string" />
+          <xs:attribute name="preferredLang" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Contact represents an entity at a location. The nature of this element
+    is that it represents a communication "end point" for a location. IdReference
+    ID reference is Within the application context (for example, a certain pair
+    of buyer and supplier), the (identifier, domain) pair should be unique. role
+    Position this person or group plays in the procurement process. Likely values
+    include endUser, administrator, purchasingAgent, technicalSupport, customerService,
+    sales, supplierCorporate, supplierMasterAccount, supplierAccount, buyerCorporate,
+    buyerMasterAccount, buyerAccount, buyer, subsequentBuyer. Other values may
+    be allowed in some cases. from and to roles are reserved for future use.
+    addressID An id for the address. Needed to support address codes for relationships
+    that require id references. Example: plantID addressIDDomain It is the qualifier
+    for the addressId to specify the agency or organization. Examples are DUNS,
+    ILN, and buyerLocationID. -->
+  <!-- <!ELEMENT Contact (Name, PostalAddress*, Email*, Phone*, Fax*, URL*,
+    IdReference*, Extrinsic*)> <!ATTLIST Contact role NMTOKEN #IMPLIED addressID
+    %string; #IMPLIED addressIDDomain %string; #IMPLIED > -->
+  <xs:element name="Contact">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="unbounded"
+          ref="PostalAddress" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Email" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Phone" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Fax" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="URL" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="role" type="xs:NMTOKEN" />
+      <xs:attribute name="addressID" type="xs:string" />
+      <xs:attribute name="addressIDDomain" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- The DeliverTo part of an Address. This would be internal to the actual
+    address know to the outside world. Similar to what an extension is to a TelephoneNumber. -->
+  <xs:element name="DeliverTo" type="xs:string" />
+
+  <!-- Street is a single line of an Address's location. -->
+  <xs:element name="Street" type="xs:string" />
+
+  <!-- City is the name of the city in an Address's location. cityCode Optional
+    code assigned by local/government agencies identifying a city region -->
+  <xs:element name="City">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="cityCode" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- State is an optional state identifier in an Address' location. isoStateCode
+    The ISO 3166-2:2013 country subdivision (state) code for this country. Universally
+    applicable code for the representation of the names of principal administrative
+    divisions of countries and territories included in ISO 3166-1. It is intended
+    to be used in conjunction with ISO 3166-1. -->
+  <xs:element name="State">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="isoStateCode" type="isoStateCode" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="PostalCode" type="xs:string" />
+
+  <!-- Country is the name of the country in an Address's location. The content
+    of this element is a string which may (for example) be printed directly to
+    a shipping label. The content is the human-readable equivalent of the isoCountryCode
+    used by applications. isoCountryCode The ISO 3166 2-letter country code for
+    this country. -->
+  <xs:element name="Country">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="isoCountryCode" use="required"
+            type="isoCountryCode" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Municipality specifies the name of the municipality in an Address’s
+    location. municipalityCode Optional code assigned by local/government agencies
+    identifying a municipality region. -->
+  <xs:element name="Municipality">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="municipalityCode" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- PostalAddress is a real-world location for a business or person. -->
+  <xs:element name="PostalAddress">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DeliverTo" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Street" />
+        <xs:element ref="City" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="Municipality" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="State" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PostalCode" />
+        <xs:element ref="Country" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Address is the association of a Contact and an Location. isoCountryCode
+    The ISO 3166 2-letter country code for the country containing this location.
+    addressID An id for the address. Needed to support address codes for relationships
+    that require id references. An example would be a shipping code. addressIDDomain
+    It is the qualifier for the addressId to specify the agency or organization.
+    Examples are DUNS and ILN. -->
+  <xs:element name="Address">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="PostalAddress" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Email" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Phone" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Fax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="URL" />
+      </xs:sequence>
+      <xs:attribute name="isoCountryCode" type="isoCountryCode" />
+      <xs:attribute name="addressID" type="xs:string" />
+      <xs:attribute name="addressIDDomain" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines the parties involved in a document (e.g., service entry sheet),
+    including fieldContractor, fieldEngineer, and requester. Contact Contact
+    information for the document (e.g., service entry sheet) partners. Allowed
+    contact roles include fieldContractor, fieldEngineer, and requester. IdReference
+    Partner reference ID, including party ID, supplier tax ID, etc. -->
+  <xs:element name="PartnerContact">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines the information of the issuer who is associated to the customs
+    info document. Address Defines the real-world location of the issuer. -->
+  <xs:element name="Issuer">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Financial Elements -->
+  <!-- Money is the representation of the object used to pay for items. currency
+    Specifies the currency in which amount is stated, must conform to ISO 4217
+    currency codes. alternateAmount The amount of money in the alternateCurrency.
+    Optional and used to support dual-currency requirements such as the Euro.
+    alternateCurrency Specifies the currency in which the alternateAmount is
+    stated, must conform to ISO 4217 currency codes. -->
+  <xs:element name="Money">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:decimal">
+          <xs:attribute name="currency" use="required"
+            type="isoCurrencyCode" />
+          <xs:attribute name="alternateAmount" type="xs:decimal" />
+          <xs:attribute name="alternateCurrency" type="isoCurrencyCode" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Optional textual child for communicating arbitrary comments or description
+    along with the parent. Though text may be interspersed with Attachment elements
+    in this content model, grouping the Attachment list at the begging or end
+    of the element is much preferred. The intended content model would be more
+    like (( Attachment+, #PCDATA ) | ( #PCDATA | Attachment* )) if the DTD syntax
+    supported it. xml:lang The language in which the Comments are written. This
+    attribute will be required in a future version of cXML. (Leaving it out is
+    deprecated.) type An optional type of the comments. Type can be used to make
+    the comments structured with respect to what they describe. -->
+  <xs:element name="Comments">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="Attachment" />
+      </xs:choice>
+      <xs:attribute ref="xml:lang" />
+      <xs:attribute name="type" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Optional child of Comments element referencing a part in a multipart
+    MIME transmission. The contained URL must use the scheme "cid:". This is
+    the identifier for the referenced attachment within the larger transmission.
+    Must match the Content-ID header of one (and only one) part of the MIME transmission
+    containing this cXML document. May also be used to retrieve the attachment
+    file separately. visibility Optional attribute that gives a hint as to how
+    an attachment should be interpreted. If the value is "internal”, it will
+    give a hint to the consumer of the attachment, that the attachment is meant
+    for internal purposes only. -->
+  <xs:element name="Attachment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="URL" />
+      </xs:sequence>
+      <xs:attribute name="visibility">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="internal" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--- Reference to a remote attachment. AttachmentReference is used inside
+    Extrinsic elements that have a predefined name of "Attachments". In the context
+    of AttachmentReference, the domain attribute of InternalID is currently optional.
+    However, as a way to prevent circular request paths, the sending application
+    may use a predefined value of "local" to indicate that the attachment requested
+    is local to the other application. This optional URL element should link
+    to a referenced source on the buyer’s system. The URL scheme must conform
+    to RFC 1738 (Uniform Resource Locators). Both https and http transmission
+    protocols are supported, however due to security reasons we highly recommend
+    to use https with the latest TLS set only. length Length of the attachment
+    in bytes. version Specifies the version of the external source. Examples:
+    1.0, beta, V-2. -->
+  <xs:element name="AttachmentReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element ref="Description" />
+        <xs:element ref="InternalID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="URL" />
+      </xs:sequence>
+      <xs:attribute name="length" type="xs:unsignedInt" />
+      <xs:attribute name="version" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Price per unit of item. Optional Modifications (changes due to discounts
+    or fixed amount) may be provided. The Money element indicates the final amount
+    after applying the Modifications. -->
+  <xs:element name="UnitPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="Modifications" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Reference to an earlier document (for example, OrderRequest). In a
+    StatusUpdateRequest, this element identifies the purchase order to be updated.
+    payloadID A unique identifier for the document. Copied directly from the
+    cXML element of the original document. -->
+  <xs:element name="DocumentReference">
+    <xs:complexType>
+      <xs:attribute name="payloadID" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="InternalID">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OriginatorCookie - Identification of a specific PunchOut session.
+    Used in both originating Request and later Message that returns user to originating
+    application. Note: The BuyerCookie element used in a 'regular' PunchOut transaction
+    (defined in Transaction.mod) is of type ANY. That does not seem useful. The
+    string required below better matches the needs for this element. Future transactions
+    similar to the PunchOut transaction will use this element. -->
+  <xs:element name="OriginatorCookie" type="xs:string" />
+
+  <!-- BrowserFormPost - Location to which the user's browser must submit
+    the final Message. This location (carried in the originating Request) does
+    not need to be specific to a PunchOut session since the OriginatorCookie
+    is returned in the Message. -->
+  <xs:element name="BrowserFormPost">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="URL" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- SelectedService - Identification of a service offered by this provider
+    and requested in this transaction. Used only in the originating Request. -->
+  <xs:element name="SelectedService" type="xs:string" />
+
+  <!-- StartPage - Location to which the user's browser must be redirected
+    to begin the interactive portion of the session at the remote site. The destination
+    system returns this information in the Response document. This location must
+    be specific to a particular session. It is effectively a one time key, providing
+    authenticated entry into the destination system. -->
+  <xs:element name="StartPage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="URL" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- ReturnData - Any information the originator must know about the completed
+    operation at the provider site. The ReturnValue is for applications; the
+    Name is for human consumption (direct presentation in the User Interface
+    of the application). Where appropriate for the possible services, this element
+    may appear in the final Message for a PunchOut session. name An identifier
+    for the data returned. Provides a meaning for the contents of a ReturnData
+    element. -->
+  <xs:element name="ReturnData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ReturnValue" />
+        <xs:element ref="Name" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ReturnValue" type="xs:string" />
+
+  <!-- Defines a time range. The start and end can be unbounded startDate
+    The starting date of the time range. endDate The ending date of the range. -->
+  <xs:element name="TimeRange">
+    <xs:complexType>
+      <xs:attribute name="startDate" type="xs:dateTime" />
+      <xs:attribute name="endDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines a period in time.
+
+    startDate
+        The starting date of the period.
+
+    endDate
+        The ending date of the period.
+  -->
+  <xs:element name="Period">
+    <xs:complexType>
+      <xs:attribute name="startDate" type="xs:dateTime" use="required"/>
+      <xs:attribute name="endDate" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Must be a UN/CEFACT (Recommendation 20) unit of measure code. -->
+  <xs:element name="UnitOfMeasure" type="xs:string"/>
+
+  <!--
+    Define the quantity as quoted in the UnitPrice
+
+    UnitOfMeasure
+        The unit of measure for the quote.
+    Description
+        The textual description of the quote.
+    quantity
+        The quantity basis for the quote.
+    conversionFactor
+        The conversion ratio from the unit of measure of the order to the unit of measure of the PriceBasisQuantity.
+  -->
+  <xs:element name="PriceBasisQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+      <xs:attribute name="conversionFactor" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines a reference to a term which is defined
+    in another document.
+
+    termName
+        The name of the ID attribute containing the term.
+
+    term
+        The value of that attribute (i.e., the term itself).
+
+  -->
+  <xs:element name="TermReference">
+    <xs:complexType>
+      <xs:attribute name="termName" type="xs:string" use="required"/>
+      <xs:attribute name="term" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines an optionally named monetary rate at which goods or services are
+    charged or paid.
+
+    Money
+        The amount of Money per UnitOfMeasure to be charged or paid.
+
+    UnitOfMeasure
+        Unit of measure.
+
+    PriceBasisQuantity
+        The quantity the price is quoted on
+
+    TermReference
+        Identifies the definition of this UnitRate
+        (found, for example, in contracts, master agreements, and other documents
+        which may or may not be cXML documents).
+  -->
+  <xs:element name="UnitRate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element ref="UnitOfMeasure" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PriceBasisQuantity" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The rate information used to define the rate of a purchase.  For
+    example, this could be the total room rate for 4 nights of stay
+    at a hotel.
+
+    Total
+        The total amount for the rate. The total amount must equal
+        to quantity x UnitRate.
+
+    UnitRate
+        The single unit rate.
+
+    Description
+        Textual description for the rate. For example, hotel nightly rate.
+
+    Quantity
+        The quantity. For example, a 4 nights stay at a hotel will
+        have quantity set to 4 with UnitofMesure in UnitRate set to Day.
+  -->
+  <xs:element name="Rate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Total" />
+        <xs:element ref="UnitRate" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- The total for something -->
+  <xs:element name="Total">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Modifications"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Tolerances for price, quantity, delivery date.
+  -->
+  <xs:element name="Tolerances">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="QuantityTolerance"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PriceTolerance"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TimeTolerance"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="QuantityTolerance">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Percentage"/>
+        <xs:element ref="Value"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="PriceTolerance">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Percentage"/>
+        <xs:element ref="Value"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="TimeTolerance">
+    <xs:complexType>
+      <xs:attribute name="limit" type="xs:int" use="required"/>
+      <xs:attribute name="type" default="days">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="minutes"/>
+            <xs:enumeration value="hours"/>
+            <xs:enumeration value="days"/>
+            <xs:enumeration value="weeks"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Lower tolerances defines a lower limit -->
+  <xs:element name="Lower">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Tolerances"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Upper tolerances defines an upper limit -->
+  <xs:element name="Upper">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Tolerances"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="TaxAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="TaxableAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    One language-specific string for the location of tax,
+    e.g. London, Canada, California, etc.
+
+    xml:lang
+        The language or locale in which the location of tax is written.
+  -->
+  <xs:element name="TaxLocation">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+
+    TriangularTransactionLawReference indicates the relevant law as
+    titled for the local jurisdiction in the scenario of a triangular
+    transaction, e.g., Triangulation, article 28c,E paragraph 3 of the
+    6th EU VAT Directive.
+
+    xml:lang
+        The language in which the law reference is written.
+  -->
+  <xs:element name="TriangularTransactionLawReference">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+
+    If you claim an exemption from taxes,
+    some tax authorities, such as Portugal SAF-T,
+    require you to specify an exemption code and exemption reason.
+
+    exemptCode
+        Specifies the code against which the tax is exempted.
+  -->
+  <xs:element name="TaxExemption">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ExemptReason" />
+      </xs:sequence>
+      <xs:attribute name="exemptCode" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+
+    ExemptReason
+        Specifies the exemption reason for zero tax.
+
+        This would have no relation with the existing "exemptDetail" attribute.
+        Existing attribute "exemptDetail" will not be ignored and this will also will be kept along with the new element "ExemptReason".
+
+    xml:lang
+        The language in which the exemption reason is written.
+
+  -->
+  <xs:element name="ExemptReason">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines details of one type of tax.
+
+    TaxableAmount
+       The taxable amount.
+
+    TaxAmount
+       The tax amount.
+
+    TaxLocation
+       The tax location.
+
+    Description
+       The textual description of the current type of tax.
+
+    TriangularTransactionLawReference
+       The law reference for transactions where isTriangularTransaction is True
+
+    purpose
+       The purpose of the tax, e.g., tax (tax), custom duty, shippingTax,
+       specialHandlingTax, etc.
+
+    category
+       The tax category, Sales tax (sales), Use tax (usage), VAT (vat),
+       GST (gst) are defined categories. Other values are permitted.
+
+    percentageRate
+       The tax rate in number of percentage.
+
+    isVatRecoverable
+       True if the VAT is recoverable.  Default is false.
+
+    taxPointDate
+       refers to the date on which VAT becomes due.
+
+    paymentDate
+       indicate the date when payment must be made.
+
+    isTriangularTransaction
+       True if the transaction is triangular. Default is false.
+
+    exemptDetail
+       If the TaxAmount is zero, VAT or other regulations may require
+       a reason why. zeroRated means the tax rate is zero. exempt
+       means the item or items are exempt from taxation.
+
+    taxRateType
+       Specify the tax rate type code(a string) that corresponds to a specific tax type.
+       For example, in Germany the tax rate of 19% for value-added tax (VAT) corresponds to the “Standard” tax rate type.
+       In different EU member states, different VAT rates are allowed.
+       The tax rate type makes it easy for the back-end system to handle different rates that result from changes in tax law.
+
+    basePercentageRate
+       The base tax rate in number of percentage.
+       For some Tax categories (e.g., ICMS for Brazil) TaxAmount will be calculated
+       considering the basePercentageRate along with percentageRate.
+       TaxAmount = TaxableAmount * percentageRate * basePercentageRate
+       Used only in the Quote Messages.
+
+    isIncludedInPrice
+       True if the TaxAmount is included in price. Default is false.
+       Used only in the Quote Messages.
+
+  -->
+  <xs:element name="TaxDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxableAmount" />
+        <xs:element ref="TaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxLocation" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TriangularTransactionLawReference" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxRegime" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TaxExemption" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="taxedElement" type="xs:IDREF"/>
+      <xs:attribute name="purpose" type="xs:string"/>
+      <xs:attribute name="category" type="xs:string" use="required" />
+      <xs:attribute name="percentageRate" type="xs:decimal"/>
+      <xs:attribute name="isVatRecoverable">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="taxPointDate" type="xs:dateTime"/>
+      <xs:attribute name="paymentDate" type="xs:dateTime"/>
+      <xs:attribute name="isTriangularTransaction">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="exemptDetail">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="zeroRated" />
+            <xs:enumeration value="exempt" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isWithholdingTax">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="taxRateType" type="xs:string"/>
+      <xs:attribute name="basePercentageRate" type="xs:decimal" />
+      <xs:attribute name="isIncludedInPrice">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    TaxRegime is related to the type of supplier activities and the
+    commodities in the invoice. Companies pay taxes based on the tax regime
+    they are enrolled. Sample tax regimes: Assimilated Regime wages, Regime
+    of Small Taxpayers (REPECO), Regimen of business and professional activities,
+    etc. Multiple tax regimes can be associated with a single invoice.
+  -->
+  <xs:element name="TaxRegime" type="xs:string"/>
+
+  <!--
+    Definition of a cXML Tax item. This represents what a Tax element should
+    be in the classic notion of a line on a PO or Invoice. It can also
+    represent a per-line-item tax element depending on where it appears
+    (inside of a item ELEMENT or inside of a something like a supplierOrder
+    ELEMENT).
+
+    Represents a tax item in the shopping basket. There could be one of these
+    for the entire order, or one per line item.
+
+    The total amount of taxes for the line item or order should be reflected
+    in the Money element. The breakdown of taxes, for example, tax on shipping
+    or tax on goods should be represented in separate TaxDetail elements.
+  -->
+  <xs:element name="Tax">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxDetail"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Distribution" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines a Modifications element which provides the original unit
+    price or shipping price and then describes a set of 1 or more
+    modifications to that price. There can one per Shipping element.
+    The optional method attribute defines how multiple Modification elements
+    are combined.
+  -->
+  <xs:element name="Modifications">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Modification" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the original price or shipping price and optionally provides a type.
+    Example type values might be MSRP, ListPrice, Actual, AverageSellingPrice,
+    CalculationGross, BaseCharge, AverageWholesalePrice, ExportPrice, AlternatePrice,
+    ContractPrice, etc.
+  -->
+  <xs:element name="OriginalPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines a Modification element and optionally provide a level: AdditionalDeduction: used only when allowances are involved
+     AdditionalCost: used when additional charges are involved
+     OriginalPrice represents the price on which the discount or charges apply.
+     Tax represents the Tax on the Modification.
+
+     Optional attribute level represent level of modification(using in cascading modifications).
+     Example:
+     Charge 1 (Level 1): Original Price 10$ Charge: 1$
+     Charge 2 (Level 1): Original Price 10$ Charge: 1$
+     Charge 3 (Level 2): Original Price 8$ Charge: 1$
+     Charge 4 (Level 3): Original Price 7$ Charge: 1$ ...
+  -->
+  <xs:element name="Modification">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="OriginalPrice" />
+        <xs:choice>
+          <xs:element ref="AdditionalDeduction" />
+          <xs:element ref="AdditionalCost" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ModificationDetail" />
+      </xs:sequence>
+      <xs:attribute name="level" type="xs:unsignedInt"></xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+  The type attribute can specify the type of deduction.
+  Eg. discount -->
+  <xs:element name="AdditionalDeduction">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="DeductionAmount" />
+        <xs:element ref="DeductionPercent" />
+        <xs:element ref="DeductedPrice" />
+      </xs:choice>
+      <xs:attribute name="type" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ModificationDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required" />
+      <xs:attribute name="code" type="xs:string" />
+      <xs:attribute name="startDate" type="xs:dateTime" />
+      <xs:attribute name="endDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Value">
+    <xs:complexType>
+      <xs:attribute name="value" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Percentage">
+    <xs:complexType>
+      <xs:attribute name="percent" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The Money element is the final cost amount for this Additional Cost or Charge
+    DO NOT USE THIS ELEMENT FOR SHIPPING, SPECIAL HANDLING, FREIGHT, etc
+   -->
+  <xs:element name="AdditionalCost">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Money" />
+        <xs:element ref="Percentage" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+   <!--
+    Defines discount applied.
+
+    DiscountAmount
+            The discount expressed as a flat amount with currency.
+
+    DiscountPercent
+            The discount rate expressed as a percentage.
+  -->
+  <xs:element name="Discount">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="DiscountPercent"/>
+        <xs:element ref="DiscountAmount"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines the Basis for the Discount. -->
+  <xs:element name="DiscountBasis">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines the details of adjustments given over category and region -->
+  <xs:element name="TaxAdjustmentDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+      </xs:sequence>
+      <xs:attribute name="category" type="xs:string" use="required"/>
+      <xs:attribute name="region" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines TaxAdjustment given on the Total Tax, currently to be used with PPR document
+    to specify the total adjustments given on the Tax for the payable.
+
+    Money
+        Describes the Total Tax Adjustment given on the payable.
+
+    TaxAdjustmentDetail
+        Describes the list of all the Adjustments given on the payable on
+        the basis of tax category and region.
+  -->
+  <xs:element name="TaxAdjustment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TaxAdjustmentDetail"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the discount rate
+
+    percent
+        The discount rate expressed as a percentage. A negative discount percent
+        represents a penalty.
+  -->
+  <xs:element name="DiscountPercent">
+    <xs:complexType>
+      <xs:attribute name="percent" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    Defines the deduction rate
+
+    percent
+        The deduction rate expressed as a percentage.
+  -->
+  <xs:element name="DeductionPercent">
+    <xs:complexType>
+      <xs:attribute name="percent" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+    The ProductMovementItemIDInfo element provides a clear reference to the line item
+    in a Consignment Movement.
+
+    movementLineNumber
+        The line number of current line item, copied from movement document.
+
+    movementID
+       The id of a consignment movement entry known to the buyer system.
+
+    movementDate
+        The date and time the product was moved from consignment inventory to the buyer inventory.
+  -->
+  <xs:element name="ProductMovementItemIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+      <xs:attribute name="movementLineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="movementID" type="xs:string" use="required" />
+      <xs:attribute name="movementDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- The InvoiceItemIDInfo element provides a clear reference to the line item in a InvoiceDetailRequest document.
+
+    invoiceLineNumber
+        The line number of a line item, copied from InvoiceDetailRequest.
+
+    invoiceID
+        The id of an invoice known to the supplier system.
+
+    invoiceDate
+        The invoice date.
+  -->
+  <xs:element name="InvoiceItemIDInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="IdReference" />
+      </xs:sequence>
+      <xs:attribute name="invoiceLineNumber" type="xs:unsignedInt" use="required" />
+      <xs:attribute name="invoiceID" type="xs:string" use="required" />
+      <xs:attribute name="invoiceDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+  ReturnQuantity
+    Quantity that was returned.
+  -->
+  <xs:element name="ReturnQuantity">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+  MaxContractAmount
+    This a new limit is directly related with Contract/Catalog items.
+    If this limit is in PO, then validation against this will occur for all Contract items.
+    This field is only visible to buyers.
+  -->
+  <xs:element name="MaxContractAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!--
+  MaxAdhocAmount
+    This a new limit is directly related with ad-hoc items.
+    If this is limit is in PO, then validation against this will occur for all Adhoc (non-Contract) items.
+    This field is only visible to buyers.
+  -->
+  <xs:element name="MaxAdhocAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

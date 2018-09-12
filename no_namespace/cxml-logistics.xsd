@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+    
+    $Id: //ariba/cxml/schema/Modules/Logistics.mod#0 $
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!--
+  A party (i.e. a company) of the transport service. Currently, only 
+  "shipFrom", "shipTo" and "carrier" parties are supported.
+  
+  The Contact element inside this element will further describe a
+  contact person inside the party. This contact person may have a more
+  specific role in the transportation, such as an emergency contact.
+  
+  role
+    The role of this party. Currently the following values are expected:
+      - shipFrom: the originating party for this consignment.
+      - shipTo: the destination party for this consignment.
+      - carrier: the party in charge of carrying the goods.
+  -->
+  <xs:element name="TransportPartner">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Contact"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="role" type="xs:NMTOKEN" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Defines the commercial terms of these goods. This usually reflects who is
+  in charge of paying each phase of the transport and who has the responsibility
+  during each phase.
+  
+  incoterms
+    Contains the Incoterms as defined by the International Chamber of Commerce.
+    Currently, this refers to version 2010. The code of the terms is in lower case.
+    For example, valid values include: fob, cif, cpt, etc.
+  -->
+  <xs:element name="CommercialTerms">
+    <xs:complexType>
+      <xs:attribute name="incoterms" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="cfr"/>
+            <xs:enumeration value="cif"/>
+            <xs:enumeration value="cip"/>
+            <xs:enumeration value="cpt"/>
+            <xs:enumeration value="daf"/>
+            <xs:enumeration value="ddp"/>
+            <xs:enumeration value="ddu"/>
+            <xs:enumeration value="deq"/>
+            <xs:enumeration value="des"/>
+            <xs:enumeration value="exw"/>
+            <xs:enumeration value="fas"/>
+            <xs:enumeration value="fca"/>
+            <xs:enumeration value="fob"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Contains a temperature or temperature range, in the given
+  unit of measure, that must be observed during transportation.
+  
+  "temperature" and "maximum"/"minimum" must not be specified
+  together.
+  
+  temperature
+    The temperature to be observed, in case of not using a range.
+  maximum
+    The upper limit to observe in a range.
+  minimum
+    The lower limit to observe in a range.
+  UnitOfMeasure
+    The unit of measure for the temperature. For example,
+    "centigrades", "fahrenheit", "kelvin", "rankine".
+
+  -->
+  <xs:element name="TransportTemperature">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="temperature" type="xs:decimal"/>
+      <xs:attribute name="maximum" type="xs:decimal"/>
+      <xs:attribute name="minimum" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Describes the origin location for the goods. This usually means
+  the physical place where the goods are picked up for the start of
+  a transport service.
+  
+  Address
+    The address of this location.
+  DateInfo
+    Any dates applicable for this location.
+  -->
+  <xs:element name="Origin">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DateInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  This element is used in the TransportConfirmation for specifying
+  additional dates to the origin location specified in the
+  referenced TransportRequest.
+  
+  DateInfo
+    Any dates applicable for this location.
+  -->
+  <xs:element name="OriginConfirmation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DateInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Describes the destination location for the goods. This usually
+  means the physical place where the goods are delivered to the
+  consignee.
+  
+  Address
+    The address of this location.
+  DateInfo
+    Any dates applicable for this location.
+  -->
+  <xs:element name="Destination">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DateInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  This element is used in the TransportConfirmation for specifying
+  additional dates to the destination location specified in the
+  referenced TransportRequest.
+  
+  DateInfo
+    Any dates applicable for this location.
+  -->
+  <xs:element name="DestinationConfirmation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DateInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  This element indicates how the packages are placed into
+  a transport equipment.
+  
+  equipmentID
+    ID of the Transport equipment
+  numberOfPackages
+    The quantity of packages that are placed into the equipment.
+  -->
+  <xs:element name="TransportPlacement">
+    <xs:complexType>
+      <xs:attribute name="equipmentID" type="xs:string" use="required"/>
+      <xs:attribute name="numberOfPackages" type="xs:decimal" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  The declared value of the goods for insurance purposes.
+  -->
+  <xs:element name="InsuranceValue">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  The total of freight charges.
+  -->
+  <xs:element name="FreightChargesAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Contains the registration number of an entity, such as a vehicle.
+  -->
+  <xs:element name="RegistrationNumber" type="xs:string"/>
+  
+  <!--
+  Contains the registration number of a vehicle and its country,
+  
+  RegistrationNumber
+        The registration number can be:
+        - License plate for cars/trucks/etc.
+      - Registration number for airplanes.
+      - IMO number for ships.
+    Country
+        The country for the registration number.
+  -->
+  <xs:element name="VehicleRegistration">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="RegistrationNumber"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Country"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  This element contains some required conditions for the transport.
+  
+  Priority
+    The "speed" of the service. The highest priority is an express
+    service, while the lowest one is a mail service.
+   -->
+  <xs:element name="TransportCondition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Priority"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  This element groups a package with the material items it contains.
+  
+  Any quantity or item-specific description should not be included
+  in Packaging, but in ItemInfo.
+  -->
+  <xs:element name="TransportPackage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Packaging"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ItemInfo"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Common Transport elements end here
+  -->
+  
+  <!--
+    This document contains a request made from one originating party to a logistics provider to
+    arrange delivery for up to multiple consignments.
+    
+    Each consignment may have only a single pick up and a single delivery locations. All the
+    consignments in a single document refer to a a single originating and a single destination
+    party. To use more parties, use multiple documents.
+    
+    TransportRequestHeader
+      Contains some general information applicable to all consignments.
+    Consignment
+      The definition of each consignment. There must be at least one.
+    TransportSummary
+      Totals for this document.
+  -->
+  <xs:element name="TransportRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TransportRequestHeader"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Consignment"/>
+        <xs:element ref="TransportSummary"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains common information for all consignments. The information present in this
+    element usually applies to all consignments, unless specified otherwise.
+    
+    operation
+          How this document is acting on the transport request:
+          new - This document creates a new transport request.
+          By default, it is "new".
+    requestID
+      The identifier for this document.
+    requestDate
+      The date/time/timezone when this document was created.
+    TransportPartner
+      Contact information for the carrier organization. The value of the role
+      attribute of this element should be "carrier". This element must NOT be
+      used to include contact for shipTo and shipFrom organizations.
+    Comments
+      User-readable comments for the whole document.
+  -->
+  <xs:element name="TransportRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportPartner"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="operation" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="requestID" type="xs:string" use="required"/>
+      <xs:attribute name="requestDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element gives information about the transport service that is requested from
+    the logistics provider.
+    
+    Hazard
+      Hazard information for dangerous goods, if applicable.
+    TransportTemperature
+      Requested temperature during transportation.
+    Classification
+      Classification of the goods carried.
+  -->
+  <xs:element name="TransportRequirements">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportTemperature"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition of a consignment.
+    
+    A consignment is a collection of packages going from a single originating party to a single
+    destination party. All items are picked up at a single location and delivered to a single location.
+    
+    Note: the name "consignment" has nothing to do with the commercial term "consignment". In
+    this case we refer to the term used in the transport industry.
+    
+    consignmentID
+      Identifier for this consignment.
+    ConsignmentHeader
+      Common information for this consignment.
+    ConsignmentLineDetail
+      Detail of packages for this consignment.
+    TransportEquipment
+      Detail of transport equipment, if any, that is used for this consignment.
+  -->
+  <xs:element name="Consignment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ConsignmentHeader"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ConsignmentLineDetail"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportEquipment"/>
+      </xs:sequence>
+      <xs:attribute name="consignmentID" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element defines common information for all the packages of this consignment.
+  
+    numberOfPackages
+      Total number of physical packages of this consignment.
+    TransportPartner
+      Information about the parties in this document.
+    Dimension
+      Total dimensions of the packages on this consignment (i.e. weight, volume). This
+      is used whenever there is no root package.
+    CommercialTerms
+      The commercial terms used.
+    NetAmount
+      Total value of the goods in this consignment.
+    ReferenceDocumentInfo
+      Reference to legal documents related to this consignment.
+    ShipmentIdentifier
+      Identifier for this consignment as assigned by the carrier (if known).
+    TransportRequirements
+      Indicates details of the transport service requested.
+    Origin
+    Destination
+      Indicates the origin and destination locations for this consignment and their
+      related dates.
+    Route
+      Indicates the transport mode (method) and means for this consignment.
+      No other data should be filled on this element for this usage.
+    TransportCondition
+      Characteristics of the service needed for transport.
+    Comments
+      User-readable comments for the whole document.
+  -->
+  <xs:element name="ConsignmentHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportPartner"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Dimension"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="CommercialTerms"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="NetAmount"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipmentIdentifier"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportRequirements"/>
+        <xs:element ref="Origin"/>
+        <xs:element ref="Destination"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Route"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportCondition"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="numberOfPackages" type="xs:unsignedInt"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A group of packages of a consignment. Each package may contain a single
+    item on it.
+    
+    lineNumber
+      A sequential for this line. The only constraint is that it must not be
+      repeated in the same consignment.
+    numberOfPackages
+      Total number of physical packages of this consignment.
+    TransportPackage
+      Package hierarchy information of this line.
+    TransportRequirements
+      Specific requirements for transporting this item, if applicable.
+    TransportPlacement
+      Indicates how these packages are placed in the transport equipment.
+    ReferenceDocumentInfo
+      Reference to documents possibly outside of the network.
+    Comments
+      User-readable comments for the whole document.
+  -->
+  <xs:element name="ConsignmentLineDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportPackage"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportRequirements"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportPlacement"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>       
+      </xs:sequence>
+      <xs:attribute name="lineNumber" type="xs:decimal" use="required"/>
+      <xs:attribute name="numberOfPackages" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines a piece of transport equipment needed for this consignment.
+    
+    equipmentID
+      The identifier of this equipment. Must be unique on this consignment.
+    type
+      Type of this equipment. This value somes from the following list:
+      - dimeCoatedTank: A tank coated with dime.
+      - epoxyCoatedTank: A tank coated with epoxy.
+      - pressurizedTank: A tank capable of holding pressurized goods.
+      - refrigeratedTank: A tank capable of keeping goods refrigerated.
+      - stainlessSteelTank: A tank made of stainless steel.
+      - nonWorking40ftReeferContainer: A 40 feet refrigerated container
+        that is not actively controlling temperature of the product.
+      - euroPallet: 80 x 120 cm.
+      - scandinavianPallet: 100 x 120 cm.
+      - trailer: Non self-propelled vehicle designed for the carriage
+        of cargo so that it can be towed by a motor vehicle.
+      - nonWorking20ftReeferContainer: A 20 foot refrigerated container
+        that is not actively controlling temperature of the product.
+      - nonWorking30ftReeferContainer: A 30 foot refrigerated container
+        that is not actively controlling temperature of the product.
+      - nonWorking40ftReeferContainer: A 40 foot refrigerated container
+        that is not actively controlling temperature of the product.
+      - exchangeablePallet: Standard pallet exchangeable following
+        international convention.
+      - semiTrailer: Non self propelled vehicle without front wheels
+        designed for the carriage of cargo and provided with a kingpin.
+      - tankContainer20ft: A tank container with a length of 20 feet.
+      - tankContainer30ft: A tank container with a length of 30 feet.
+      - tankContainer40ft: A tank container with a length of 40 feet.
+      - refrigeratedTank20ft: A refrigerated tank with a length of 20 feet.
+      - refrigeratedTank30ft: A refrigerated tank with a length of 30 feet.
+      - refrigeratedTank40ft: A refrigerated tank with a length of 40 feet.
+      - temperatureControllerContainer20ft: Temperature controlled
+        container measuring 20 feet.
+      - temperatureControllerContainer30ft: Temperature controlled
+        container measuring 30 feet.
+      - temperatureControllerContainer40ft: Temperature controlled
+        container measuring 40 feet.
+      - totebin: A steel open top unit of about 1,5 * 1,5 * 2,5 meters
+        for road transport of bulk cargo.
+      - dualTrailers: Two trailers linked together one behind another and
+        pulled by one tractor.
+    numberOfEquipments
+      The number of equipment units available.
+    providedBy
+      Indicates who provides this equipment.
+        - sender: The sender party.
+        - receiver: The receiving party.
+        - carrier: The transport carrier.
+        - other: Any other party.
+    status
+      Indicates of the equipment is full or empty after loading this consignment.
+    VehicleRegistration
+      The registration information for the vehicle, if applicable.
+  -->
+  <xs:element name="TransportEquipment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="VehicleRegistration"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+      </xs:sequence>
+      <xs:attribute name="equipmentID" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string"/>
+      <xs:attribute name="numberOfEquipments" type="xs:decimal" default="1"/>
+      <xs:attribute name="providedBy">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="sender"/>
+            <xs:enumeration value="receiver"/>
+            <xs:enumeration value="carrier"/>
+            <xs:enumeration value="other"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="status">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="full"/>
+            <xs:enumeration value="empty"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Contains a summary of the data contained in all the consignments
+    of this document.
+    
+    FreightChargesAmount
+      The sum of the freight charges of all the consignments.
+    SubtotalAmount
+      Taxable amount for the freight charges.
+    InsuranceValue
+      Declared value for insurance purposes.
+    Dimension
+      Total dimensions for the packages of all consignments.
+  
+  -->
+  <xs:element name="TransportSummary">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="FreightChargesAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SubtotalAmount"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="InsuranceValue"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Dimension"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="numberOfPackages" type="xs:unsignedInt" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The TransportConfirmation is a message, sent from a logistics provider to
+    an interested party (for example, the party requesting the transport),
+    containing updates on the process for a transportation request.
+    
+    TransportConfirmationHeader
+      Includes some general information, including the carrier information.
+    TransportReference
+      Reference to a previously submitted TransportRequest that we are
+      updating.
+    ConsignmentConfirmation
+      Contains the updated information for a consignment. The consignment
+      must be present in the original TransportRequest.
+  
+  -->
+  <xs:element name="TransportConfirmation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TransportConfirmationHeader"/>
+        <xs:element ref="TransportReference"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="ConsignmentConfirmation"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element contains some common information that applies to the
+    whole confirmation message.
+  
+    TransportPartner
+      This element is used, in this case, to contain the carrier
+      (logistics provider) information, so it should use the role "carrier".
+      No other party is expected here.
+    operation
+      The cXML operation to perform. Currently, only "new" is supported, which
+      will create a new confirmation.
+    confirmationID
+      An optional, user-supplied identifier for this confirmation.
+    confirmationDate
+      An optional, user-supplied date for this confirmation.
+  
+  -->
+  <xs:element name="TransportConfirmationHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TransportPartner"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="operation" default="new">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="new"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="confirmationID" type="xs:string" use="required"/>
+      <xs:attribute name="confirmationDate" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element represents an update made to a previously existing consignment
+    from the referenced TransportRequest.
+    
+    In all cases, the information present on this document will replace the information
+    of the Transport Request. For example, if a consignment has two hazard material codes
+    in the Transport Request, but in the confirmation we only put one, the updated document
+    will contain a single code.
+    
+    ConsignmentConfirmationHeader
+      Common information for all the packages of this consignment.
+    TransportEquipment
+      Transport Equipment for this transport. If an equipmentID used in the
+      corresponding TransportRequest is used, then the equipment is modified. If a new
+      equipmentID is used, then a new equipment is created and all lines are
+      placed on it.
+    consignmentID
+      The identifier of the consignment as specified on the TransportRequest.
+    consignmentStatus
+      The new status for this consignment.
+    rejectionReason
+      If the status is "rejected", then a reason must be provided in this attribute.
+  -->
+  <xs:element name="ConsignmentConfirmation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ConsignmentConfirmationHeader"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="TransportEquipment"/>
+      </xs:sequence>
+      <xs:attribute name="consignmentID" type="xs:string" use="required"/>
+      <xs:attribute name="consignmentStatus" use="required">
+         <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="accepted"/>
+            <xs:enumeration value="collected"/>
+            <xs:enumeration value="rejected"/>
+            <xs:enumeration value="cancelled"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="rejectionReason" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element contains some common information for this consignment.
+    
+    Hazard
+      Updated hazard information about the whole consignment.
+    Dimension*
+      Updated dimensions of the consignment (total weight, total volume).
+    ReferenceDocumentInfo
+      Reference to legal documents for this consignment, possibly outside the network.
+    ShipmentIdentifier
+      The tracking identifier from the logistics provider.
+    OriginConfirmation
+    DestinationConfirmation
+      Updated dates for the locations specified in the TransportRequest.
+    Comments
+      Any human-readable comments to be added.
+    
+    numberOfPackages
+      The updated package count, only if it needs to be updated.
+  -->
+  <xs:element name="ConsignmentConfirmationHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Hazard"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Dimension"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReferenceDocumentInfo"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipmentIdentifier"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="OriginConfirmation"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="DestinationConfirmation"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic"/>
+      </xs:sequence>
+      <xs:attribute name="numberOfPackages" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

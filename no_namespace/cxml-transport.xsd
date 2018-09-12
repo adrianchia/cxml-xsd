@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Profile.mod#1 $
+-->
+<!--
+    For more information about these elements/entities, see the 
+    cXML Reference Guide and related documents.
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  <xs:include schemaLocation="cxml-profile.xsd"/>
+  <xs:include schemaLocation="cxml-pending.xsd"/>
+  <xs:include schemaLocation="cxml-subscription.xsd"/>
+  <xs:include schemaLocation="cxml-provider.xsd"/>
+  <xs:include schemaLocation="cxml-subscription.xsd"/>
+  <xs:include schemaLocation="cxml-dataAvailable.xsd"/>
+  <xs:include schemaLocation="cxml-dataRequest.xsd"/>
+  <xs:include schemaLocation="cxml-catalogUpload.xsd"/>
+  <xs:include schemaLocation="cxml-organization.xsd"/>
+  <xs:include schemaLocation="cxml-pending.xsd"/>
+  <xs:include schemaLocation="cxml-approval.xsd"/>
+  <xs:include schemaLocation="cxml-invoiceDetail.xsd"/>
+  <xs:include schemaLocation="cxml-contract.xsd"/>
+  <xs:include schemaLocation="cxml-logistics.xsd"/>
+  <xs:include schemaLocation="cxml-paymentRemittance.xsd"/>
+  <xs:include schemaLocation="cxml-trade.xsd"/>
+  <xs:include schemaLocation="cxml-fulfill.xsd"/>
+  <xs:include schemaLocation="cxml-timecard.xsd"/>
+  <xs:include schemaLocation="cxml-receipt.xsd"/>
+  <xs:include schemaLocation="cxml-salesOrder.xsd"/>
+  <xs:include schemaLocation="cxml-orderStatusData.xsd"/>
+  <xs:include schemaLocation="cxml-content.xsd"/>
+  <xs:include schemaLocation="cxml-private.xsd"/>
+  <xs:include schemaLocation="cxml-query.xsd"/>
+  <xs:include schemaLocation="cxml-mapsync.xsd"/>
+  <xs:include schemaLocation="cxml-l3Charge.xsd"/>
+  <xs:include schemaLocation="cxml-priceAvailability.xsd"/>
+  
+  <!--
+    Defines the set of known valid cXML digital signature versions
+  -->
+  <xs:simpleType name="cxml.signatureVersions">
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="1.0"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!--
+    cXML envelope
+    
+    version
+        Version of this cXML transmission. Should be less than or equal
+    to the version portion of the SYSTEM identifier for this document.
+    
+    payloadID
+        A unique identifier for this document.
+    
+    timestamp
+        The date and time at which this document was originally created.
+    
+    signatureVersion
+        If present, specifies the cXML digital signature version to
+        which this document conforms. This implies that the
+        ds:Signature element must be present. It is an error if this
+        attribute is present and the document does not conform to the
+        specified signature version. If absent, the document is not
+        signed.
+    
+    xml:lang
+        The default locale for all strings (not formatted items such as
+        dates, times and numbers) in this document. This attribute will be
+        required in a future version of cXML. (Leaving it out is
+        deprecated.)
+  -->
+  <xs:element name="cXML">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:sequence>
+            <xs:element ref="Header" />
+            <xs:choice>
+              <xs:element ref="Message" />
+              <xs:element ref="Request"/>
+            </xs:choice>
+          </xs:sequence>
+          <xs:element ref="Response" />
+        </xs:choice>
+        <xs:element ref="ds:Signature" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" default="1.2.039" />
+      <xs:attribute name="payloadID" type="xs:string" use="required" />
+      <xs:attribute name="timestamp" type="xs:dateTime" use="required" />
+      <xs:attribute name="signatureVersion" type="cxml.signatureVersions"/>
+      <xs:attribute ref="xml:lang" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  <!ELEMENT Header (From, To, Sender, (Path, OriginalDocument)?)> 
+   -->
+  <xs:element name="Header">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="From" />
+        <xs:element ref="To" />
+        <xs:element ref="Sender" />
+        <xs:sequence minOccurs="0" maxOccurs="1">
+          <xs:element ref="Path"/>
+          <xs:element ref="OriginalDocument"/>
+        </xs:sequence>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- 
+  <!ELEMENT From (Credential+, Correspondent?)>
+   -->
+  <xs:element name="From">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Credential" minOccurs="1" maxOccurs="unbounded" />
+        <xs:element ref="Correspondent" minOccurs="0" maxOccurs="1" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- <!ELEMENT To (Credential+, Correspondent?)>-->
+  <xs:element name="To">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Credential" minOccurs="1" maxOccurs="unbounded" />
+        <xs:element ref="Correspondent" minOccurs="0" maxOccurs="1" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- <!ELEMENT Sender (Credential+, UserAgent)>-->
+  <xs:element name="Sender">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Credential" minOccurs="1" maxOccurs="unbounded" />
+        <xs:element ref="UserAgent" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Path. A list of nodes that records the path taken by a user through 
+    a punchout chaining scenario.
+
+    If no route node is included then punchout chaining scenario is not executed and only copies are processed. 
+  -->
+  <!-- <!ELEMENT Path (Node+)> -->
+  <xs:element name="Path">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Node" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A Node is any entity connected to a Network.
+    
+    type
+        A node can define itself as a router node or a copy node. Routers
+        assume responsibility for the transaction. Copy Nodes request to only
+        be aware of the transaction.
+    
+    itemDetailsRequired
+        Intermediary Nodes may want to support special operations without
+        having to store specific information required to fulfill that operation.
+        This attribute tells the previous node to send ItemDetail information
+        when performing a PunchOutSetupRequest edit/inspect operation.
+  -->
+  <xs:element name="Node">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Credential"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="copy"/>
+            <xs:enumeration value="route"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="itemDetailsRequired">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Identifies the previous document in the situation that a router node
+    forwards a message or request on to a more distant node.
+    
+    payloadID
+        The payloadId of the original document.
+  -->
+  <xs:element name="OriginalDocument">
+    <xs:complexType>
+      <xs:attribute name="payloadID" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A textual string representing who the UserAgent is conducting the cXML
+    conversation. Analogous to UserAgent for HTTP conversations.
+  -->
+  <xs:element name="UserAgent" type="xs:string" />
+  
+  <!--
+    DEPRECATED 
+    Do not use this element.
+  -->
+  <xs:element name="DigitalSignature" substitutionGroup="cxml.authentication">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" default="PK7 self-contained"/>
+      <xs:attribute name="encoding" type="xs:string" default="Base64"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A shared secret. Typically, this is a username/password type of secret
+    exchanged through a secure transport before communication takes place.
+  -->
+  <xs:element name="SharedSecret" substitutionGroup="cxml.authentication">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Represents an identity for a credential.
+
+    lastChangedTimestamp
+       When the underlying object last changed in the originating system.
+       This is used in cases where the same object (e.g. a buyer
+       organization) is replicated, and kept synchronized, across two
+       systems.
+  -->
+  <!-- 
+  <!ELEMENT Identity ANY>
+  <!ATTLIST Identity
+    lastChangedTimestamp  %datetime.tz;  #IMPLIED
+  >
+   -->
+  <xs:element name="Identity">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence> 
+      <xs:attribute name="lastChangedTimestamp" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    A Credential Message Authentication Code (MAC). This is used in
+    situations where one party (the sender) must prove to another (the
+    receiver) that it is authenticated by a shared secret with a third
+    party trusted by both.
+    
+    The MAC should be computed by the trusted third party and
+    transferred to the sender. The MAC should be opaque to the sender
+    (i.e., it should be secure and non-reversible). The MAC should
+    use as its inputs enough information to accomplish the following
+    goals:
+    
+    (1) The MAC must prove to the receiver that it really originated
+    with the trusted third party. E.g., the MAC could use a shared
+    secret between the receiver and the trusted third party as its
+    secret key.
+    
+    (2) The MAC should be usable only by a certain sender. E.g., the
+    MAC could authenticate an identifier for the sending organization.
+    
+    (3) The MAC should prove that the sender is authorized to send on
+    behalf of the From organization. E.g., the MAC could authenticate
+    an identifier for the From organization.
+    
+    (4) The MAC should limit the risk of the MAC being compromised and
+    used to impersonate the sender by another party communicating with
+    the receiver. E.g., the MAC could authenticate an expiration date
+    or sequence number.
+    
+    type
+        An implementation-dependent identifier for the exact data
+        being authenticated and the method in which it is formatted
+        for authentication. Currently the only supported value is
+        "FromSenderCredentials".
+    
+    algorithm
+        An implementation-dependent identifier for the exact MAC
+        algorithm used on the data. Currently the only supported
+        value is "HMAC-SHA1-96".
+    
+    creationDate
+        The time at which this MAC was issued. The receiver must not
+        accept the MAC before this time.
+    
+    expirationDate
+        The time at which this MAC expires. The receiver must not
+        accept the MAC after this time.
+  -->
+  <!-- 
+  <!ELEMENT CredentialMac (#PCDATA)>
+  <!ATTLIST CredentialMac
+    type           %string;      #REQUIRED
+    algorithm      %string;      #REQUIRED
+    creationDate   %datetime.tz; #REQUIRED
+    expirationDate %datetime.tz; #REQUIRED
+  >
+   -->
+  <xs:element name="CredentialMac" substitutionGroup="cxml.authentication">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="type" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="FromSenderCredentials" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="algorithm" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="HMAC-SHA1-96"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="creationDate" type="xs:dateTime" use="required"/>
+          <xs:attribute name="expirationDate" type="xs:dateTime" use="required"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="cxml.authentication" abstract="true"/>
+  
+  <!--
+    A combination of an Identity and authentication element. If the
+    authentication element is present, it strongly authenticates who/what
+    someone is. The authentication element should not be sent within Message
+    documents transported via an end user's browser. One-way communication
+    must be authenticated in the transport layer.
+
+    domain
+        In what domain is this Credential represented?
+    type
+        Does this Credential identify a marketplace or one of its member
+        companies?  A Credential without this attribute describes a member
+        company or unaffiliated buying organization.
+  -->
+  <!-- 
+  <!ENTITY % cxml.authentication  "SharedSecret |
+                                 DigitalSignature |
+                                 CredentialMac">
+  <!ELEMENT Credential (Identity, (%cxml.authentication;)?)>
+  <!ATTLIST Credential
+      domain  %string;      #REQUIRED
+      type    (marketplace) #IMPLIED> 
+  -->
+  <xs:element name="Credential">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Identity" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="cxml.authentication" />
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="domain" type="xs:string" use="required" />
+      <xs:attribute name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="marketplace"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status of a Response or Message. If present, the element content
+    describes specifics of a problem.
+
+    code
+        HTTP or cXML-specific status code.
+
+    text
+        Textual version of the status code (not specific issue).
+
+    xml:lang
+        The language in which the text attribute and element content are
+    written. This attribute will be required in a future version of
+    cXML. (Leaving it out is deprecated.)
+  -->
+  <xs:element name="Status">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="code" type="xs:unsignedInt" use="required" />
+          <xs:attribute name="text" type="xs:string" use="required" />
+          <xs:attribute ref="xml:lang" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Message
+
+    When Status not present, '<Status code="200" text="OK" />' is implied.
+  -->
+  <xs:element name="Message">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Status"/>
+        <xs:choice>
+          <xs:element ref="PunchOutOrderMessage"/>
+          <xs:element ref="ProviderDoneMessage"/>
+          <xs:element ref="SubscriptionChangeMessage"/>
+          <xs:element ref="DataAvailableMessage"/>
+          <xs:element ref="SupplierChangeMessage"/>
+          <xs:element ref="OrganizationChangeMessage"/>
+          <xs:element ref="ProductActivityMessage"/>
+          <xs:element ref="QuoteMessage"/>
+          <xs:element ref="ProductReplenishmentMessage"/>
+          <xs:element ref="OrderStatusDoneMessage"/>
+          <xs:element ref="QuoteDataMessage"/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="deploymentMode" default="production">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="production" />
+            <xs:enumeration value="test" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="inReplyTo" type="xs:string" />
+      <xs:attribute name="id" type="xs:ID" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- request -->
+  <xs:element name="Request">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="ProfileRequest"/>
+          <xs:element ref="OrderRequest" />
+          <xs:element ref="MasterAgreementRequest" />
+          <xs:element ref="PurchaseRequisitionRequest" />
+          <xs:element ref="PunchOutSetupRequest" />
+          <xs:element ref="ProviderSetupRequest" />
+          <xs:element ref="StatusUpdateRequest" />
+          <xs:element ref="GetPendingRequest" />
+          <xs:element ref="SubscriptionListRequest" />
+          <xs:element ref="SubscriptionContentRequest" />
+          <xs:element ref="SupplierListRequest" />
+          <xs:element ref="SupplierDataRequest" />
+          <xs:element ref="SubscriptionStatusUpdateRequest" />
+          <xs:element ref="CopyRequest" />
+          <xs:element ref="CatalogUploadRequest" />
+          <xs:element ref="AuthRequest" />
+          <xs:element ref="DataRequest" />
+          <xs:element ref="OrganizationDataRequest" />
+          <xs:element ref="ApprovalRequest" />
+          <xs:element ref="QualityNotificationRequest" />
+          <xs:element ref="QualityInspectionRequest" />
+          <xs:element ref="QualityInspectionResultRequest" />
+          <xs:element ref="QualityInspectionDecisionRequest" />
+          <xs:element ref="InvoiceDetailRequest" />
+          <xs:element ref="QuoteRequest" />
+          <xs:element ref="ContractRequest"/>
+          <xs:element ref="ContractStatusUpdateRequest"/>
+          <xs:element ref="TransportRequest"/>
+          <xs:element ref="TransportConfirmation"/>
+          <xs:element ref="PaymentRemittanceRequest"/>
+          <xs:element ref="PaymentRemittanceStatusUpdateRequest"/>
+          <xs:element ref="PaymentProposalRequest"/>
+          <xs:element ref="TradeRequest"/>
+          <xs:element ref="PaymentBatchRequest"/>
+          <xs:element ref="ConfirmationRequest"/>
+          <xs:element ref="ShipNoticeRequest"/>
+          <xs:element ref="ServiceEntryRequest"/>
+          <xs:element ref="SalesOrderRequest"/>
+          <xs:element ref="TimeCardInfoRequest"/>
+          <xs:element ref="ReceiptRequest"/>
+          <xs:element ref="OrderStatusRequest"/>
+          <xs:element ref="TimeCardRequest"/>
+          <xs:element ref="ComponentConsumptionRequest"/>
+          <xs:element ref="SessionStatusRequest"/>
+          <xs:element ref="OrderStatusSetupRequest"/>
+          <xs:element ref="InvoiceRequest"/>
+          <xs:element ref="NotificationRequest"/>
+          <xs:element ref="PrivateOrganizationRequest"/>
+          <xs:element ref="CatalogChangeRequest"/>
+          <xs:element ref="OrderStatusDataRequest"/>
+          <xs:element ref="SourcingUpdateRequest"/>
+          <xs:element ref="ContentRequest"/>
+          <xs:element ref="RelationshipRequest"/>
+          <xs:element ref="RFxEventRequest"/>
+          <xs:element ref="ProviderDataRequest"/>
+          <xs:element ref="SearchRequest"/>
+          <xs:element ref="MapSyncRequest"/>
+          <xs:element ref="CollaborationRequest"/>
+          <xs:element ref="RFxPublishRequest"/>
+          <xs:element ref="L3ChargeFileRequest"/>
+          <xs:element ref="BlanketOrderStatusUpdateRequest"/>
+          <xs:element ref="PriceAvailabilityRequest"/>
+          <xs:element ref="DataSyncChangeListRequest"/>
+          <xs:element ref="DataSyncDataRequest"/>
+          <xs:element ref="S4DataPushRequest"/>
+          <xs:element ref="UpdateMigratedSupplierRequest"/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="deploymentMode" default="production">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="production" />
+            <xs:enumeration value="test" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="id" type="xs:ID" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- response -->
+  <xs:element name="Response">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Status"/>
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="ProfileResponse" />
+          <xs:element ref="PunchOutSetupResponse" />
+          <xs:element ref="ProviderSetupResponse" />
+          <xs:element ref="GetPendingResponse" />
+          <xs:element ref="SubscriptionListResponse" />
+          <xs:element ref="SubscriptionContentResponse" />
+          <xs:element ref="SupplierListResponse" />
+          <xs:element ref="SupplierDataResponse" />
+          <xs:element ref="AuthResponse" />
+          <xs:element ref="DataResponse" />
+          <xs:element ref="OrganizationDataResponse" />
+          <xs:element ref="SessionStatusResponse" />
+          <xs:element ref="OrderStatusSetupResponse" />
+          <xs:element ref="PrivateOrganizationResponse" />
+          <xs:element ref="ContentResponse" />
+          <xs:element ref="RelationshipResponse" />
+          <xs:element ref="ProviderDataResponse" />
+          <xs:element ref="SearchResponse" />
+          <xs:element ref="PriceAvailabilityResponse" />
+          <xs:element ref="DataSyncChangeListResponse"/>
+          <xs:element ref="DataSyncDataResponse"/>
+          <xs:element ref="S4DataPushResponse"/>
+        </xs:choice>
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:ID" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element includes signed cXML-specific details about the
+    document being signed. When a cXML document is signed, this
+    element must appear inside the first ds:Object element in the
+    ds:Signature element.
+
+    signatureVersion
+        This specifies the cXML signature version to which this
+        document conforms. It is an error if this attribute value
+        does not exactly match the value of the signatureVersion
+        attribute from the top-level cXML element. It is an error if
+        the document does not conform to the specified cXML signature
+        version.
+
+    payloadID
+        Specifies the payloadID of the document. It is an error if
+        the value of this attribute does not exactly match the value
+        of the payloadID attribute from the top-level cXML element.
+
+    Id
+        This identifies this cXMLSignedInfo element for purposes of
+        the signature. This attribute must always be present and
+        should always have the value "cXMLSignedInfo"
+  -->
+  <xs:element name="cXMLSignedInfo">
+    <xs:complexType>
+      <xs:attribute name="signatureVersion" type="cxml.signatureVersions" use="required"/>
+      <xs:attribute name="payloadID" type="xs:string" use="required"/>
+      <xs:attribute name="Id" type="xs:ID" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This element includes the contact information of the organisation
+    to/from whom the document is sent/received.
+
+    preferredLanguage
+        Optional language which the organization, identified by this 
+        element, would prefer to use. Refer to the definition of 
+        xmlLangCode entity.
+  -->
+  <xs:element name="Correspondent">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" minOccurs="1" maxOccurs="unbounded" />
+        <xs:element ref="Extrinsic" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+      <xs:attribute name="preferredLanguage" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>  

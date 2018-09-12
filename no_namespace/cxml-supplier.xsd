@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- For cXML license agreement information, please see http://www.cxml.org/home/license.asp 
+  $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Supplier.mod#1 $ -->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+
+  <!-- Supplier of goods and services. Includes a list of SupplierIDs which 
+    identify the Supplier. corporateURL URL to web site about the supplier. storeFrontURL 
+    URL to web site where a user can shop or browse. -->
+  <xs:element name="Supplier">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID" />
+        <xs:element minOccurs="0" maxOccurs="unbounded"
+          ref="SupplierLocation" />
+      </xs:sequence>
+      <xs:attribute name="corporateURL" type="URL" />
+      <xs:attribute name="storeFrontURL" type="URL" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- One of the locations for a supplier. Supplier location is generally 
+    a physical location. -->
+  <xs:element name="SupplierLocation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address" />
+        <xs:element ref="OrderMethods" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderMethods is the list of methods by which one can order from a 
+    supplier. The contact element is the technical contact who should be able 
+    to assist with order processing issues. The list is to be ordered by supplier 
+    preference, the first element having the highest degree of preference. -->
+  <xs:element name="OrderMethods">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="OrderMethod" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Contact" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderMethod is a method for ordering. It is comprised of a target 
+    address for the order and the protocol expected by the address. -->
+  <xs:element name="OrderMethod">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrderTarget" />
+        <xs:element minOccurs="0" maxOccurs="1"
+          ref="OrderProtocol" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderTarget represents an address to which orders can be sent. -->
+  <xs:element name="OrderTarget">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Phone" />
+        <xs:element ref="Email" />
+        <xs:element ref="Fax" />
+        <xs:element ref="URL" />
+        <xs:element ref="OtherOrderTarget" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- OrderProtocol is the communication method to be used when communicating 
+    an order to a supplier. An example would be "cXML". -->
+  <xs:element name="OrderProtocol" type="xs:string" />
+
+  <!-- OtherOrderTarget represents an address which is not enumerated by 
+    default in the OrderTarget Element. This may contain address targets beyond 
+    the ability of this document to describe. name Optional name for target. -->
+  <xs:element name="OtherOrderTarget">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Definition of a supplier ID. A supplier ID is a (domain, value) pair 
+    so that suppliers have the flexibility to define their ID's according to 
+    an arbitrary convention (e.g., (DUNS, 12345), (TaxID, 88888888)). domain 
+    The domain of the ID. -->
+  <xs:element name="SupplierID">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="domain" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Defines a List of Suppliers that might be associated with a quote 
+    Item. Used in ItemOut. -->
+  <xs:element name="SupplierList">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Supplier" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

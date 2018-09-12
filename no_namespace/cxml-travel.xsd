@@ -1,0 +1,1035 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id$
+-->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd" />
+  <xs:include schemaLocation="cxml-supplier.xsd" />
+  
+  <!--
+    This element captures travel information. It could be one of four
+    types: air, car rental, hotel or rail.
+
+    AirDetail
+        Air travel detail.
+
+    CarRentalDetail
+        Car rental detail.
+
+    HotelDetail
+        Hotel detail.
+
+    RailDetail
+        Rail detail.
+
+    PolicyViolation
+        List of policy violations (if any) associated with this
+        travel line item.
+
+    Comments
+        Top level comments for this travel line item (if any). This
+        is not the policy violation comment but a top level comment
+        given by the user for this travel line item while in Travel
+        Booking Provider's web site.
+
+    TermsAndConditions
+        List of Terms and conditions (if any) associated with this
+        travel line item.
+
+    confirmationNumber
+        A unique confirmation number that is useful to both the
+        traveler and the vendor who is providing the service for this
+        travel line item. For example, hotel reservation number or
+        e-ticket number from the airline.
+
+    pnrLocator
+        Passenger Name Record (PNR) Locator that is useful to the
+        Travel Booking Provider.
+
+    quoteExpirationTime
+        Date and time that this quote will expire. This value is
+        normally supplied in the PunchoutOrderMessage. If no value is
+        supplied, it is assumed that there is no expiration time or
+        date for this quote.
+  -->
+  <xs:element name="TravelDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="AirDetail" />
+          <xs:element ref="CarRentalDetail" />
+          <xs:element ref="HotelDetail" />
+          <xs:element ref="RailDetail" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="PolicyViolation"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="TermsAndConditions"/>
+      </xs:sequence>
+      <xs:attribute name="confirmationNumber" type="xs:string" use="required" />
+      <xs:attribute name="pnrLocator" type="xs:string" />
+      <xs:attribute name="quoteExpirationTime" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Air -->
+  <!--
+    Air detail information for the air trip.
+
+    TripType
+        Round Trip, One Way, or Multi Leg
+
+    AirLeg
+        Different air leg that makes up this air detail.
+        For example a round trip from SFO -> TPE with no stops
+        will have two air legs. One air leg from SFO -> TPE
+        and another from TPE -> SFO.
+
+    AvailablePrice
+        Other available airfare prices that the user did not pick.
+
+    Penalty
+        Penalty amount (if any). This is normally due to changes or
+        cancellation of the ticket.
+  -->
+  <xs:element name="AirDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TripType" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="AirLeg" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AvailablePrice" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Penalty" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Define a single leg in the air travel.
+    
+    Vendor
+        Airline vendor name and information.
+    
+    AirLegOrigin
+        Originating airport for this air leg.
+    
+    AirLegDestination
+        Destination airport for this air leg.
+    
+    BookingClassCode
+        Airline booking class code. This is the de-facto
+        airline standard. For example,
+    
+        F, FN, P, R, A      - first class
+        C, CN, D, J, I, Z   - business class.
+        Y, YN, B, BN, M, H, V, VN, O, Q, QN, S, 
+        K, KN, L, U, T, W - coach class.
+    
+    Rate
+        Rate for this particular air leg. If specify, the total
+        of all the rate for the different air legs must add up
+        to the total the line item level.
+    
+    Meal
+        Meal information for this air leg (if any)
+    
+    travelSegment
+        Textual information to identify this travel segment.
+        This information is specific to the Travel Booking Provider.
+    
+    departureTime
+        Departure date and time for this air leg
+    
+    arrivalTime
+        Arrival date and time for this air leg
+    
+    flightNumber
+        Flight number for this air leg
+    
+    seatNumber
+        Seat number for this air leg
+    
+    seatType
+        Seat type
+            aisle       - Aisle
+            window      - Window
+            middle      - Middle
+    
+    upgrade
+        Is this ticket an upgrade?
+    
+    stops
+        The number of stop for this air leg.
+        0 if it is a direct flight. If no information is supplied
+        it is defaulted to 0.
+    
+    equipment
+        The plane equipment information for this air leg
+  -->
+  <xs:element name="AirLeg">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Vendor" />
+        <xs:element ref="AirLegOrigin" />
+        <xs:element ref="AirLegDestination" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Rate" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Meal" />
+      </xs:sequence>
+      <xs:attribute name="travelSegment" type="xs:string" use="required" />
+      <xs:attribute name="departureTime" type="xs:dateTime" use="required" />
+      <xs:attribute name="arrivalTime" type="xs:dateTime" use="required" />
+      <xs:attribute name="flightNumber" type="xs:string" use="required" />
+      <xs:attribute name="seatNumber" type="xs:string" />
+      <xs:attribute name="seatType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="window" />
+            <xs:enumeration value="aisle" />
+            <xs:enumeration value="middle" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="upgrade">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="stops" type="xs:decimal" />
+      <xs:attribute name="equipment" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Originating airport for this Air Leg.
+    
+    Airport
+        Originating airport
+  -->
+  <xs:element name="AirLegOrigin">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Airport" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Destination airport for this Air Leg.
+    
+    Airport
+        Destination airport
+  -->
+  <xs:element name="AirLegDestination">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Airport" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Airport information that includes the iso airport code
+    
+    Address
+        Physical address of the airport.
+    
+    airportCode
+        The 3 letter IATA airport code.
+  -->
+  <xs:element name="Airport">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Address" />
+      </xs:sequence>
+      <xs:attribute name="airportCode" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    -
+    Meal information used by air, hotel and rail.
+    
+    BookingClassCode
+        Code for the meal. For example, airlines use
+            B     - Breakfast
+        C     - Complimentary liquor
+        D     - Dinner
+        F     - Food for purchase
+        G     - Food and beverage for purchase
+        H     - Hot meal
+        K     - Continental breakfast
+        L     - Lunch
+        M     - Meal
+        N     - No meal service 
+        O     - Cold meal
+        P     - Liquor for purchase
+        R     - Refreshments
+        S     - Snack or brunch
+        V     - Refreshments for purchase
+    
+    Description
+        Textual description of the meal, including any special needs
+        such as vegetarian or dairy-free.
+  -->
+  <xs:element name="Meal">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Car Rental -->
+  <!--
+    Car rental information.
+
+    Vendor
+        Car rental vendor information.
+
+    CarRentalPickup
+        Pickup location for the rental car.
+
+    CarRentalDropoff
+        Drop off location for the rental car.
+
+    BookingClassCode
+        4 letter code for car.
+
+        1st Letter - M (Mini), E (Economy), C (Compact), S (Standard),
+                     I (Intermediate), F (Full size), P (Premium), L (Luxury)
+                     V (MiniVan), X (Special)
+        2nd Letter - B (2 door), C (2/4 door), D (4 door), T (Convertible),
+                     F (Four wheel drive), V (Van), W (Wagon), S (Sport)
+                     X (Special)
+        3rd Letter - A (Automatic), M (Manual)
+        4th Letter - R (A/c), N (No A/C)
+
+    CarRentalFee
+        Mutliple car rental fee can be specified to capture the
+        break down of different fees. The total of these fees must
+        add up to the total at the line item level.
+
+    LimitedMileage
+        Mileage limit information
+
+    AvailablePrice
+        Other available prices for car rental that the user did not pick.
+
+    travelSegment
+        Textual information to identify this travel segment.
+        This information is specific to the Travel Booking Provider.
+
+    pickupTime
+        The intended pickup date and time
+
+    dropoffTime
+        The intended dropoff date and time
+  -->
+  <xs:element name="CarRentalDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Vendor" />
+        <xs:element ref="CarRentalPickup" />
+        <xs:element ref="CarRentalDropoff" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="CarRentalFee" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="LimitedMileage" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AvailablePrice" />
+      </xs:sequence>
+      <xs:attribute name="travelSegment" type="xs:string" use="required" />
+      <xs:attribute name="pickupTime" type="xs:dateTime" use="required" />
+      <xs:attribute name="dropoffTime" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Physical location where the rental car should be picked up. This
+    is either an Airport or off airport car rental location.
+
+    Airport
+        An airport location.
+
+    Address
+        Physical address of the car rental location
+  -->
+  <xs:element name="CarRentalPickup">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Airport" />
+        <xs:element ref="Address" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Physical location where the rental car should be dropped off.
+    This is either an Airport or off-airport car rental location.
+
+    Airport
+        An airport location.
+
+    Address
+        Physical address of the car rental location
+  -->
+  <xs:element name="CarRentalDropoff">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Airport" />
+        <xs:element ref="Address" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This specifies the quantity and the unit of measure of the mileage
+    limit.
+
+    UnitOfMeasure
+        Unit of measure either miles or kilometers.
+
+    quantity
+        The mileage limit amount.
+  -->
+  <xs:element name="LimitedMileage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="UnitOfMeasure"/>
+      </xs:sequence>
+      <xs:attribute name="quantity" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Car rental fee information. CarRentalFee captures the actual
+    charges and fee that applies to this rental. Conditional charges
+    such as extra mileages that are over the mileage limit should not
+    be specified here but rather in the TermsAndConditions text.
+
+    Total
+        Total amount for this car rental fee. All the total for the rates
+        must add up to this amount.
+
+    Rate
+        The individual broken-down fee information.
+
+    type
+        Type of rate
+            baseRate            - Base rental rate
+            additionalDriver    - Additional driver fee
+            airportAccessFee    - Airport Access fee
+            dropOffCharge       - Drop off charge
+            vehicleLicensingFee - Vehicle licensing fee
+            touristTax          - Tourist tax
+            prepaidGasoline     - Prepaid gasoline charge
+            navigationSystem    - Navigation system
+            childSeat           - Child seat charge
+            luggageRack         - Luggage rack charge
+            collisionDamageInsurance    - Collision damage insurance
+            liabilityInsurance          - Liability insurance
+            mobilePhone         - Mobile phone base charge
+            other               - Other charges.
+  -->
+  <xs:element name="CarRentalFee">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Rate"/>
+      </xs:sequence>
+      <xs:attribute name="type" default="baseRate">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="baseRate"/>
+            <xs:enumeration value="additionalDriver"/>
+            <xs:enumeration value="airportAccessFee"/>
+            <xs:enumeration value="dropOffCharge"/>
+            <xs:enumeration value="vehicleLicensingFee"/>
+            <xs:enumeration value="touristTax"/>
+            <xs:enumeration value="prepaidGasoline"/>
+            <xs:enumeration value="navigationSystem"/>
+            <xs:enumeration value="childSeat"/>
+            <xs:enumeration value="luggageRack"/>
+            <xs:enumeration value="collisionDamageInsurance"/>
+            <xs:enumeration value="liabilityInsurance"/>
+            <xs:enumeration value="mobilePhone"/>
+            <xs:enumeration value="other"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Hotel -->
+  <!--
+    Hotel detail information.
+
+    Vendor
+        Hotel vendor information.
+
+    Address
+        Physical address of the hotel. This is might be different
+        from the address specified in the Vendor field as the vendor
+        address might be the head quarter address.
+
+    RoomType
+        The type of room reserved.
+
+    BookingClassCode
+        Hotel booking class code.
+
+    Meal
+        Any complementary meals that are included with the room. For
+        example, complementary continental breakfast.
+
+    Rate
+        Hotel rate information. Multiple rates can be specified. For
+        example, the night rate, valet parking rate, and other rates.
+
+    AvailablePrice
+        Other available prices that user did not pick. Available
+        prices can be from the same vendor or different vendor.
+
+    travelSegment
+        Textual information to identify this travel segment. This
+        information is specific to the Travel Booking Provider.
+
+    arrivalTime
+        Date and time of arrival at the hotel. This is used as an
+        advisory to the hotel vendor for the arrival time.
+
+    departureTime
+        Date and time of departure from the hotel. This is used as an
+        advisory to the hotel vendor for the departure time.
+
+    checkinTime
+        The official checkin time. For example, most hotel checkin
+        time is 3:00 PM.
+
+    checkoutTime
+        The official checkout time. For example, most hotel checkout
+        time is 12:00 PM (noon).
+
+    earlyCheckinAllowed
+        Does the hotel allow early checkin?
+
+    lateCheckoutAllowed
+        Does the hotel allow late checkout?
+  -->
+  <xs:element name="HotelDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Vendor"/>
+        <xs:element ref="Address"/>
+        <xs:element ref="RoomType"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Meal"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Rate"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AvailablePrice"/>
+      </xs:sequence>
+      <xs:attribute name="travelSegment" type="xs:string" use="required"/>
+      <xs:attribute name="arrivalTime" type="xs:dateTime" use="required"/>
+      <xs:attribute name="departureTime" type="xs:dateTime" use="required"/>
+      <xs:attribute name="checkinTime" type="xs:time" use="required" />
+      <xs:attribute name="checkoutTime" type="xs:time" use="required" />
+       <xs:attribute name="earlyCheckinAllowed">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+       <xs:attribute name="lateCheckoutAllowed">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Information about a hotel room.
+
+    Description
+        Textual description of the hotel room.
+
+    Amenities
+        List of amenities for this hotel room.
+
+    smoking
+        Is the room a smoking or non-smoking room
+
+    numberOfBed
+        The number of beds in this room
+
+    bedType
+        The bed type in this room.
+  -->
+  <xs:element name="RoomType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Amenities"/>
+      </xs:sequence>
+      <xs:attribute name="smoking" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="numberOfBed" type="xs:decimal"/>
+      <xs:attribute name="bedType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="king" />
+            <xs:enumeration value="queen" />
+            <xs:enumeration value="full" />
+            <xs:enumeration value="double" />
+            <xs:enumeration value="single" />
+            <xs:enumeration value="other" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>    
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Textual description of the amenities for the hotel room.
+
+    Description
+        Text description of this amenities. For example,
+        DSL connection, two telephone lines, and other information
+        about a hotel room.
+  -->
+  <xs:element name="Amenities">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Description" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Rail -->
+  <!--
+    Rail detail information. A rail detail can have multiple legs.
+
+    TripType
+        Trip type for this rail.
+
+    Rail leg
+        The different rail legs that make up this rail detail.
+
+    AvailablePrice
+        Other available prices that the user did not pick for for this
+        rail trip.
+
+    Penalty
+        Penalty (if any) associated with this rail trip.
+  -->
+  <xs:element name="RailDetail">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TripType"/>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="RailLeg"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AvailablePrice"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Penalty"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Rail leg is used to express information regarding a single leg for
+    a rail travel.
+
+    Vendor
+        Rail vendor information.
+
+    RailLegOrigin
+        Rail originating location.
+
+    RailLegDestination
+        Rail Destination location.
+
+    BookingClassCode
+        Rail booking class code.
+
+    Rate
+        Rate information (if any) for this rail leg. If specified,
+        all the rates in all rail legs must add up to the total at the
+        travel line item level.
+
+    Meal
+        Meal served for this leg (if any).
+
+    travelSegment
+        Textual information to identify this travel segment. This
+        information is specific to the Travel Booking Provider.
+
+    departureTime
+        Date and time of departure at the originating location.
+
+    arrivalTime
+         Date and time of arrival at the destination location.
+
+    trainNumber
+        Train number for this rail leg.
+
+    seatNumber
+        Seat number.
+
+    carType
+        Type of the rail car.
+  -->
+  <xs:element name="RailLeg">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Vendor" />
+        <xs:element ref="RailLegOrigin" />
+        <xs:element ref="RailLegDestination" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BookingClassCode" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Rate" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Meal" />
+      </xs:sequence>
+      <xs:attribute name="travelSegment" type="xs:string" use="required"/>
+      <xs:attribute name="departureTime" type="xs:dateTime" use="required"/>
+      <xs:attribute name="arrivalTime" type="xs:dateTime" use="required"/>
+      <xs:attribute name="trainNumber" type="xs:string" use="required"/>
+      <xs:attribute name="seatNumber" type="xs:string"/>
+      <xs:attribute name="carType">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="sleeper"/>
+            <xs:enumeration value="seat"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The origin of a particular rail leg. This can be an airport or a
+    physical address of a rail station.
+
+    Airport
+        An airport location
+
+    Address
+        A physical address of a rail station
+  -->
+  <xs:element name="RailLegOrigin">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Airport"/>
+        <xs:element ref="Address"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The destination of a particular rail leg. This can be an airport
+    or a physical address of a rail station.
+
+    Airport
+        An airport location
+
+    Address
+        A physical address of a rail station
+  -->
+  <xs:element name="RailLegDestination">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="Airport"/>
+        <xs:element ref="Address"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    The type of the trip. This is used by Air and Rail to indicate
+    round trip, one way or multi-leg trip.
+
+    type
+        Type of the trip
+        round       - a round trip
+        oneWay      - a one way trip
+        multiLeg    - a multi leg or open jaw trip
+  -->
+  <xs:element name="TripType">
+    <xs:complexType>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="round" />
+            <xs:enumeration value="oneWay" />
+            <xs:enumeration value="multiLeg" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Information about a vendor that is providing this service.
+    
+    Address
+        The physical address of the vendor. This address normally is
+        the business or head quarter address of the vendor.
+    
+    SupplierID
+        Supplier id for this vendor. This is just a (domain, value)
+        pair so that Travel Booking Providers have the flexibility to
+        define their id's according to an arbitrary convention (e.g.,
+        (DUNS, 12345), (TaxID, 88888888)).
+    
+        Note that multiple supplier id can be specified. This is so
+        that Travel Booking Provider can have a single implementation
+        that works with different Buyer implementations that use
+        different supplier id domain.
+    
+    preferred
+        Is this vendor a preferred vendor?
+  -->
+  <xs:element name="Vendor">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="SupplierID" />
+      </xs:sequence>
+      <xs:attribute name="preferred" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Textual terms and conditions associated with an air fare, car
+    rental, hotel, or rail. For example, a car rental terms and
+    conditions normally include boundary limit, additional mileage
+    charges, gasoline charge and other restriction information.
+
+    Multiple terms and conditions can be attached to a single travel
+    line item.
+
+    Description
+        Textual terms and conditions.
+  -->
+  <xs:element name="TermsAndConditions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Description"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Policy violation (if any) that results from the user picking this
+    particular travel. Policy violations are associated with an
+    individual line item of travel and not associated at the header
+    level. This allows for clear identification of the violation with
+    the individual line item.
+
+    Description
+        Textual description of this violation.
+
+    PolicyViolationJustification
+        Justification for this violation given by user normally picked
+    from a standard list of justifications at the Travel Booking
+    Provider web site.
+
+    Comments
+        Additional comments to further clarify the justification given
+        by user.
+
+    level
+        Violation level.
+            warning     - a non serious violation.
+            violation   - a serious violation of company policy.
+  -->
+  <xs:element name="PolicyViolation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Description"/>
+        <xs:element ref="PolicyViolationJustification"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments"/>
+      </xs:sequence>
+      <xs:attribute name="level" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="warning"/>
+            <xs:enumeration value="violation"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Justification given by the user why they violate the company
+    travel policy. This justification value is normally picked from a
+    pick list at the Travel Booking Provider web site.
+
+    Description
+        The justification of the violation picked from a standard list
+        at the Travel Booking Provider web site.
+  -->
+  <xs:element name="PolicyViolationJustification">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Description" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Penalty (if any) for this travel segment
+
+    Money
+        The penalty amount
+
+    Description
+        Textual description of the cause of the penalty. For example,
+        change fee associated with air ticket.
+  -->
+  <xs:element name="Penalty">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money"/>
+        <xs:element ref="Description"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Other avaible price. AvailablePrice is used to express what other
+    prices are available that the traveler did not pick.
+    AvailablePrice is can be used to capture the lowest price, the
+    highest price, the lowest compliant price, and the hight compliant
+    price.
+    
+    Money
+        The amount of the other available price.
+    
+    Description
+        Textual description of the available price. It explain
+        how this price was derived at. For example, a non direct flight
+        exists with the flight number can be put here.
+    
+    Type
+        Type of available price. Currently we capture four
+        different type.
+            lowest              - The lowest price possible regardless of the
+                                  traveling policies
+            lowestCompliant     - The lowest price that still complies with
+                                  the travel policies
+            highestCompliant    - The highest price that still complies with
+                                  the travel policies
+            highest             - The highest price possible regardless of the travel
+                                  policies
+            other               - Other, specify in the description
+  -->
+  <xs:element name="AvailablePrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="lowest" />
+            <xs:enumeration value="lowestCompliant" />
+            <xs:enumeration value="highestCompliant" />
+            <xs:enumeration value="highest" />
+            <xs:enumeration value="other" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Booking class code used by airfare, car rental, hotel, and rail to
+    indicate the class.
+    
+    Description
+        Textual description of the code
+    
+    code
+        code
+  -->
+  <xs:element name="BookingClassCode">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="domain" type="xs:string" use="required" />
+      <xs:attribute name="code" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Define a physical location and its address. This can be used to 
+    describe places such as airport, bus station, ferry dock, railway
+    station and so on.
+
+    Address
+        Indicates the address of the place
+
+    code
+        Indicates the code the may represent the place. For example,
+        airport can have an airport code.
+
+    domain
+        Qualifier or domain for the code. For example, airport code
+        is IATA standard, the domain value would be "IATA"; however
+        bus station code may be local specific.
+  -->
+  <xs:element name="Place">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="Address"/>
+      </xs:sequence>
+      <xs:attribute name="code" type="xs:string"/>
+      <xs:attribute name="domain" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines places such as city, airport or railway where trip or leg originated.
+  -->
+  <xs:element name="LegOrigin">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Place"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Defines places such as city, airport or railway code where trip or leg ended.
+  -->
+  <xs:element name="LegDestination">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Place"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

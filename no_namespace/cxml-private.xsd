@@ -1,0 +1,1529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    For cXML license agreement information, please see
+    http://www.cxml.org/home/license.asp
+
+    $Id: //ariba/cxml/release/schema/1.2.39.1+/Modules/Private.mod#2 $
+-->
+
+<!-- ====
+    Not yet public Requests, Responses and Messages.
+==== -->
+<xs:schema  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+  elementFormDefault="unqualified">
+  <!-- Import xml: namespace -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+        schemaLocation="http://www.w3.org/2001/xml.xsd" />
+  <!-- Import ds: namespace -->
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="ds.xsd" />
+  <xs:include schemaLocation="cxml-base.xsd"/>
+  
+  <!-- ====
+    SessionStatus* transaction allows two cooperating visually integrated
+    applications to link their user sessions (timeouts in particular)
+    together.
+  ==== -->
+
+  <!--
+    SessionStatusRequest
+
+    Used to exchange session status information between two cooperating
+    visually integrated applications.  The cookie used matches the one sent
+    in the original *SetupRequest.  When used to check on the status of a
+    session initiated using a PunchOutSetupRequest, the OriginatorCookie
+    contains the BuyerCookie from that document.
+
+    payloadID
+        The unique identifier for the document which initiated this
+        session.  Copied directly from the cXML element of the original
+        document.  Presently, that document must have contained an
+        OrderStatusSetupRequest, ProviderSetupRequest or
+        PunchOutSetupRequest element.
+
+        Associates this check or update with the original document and
+        allows an intermediate hub to route the SessionStatusRequest
+        identically to the original Request document.  This covers the case
+        in which a one provider provides a service on behalf of another.
+        (A SessionStatusRequest must go to the location specified in the
+        ProfileResponse of the correct provider.)
+
+    operation
+        The information requested or transmitted by the originator:
+        ping - Asks "Is the session at the remote site still active?"
+           Response Status codes include:
+              200, the given cookie identifies a user session known to the
+                remote server.  The SessionStatusResponse contains the
+                interval since last activity.
+              401, the remote session has expired or cannot be found
+        cancel - Informs the remote site the user has returned to the
+                originating application.  Remote site can close its
+                session.
+        timeout - Informs the remote site the user's session in the
+                originating application has expired.  The remote site
+                should not attempt to return a completion message.
+        complete - Informs the remote site the user has returned via a
+                successfully received ProviderDoneMessage or
+                PunchOutOrderMessage, completing the session.  Remote site
+                should already have closed its session.
+
+    Profile note: If the requestName of a Transaction in a ProfileResponse
+    is "SessionStatusRequest", an Option element with name="requestNames"
+    is required inside that Transaction element.  The content of that
+    Option element must be a space-separated list of tag names chosen from
+    the set "OrderStatusSetupRequest", "ProviderSetupRequest" and
+    "PunchOutSetupRequest".  This Option element informs the client that
+    the server supports session checks and updates while performing a
+    listed interactive service.  Transaction elements for each of the
+    listed requests must also be included in the profile.
+  -->
+  <xs:element name="SessionStatusRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OriginatorCookie" />
+      </xs:sequence>
+      <xs:attribute name="payloadID" type="xs:string" use="required" />
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="ping" />
+            <xs:enumeration value="cancel" />
+            <xs:enumeration value="timeout" />
+            <xs:enumeration value="complete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SessionStatusResponse
+
+    Returned in Response to a SessionStatusRequest only when
+    operation="ping" in the Request and the Response Status code is 200.
+
+    idleInterval
+        Number of seconds since the user last performed some action at the
+        remote site.  (This attribute does not contain the time that action
+        was initiated to avoid problems synchronizing clocks between the
+        originating application and remote site.)
+  -->
+  <xs:element name="SessionStatusResponse">
+    <xs:complexType>
+      <xs:attribute name="idleInterval" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    OrderStatus* transaction is used to visually integrate an application
+    with an order routing service provider to display detailed order
+    status.
+  ==== -->
+
+  <!--
+    OrderStatusSetupRequest - Request (dynamic) location for new session
+        within remote application.
+
+    Contains information about one or more orders (the DocumentReference
+    list), optional information about the requistion containing the orders
+    of interest (the ReqReference element) and a way to tie the later
+    interactive session to this particular request (the OriginatorCookie
+    element).
+
+    The originating application would provide the BrowserFormPost location
+    only if it wished the provider site to display a "Done" button or
+    would like information (at least Status) returned at the end of the
+    interactive session.  Inclusion should lead to a ProviderDoneMessage
+    from the provider at the end of a session.
+
+    The originating application would provide a SelectedService if it
+    were asking the target application to display status information
+    about a particular service tied to the order.  Examples uses of this
+    are for checking payment status, and package tracking.  These are both
+    services of an order.
+
+    operation
+        inspect - Provider should create a session allowing the user to
+            view details about the order(s).  Changes should not be allowed
+            within this session.  This is the default operation.
+        edit - Provider should create a session allowing the user to update
+            details about the order(s).  Allowed changes may vary depending
+            upon the user's organization (identified in the From
+            credential).
+  -->
+  <xs:element name="OrderStatusSetupRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OriginatorCookie" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BrowserFormPost" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="SelectedService" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ReqReference" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="DocumentReference" />
+      </xs:sequence>
+      <xs:attribute name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="inspect" />
+            <xs:enumeration value="edit" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Additional information used to summarise a requisition when multiple
+    DocumentReference elements appear in the OrderStatusSetupRequest.  None
+    of this data corresponds to information maintained outside of the
+    procurement application.  One exception: requisitionID may optionally
+    appear in the original order at the header or line item level.
+
+    requisitionID
+        The buyers system requisition id for the order(s) listed in the
+        OrderStatusSetupRequest.
+
+    creationDate
+        The date this requisition was created in the procurement
+        application.
+  -->
+  <xs:element name="ReqReference">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+      </xs:sequence>
+      <xs:attribute name="requisitionID" type="xs:string" use="required" />
+      <xs:attribute name="creationDate" type="xs:dateTime" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     OrderStatusSetupResponse
+  -->
+  <xs:element name="OrderStatusSetupResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="StartPage" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     OrderStatusDoneMessage
+  -->
+  <xs:element name="OrderStatusDoneMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OriginatorCookie" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ReturnData" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Information of a QuoteData.  This is the supplier specific quote data information that is sent to the buyer. 
+    type
+        supplier action type.
+    quoteID
+        unique identifier for a quote. 
+    quoteDate
+        The date when the quote is submitted.
+  -->
+  <xs:element name="QuoteDataInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrganizationID" />
+        <xs:element ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="ShipTo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="accept" />
+            <xs:enumeration value="reject" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="final" />
+            <xs:enumeration value="award" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="quoteID" type="xs:string" use="required" />
+      <xs:attribute name="quoteDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="currency" type="isoCurrencyCode" use="required" />
+      <xs:attribute ref="xml:lang" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Definition for a quote data object. This contains quote data from one supplier.
+  -->
+  <xs:element name="QuoteData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="QuoteDataInfo" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="QuoteItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Header for the quote data message. This contains the header information for the quote data message.
+  -->
+  <xs:element name="QuoteDataMessageHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="QuoteRequestReference" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="QuoteDataMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="QuoteDataMessageHeader" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="QuoteData" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    Invoice* transaction allows a supplier to transmit a request for
+    payment to a buyer.
+  ==== -->
+
+  <!--
+    InvoiceRequest
+
+    Transmits a request for payment to a buyer.  Directly references an
+    earlier OrderRequest document and provides finalized total, shipping
+    and tax information.  (An Invoice may not request payment for anything
+    other than a single order.)
+
+    This document must be sent to the Followup location specified in an
+    earlier OrderRequest document.  That OrderRequest document must be
+    identified in the DocumentReference element contained here.               
+
+    The Total amount must include all line item amounts, Shipping and Tax.
+    It is the single amount the buyer will pay.  Exact Shipping and Tax
+    amounts must be provided if they apply to this order.
+
+    The requisitionID attribute and BillTo element echo data provided in
+    the original OrderRequest document, if any.  While identical elements
+    are available in an OrderRequest document, the Contact, Comments and
+    Extrinsic elements in this request should not duplicate anything in the
+    original OrderRequest document.  These elements provide additional
+    detail the supplier wishes to transmit.
+
+    invoiceDate
+        Date and time this Invoice was created (should be earlier than the
+        document's timestamp).
+
+    invoiceID
+        A supplier-generated identifier for this Invoice.  Identical to the
+        Invoice Number which appears at the top of a physical Invoice.
+
+    requestedAction
+        Action the buyer should take as a result of this document.  May be:
+        none
+            This document is provided as a receipt for payment the supplier
+            has already initiated.
+        payment
+            The buyer should initiate payment of the Total amount.
+
+    orderID
+        The buyer system orderID for this request.  Basically, what the PO
+        number is today.  Copied directly from the OrderRequestHeader of
+        the original purchase order document.
+
+    requisitionID
+        The buyers system requisition id for this entire order.  Copied
+        directly from the OrderRequestHeader of the original document.
+  -->
+  <xs:element name="InvoiceRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentReference" />
+        <xs:element ref="InvoiceRequestHeader" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="InvoiceRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Total" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Shipping" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Tax" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PayTo" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="BillTo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="invoiceDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="invoiceID" type="xs:string" use="required" />
+      <xs:attribute name="requestedAction" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none" />
+            <xs:enumeration value="payment" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="orderID" type="xs:string" use="required" />
+      <xs:attribute name="requisitionID" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    An address where payment (if done by physical means) should be
+    sent.
+  -->
+  <xs:element name="PayTo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Address" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    PrivateOrganization* transaction is used by marketplaces to create a
+    supplier or buyer within their Private Labelled Ariba Network (PLAN).
+  ==== -->
+
+  <!--
+    PrivateOrganizationRequest - Operate on a member organization.
+
+    operation
+        create - Create a new member organization with this Name and in the
+            given Organization Role.
+        update - Update the given member organization with new Name and/or
+            Organization Role.
+        query - Return a previously-generated Credential for the given
+            member organization.  Server must return Status code 204 (No
+            Content) without a PrivateOrganizationResponse if this member
+            organization does not yet exist.
+        delete - Delete the given member organization.
+
+    Note: The header-level From credential identifies the marketplace in
+    case of 'create' or 'query' and the member organization in case of
+    'delete'.
+
+    Name - Company name of interest.
+    OrganizationRole - Role of this company within the marketplace or
+        exchange.
+  -->
+  <xs:element name="PrivateOrganizationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="OrganizationRole" />
+      </xs:sequence>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="query" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+     PrivateOrganizationResponse - Return data for successful 'create' and
+     'query' PrivateOrganizationRequest attempts.
+
+     The response includes the Credential for the created or queried
+     organization.  The PrivateOrganizationResponse would not be returned
+     in the 'delete' case.
+  -->
+  <xs:element name="PrivateOrganizationResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Credential" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+    NotificationRequest - send a notification.
+      This request is also posted to add notes or additional information 
+  to any earlier document.
+
+  DocumentReference
+    This element is used to identify the document using payloadId
+    for which notes are added.
+  DocumentInfo
+    This element is used if DocumentReference is omitted.
+    This element identifies a document using documentId, documentTye,
+    documentDate. Either DocumentReference or DocumentInfo should 
+    be provided.
+      Attachment
+        This is an optional element used to provide any number of 
+        attachments.  
+  category
+            could be used for routing notifications to those responsible for
+            an area.
+        type
+            indicates the nature and severity of the notification.            
+  ==== -->
+  <xs:element name="NotificationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Subject" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Body" />
+        <xs:choice minOccurs="0" maxOccurs="1">
+          <xs:element ref="DocumentReference" />
+          <xs:element ref="DocumentInfo" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Attachment" />
+      </xs:sequence>
+      <xs:attribute name="category" type="xs:string" />
+      <xs:attribute default="info" name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="info" />
+            <xs:enumeration value="warning" />
+            <xs:enumeration value="error" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Subject">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Body">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute ref="xml:lang" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    CatalogChangeRequest
+
+    This request is posted to the catalog server whenever the content or
+    the subscriber list (or both) associated with a particular catalog
+    changes.  Note that the From credential in the request indicates the
+    supplier from whom the catalog comes.
+
+    This request is also posted to AN from the catalog server to
+    indicate that a catalog's location has been toggled between network and
+    local. For a network catalog enabled buyer, AN will not put the
+    new version of the catalog in the queue where buyer used to be
+    able to sync the catalog from. Instead the catalog server will
+    sync the catalog from AN. By default, the catalog is considered to
+    be on the network. The buyer has a choice to change the location
+    from network to local, and vice versa. When this toggle happens,
+    we will use CatalogChangeRequest to notify AN. AN will act
+    correspondingly. Specifically, if the catalog is changed from
+    network to local, AN has to put the catalog in the queue again.
+
+    In this case, the From element will be used to represent the
+    supplier. The buyer will be represented in the SubscriberList,
+    which contains only one element.
+
+    type
+        Indicates the type of change
+
+    isPublic
+        Indicates whether the catalog changed is a public catalog or not.
+
+    location
+        Indicates the location of the catalog, when the request is
+        sent from the catalog server to AN. To be extensible, it's
+        defined as a string, not an enumeration or boolean.
+  -->
+  <xs:element name="CatalogChangeRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="CatalogID" />
+        <xs:element ref="SubscriberList" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="isPublic">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="location" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="CatalogID">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Identity" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SubscriberList">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="OrganizationID" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+      SourcingUpdateRequest  - A request from Sourcing to Buyer application, can be sent in three flavors.
+      1.    SourcingUpdateRequest - SourcingReference information in the form of Extrinsics with no item information. 
+      This is more for confirmation of creation of a Sourcing transaction on Sourcing. 
+      This reference will be used in Subsequent Messaging Transactions.
+      2.    SourcingUpdateRequest - quoteStatus="pending", the request will have a set of MasterAgreements that are a partial completion of the corresponding SourcingTransaction, 
+      Buyer application will be expecting subsequent SourcingUpdateRequests from Sourcing.
+
+      3.    SourcingUpdateRequest - quoteStatus="final", the request will have MasterAgreements, Items or nothing. This will cause Buyer to close the SourcingRequest within Buyer and not wait for  more documents.
+  -->
+  <xs:element name="SourcingUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SourcingUpdateRequestHeader" />
+        <xs:choice>
+          <xs:element ref="PurchaseRequisition" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="MasterAgreement" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   SourcingUpdateRequestHeader
+    - Header Level Sourcing/Buyer handshake information
+    and also header level information for spot purchases.
+    This is via Extrinsics for this release
+                quoteStatus - defines the status of the Sourcing
+    transaction on Sourcing.
+    "pending" - Sourcing is partially completed process
+    all the items and agreements in the request but wait
+     for more.
+    "final" - process is complete so no need to wait for
+     more results.
+  -->
+  <xs:element name="SourcingUpdateRequestHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="SourcingStatus" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute default="final" name="quoteStatus">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="pending" />
+            <xs:enumeration value="final" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute default="spot" name="sourcingType">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="spot" />
+            <xs:enumeration value="contract" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    MasterAgreementHeader  - header level information for a Master
+    Agreement. Contains Header level terms and identifies the
+    contract type.
+
+    SupplierID -  identifies the header level supplier for the
+    MasterAgreement.
+    MaxAmount - If the MasterAgreement "type" is "value " then
+    this represents maximum amount limit on the MA
+    MinAmount - If the MasterAgreement "type" is "value", then
+    this represents minimum amount limit on the MA
+         MinReleaseAmount -This represents the release terms for the
+    Minimum release amount per MA release
+    Extrinsic - Extended attribute for the MA  terms at the header
+    level
+         Comments - Attachments  with Description at the header level
+    agreementDate - Date of agreement
+    effectiveDate - Date the MA is effective.
+         expirationDate - Date for expiration.
+ -->
+  <xs:element name="MasterAgreement">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="MasterAgreementHeader" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="AgreementItemIn" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="MasterAgreementHeader">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SupplierID" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinReleaseAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="agreementDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="effectiveDate" type="xs:dateTime" use="required" />
+      <xs:attribute name="expirationDate" type="xs:dateTime" use="required" />
+      <xs:attribute default="value" name="type">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="value" />
+            <xs:enumeration value="quantity" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   AgreementItemIn, enhanced ItemIn to contain agreement specific
+   information.
+  -->
+  <xs:element name="AgreementItemIn">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ItemIn" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MaxAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="MinAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="PricingTerm" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+      </xs:sequence>
+      <xs:attribute name="maxQuantity" type="xs:decimal" />
+      <xs:attribute name="minQuantity" type="xs:decimal" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+        PricingTerm information, these are pricing terms for either
+   the header or the items in a contract.
+
+        DiscountPercent - Percentage Discount for the Amount.
+        DiscountedPrice - DiscountedPrice, supported at item level only.
+        AmountTierPrice - Tier Pricing Based on Amount.
+    - MinTierAmount - Lower  amount limit for a given tier.
+        QuantityTierPrice - Quantity Based Tier Pricing.
+    - MinTierQuantity - Lower quantity limit for a given tier.
+  -->
+  <xs:element name="PricingTerm">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice>
+          <xs:element ref="DiscountPercent" />
+          <xs:element ref="DiscountedPrice" />
+          <xs:element ref="TieredPrice" />
+        </xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="DiscountedPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="TieredPrice">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="AmountTierPrice" />
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="QuantityTierPrice" />
+      </xs:choice>
+      <xs:attribute name="cumulative">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="AmountTierPrice">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="MinTierAmount" />
+        <xs:choice>
+          <xs:element ref="DiscountPercent" />
+          <xs:element ref="DiscountedPrice" />
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="QuantityTierPrice">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="DiscountPercent" />
+        <xs:element ref="DiscountedPrice" />
+      </xs:choice>
+      <xs:attribute name="minTierQuantity" type="xs:decimal" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="MinTierAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   Used to create a relationship between two organizations
+   Create is used to create a relationship. Delete is used to remove
+   the relationship between the organizations.
+  -->
+  <xs:element name="RelationshipRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="Relationship" />
+      </xs:sequence>
+      <xs:attribute name="action" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="create" />
+            <xs:enumeration value="delete" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Relationship">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrganizationID" />
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="buyer" />
+            <xs:enumeration value="orgDataSubscription" />
+            <xs:enumeration value="sourcing" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="RelationshipResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="RelationshipStatus" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="RelationshipStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SubStatus" />
+        <xs:element ref="Relationship" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="SubStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Description" />
+      </xs:sequence>
+      <xs:attribute name="code" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   Request to track a RFx
+  -->
+   <!--
+     The type can be one of
+     periodic, continuous, dutch, english, exchange, japanese, sealedBid, schedSealedBid,
+     openRFQ, openRFB, openRFI, sealedRFQ, sealedRFB, sealedRFI, negotiationSequential,
+     negotiationParallel, negotiationParallelCollective or any other type added later.
+     The type of RFx is not enumerated since these keep changing.
+     In the launch phase a list of participants is sent. In the winner stage a
+     list of winners is sent.
+  -->
+  <xs:element name="RFxEventRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="OrganizationID" />
+      </xs:sequence>
+      <xs:attribute name="rfxType" type="xs:NMTOKEN" use="required" />
+      <xs:attribute name="phase" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="launch" />
+            <xs:enumeration value="winner" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Used to exchange information between two cooperating applications.
+  -->
+  <xs:element name="ProviderDataRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SelectedService" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ProviderDataResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+  Collaboration Request
+     Request for a generic collaboration. For updates we use the
+     collaborationID to reference the collaboration being updated.
+     The CollaborationInfo piece is not sent during a statusUpdate operation.
+  
+     status
+      the status of the request. Some recommended ones are
+      buyerSubmitted | buyerEditing | supplierDeclined |
+      buyerWithdrawn | expired |deleted |completed | inProgress for
+      type = requisition
+  
+          collaborationID
+      the id of the collaboration request in the buyer system.
+      This needs to unique within just the buyer system, not globally.
+  
+          operation
+      what operation is this request . defaults to "new"
+  
+          type
+      the type of collaboration request recommended ones are
+      "requisition"
+  -->
+  <xs:element name="CollaborationRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="CollaborationInfo" />
+      </xs:sequence>
+      <xs:attribute name="collaborationID" type="xs:NMTOKEN" use="required" />
+      <xs:attribute name="status" type="xs:string" use="required" />
+      <xs:attribute default="new" name="operation">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="statusUpdate" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!---
+   Information about the collaboration. Any information specify to
+   the collaboration like estimated amount etc. should be included
+   in the extrinsics
+
+   expirationDate
+    the time when the request expires. This is just for
+    informational purpose.
+  -->
+  <xs:element name="CollaborationInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="expirationDate" type="xs:dateTime" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    This request is used to send information about a RFX.
+
+    operation
+        The operation being performed with this message.
+        "new" indicates that this is the first time that the RFx is
+        being published.
+        "update" is used to send new header information when the
+        public RFx information is changed.
+        "updateState" is used to send changes in the RFx status.
+        "updateParticipant" is used to send information about the
+        RFx participant list only. This could be to send the list
+        of winners or whenever the RFx participants are changed.
+    rfxID
+        The identifier of the RFX within the Sourcing instance.
+    status
+        The current status of the RFX and can be one of the
+        following: New, Open, Suspended, Closed, Failed Recovery,
+        Killed, Pending Selection, Scheduled, Preview,
+        Pending Launch.
+    type
+        The type of RFX. Can be one of english, sealedBid,
+        openRFQ, openRFB, openRFI, sealedRFQ, sealedRFB,
+        sealedRFI, sealedRFP, negotiationSequential,
+        negotiationParallel, negotiationParallelCollective
+        or any other type added later.
+        Note: type is not enumerated since the list is subject
+        to change.
+  -->
+  <xs:element name="RFxPublishRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="PublicRFxInfo" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="RFxParticipantInfo" />
+      </xs:sequence>
+      <xs:attribute name="operation" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="new" />
+            <xs:enumeration value="update" />
+            <xs:enumeration value="updateState" />
+            <xs:enumeration value="updateParticipant" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="rfxID" type="xs:NMTOKEN" use="required" />
+      <xs:attribute name="status" type="xs:string" use="required" />
+      <xs:attribute name="type" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Provides summary information about a RFx.
+
+    Note: Extrinsics are used to pass additional information
+    about the RFx.
+  -->
+  <xs:element name="PublicRFxInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Name" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Description" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="TimeRange" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Country" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Classification" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Provides information about a supplier's particpation in a RFx.
+
+    status
+        The current status of the supplier in the RFx.
+        "participant" indicates the supplier is invited to the RFx.
+        "winner" indicates the supplier has been selected as a winner.
+        "nominated" indicates that the supplier would like to
+        participate in a RFx pending approval by the RFx initiator.
+        "approved" indicates that the RFx initiator has accepted the
+        supplier's nomination request.
+        "denied" indicates that the RFx initiator has rejected the
+        supplier's nomination request.
+        "deleted" indicates that the supplier has been removed from the
+        list of participants.
+  -->
+  <xs:element name="RFxParticipantInfo">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="status" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:NMTOKEN">
+                <xs:enumeration value="participant" />
+                <xs:enumeration value="winner" />
+                <xs:enumeration value="nominated" />
+                <xs:enumeration value="approved" />
+                <xs:enumeration value="denied" />
+                <xs:enumeration value="deleted" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Money element to indicate Available Amount on a Blanket Purchase Order
+    or a Contract.
+  -->
+  <xs:element name="AvailableAmount">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Money" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Status update for an existing purchase order of type "blanket".
+    open
+     open the blanket purchase order, blanket orders can be invoiced or
+     released against once they are opened
+    close
+     close the blanket purchase order, release type blanket order cannot
+     release against once they are closed. But no release type blanket order
+     still can be invoiced as long as there is an available amount.
+    update
+      update available amount with the amount specified in the AvailableAmount element.
+  -->
+  <xs:element name="BlanketOrderStatus">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="1" ref="AvailableAmount" />
+        <xs:element minOccurs="0" maxOccurs="1" ref="Comments" />
+      </xs:sequence>
+      <xs:attribute name="action" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="open" />
+            <xs:enumeration value="close" />
+            <xs:enumeration value="update" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   BlanketOrderStatusUpdateRequest
+   A request to update the status of a PurchaseOrder of type BPO.
+   This request is used to update the blanket purchase order about any
+   status update("open/close") and the available amount("update").
+
+   OrderReference
+      Reference to the blanket  purchase order that is being updated.
+   BlanketOrderStatus
+      Element representing the status updates to the blanket order.
+  -->
+  <xs:element name="BlanketOrderStatusUpdateRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="OrderReference" />
+        <xs:element ref="BlanketOrderStatus" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- ====
+     DataSync* requests support the AOD Data Synchronization service.
+  ==== -->
+
+  <!--
+    DataSyncChangeListRequest
+
+    Used to query AN for the list of objects requiring synchronization.
+    The parameters indicate the type of data the client is interested, and
+    a sequence number indicating the last time the client synced.
+
+    scn
+    rowNum
+        scn and rowNum values should be the values the client received from
+            the last successfully-synchronized change list request.
+            They are used by the server to determine which objects need to
+            be synced to the client.
+
+    syncType
+        Indicates the type of data this client is interested in. For example,
+            S4 may require a different shape of data from SSP. A given client
+            should always use the same value for this parameter.
+
+    limit
+        The maximum number of syncObjs to return. If there are more changes than the limit,
+        subsequent invocations will be required.
+  -->
+  <xs:element name="DataSyncChangeListRequest">
+    <xs:complexType>
+      <xs:attribute name="scn" type="xs:int" use="required" />
+      <xs:attribute name="rowNum" type="xs:int" />
+      <xs:attribute name="syncType" type="xs:string" use="required" />
+      <xs:attribute name="limit" type="xs:int" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DataSyncChangeListResponse
+
+    Returned in response to a DataSyncChangeListRequest.
+    Contains a list of objects requiring synchronization.
+
+    scn
+        System change number.
+    rowNum
+         The client should save the scn and rowNum values and pass them to the next DataSyncChangeListRequest invocation
+
+    Consumers
+         0 or more lists of orgs concerned with the returned data; e.g. buyer orgs with relationships to returned supplier orgs.
+    SyncObj
+        Indicate object that need to be synced to the client.
+  -->
+  <xs:element name="DataSyncChangeListResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Consumers" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="SyncObj" />
+      </xs:sequence>
+      <xs:attribute name="scn" type="xs:string" use="required" />
+      <xs:attribute name="rowNum" type="xs:string" />
+      <xs:attribute name="morePending">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Consumers
+
+    Contains a list of ID's of 'consumer' objects.
+    (In the case of s4 data sync, a "consumer" is a buyer with a sourcing relationship to the supplier org,
+    and this element would contain a list of buyer ANId's.)
+
+    id
+        An ID unique within the scope of the xml document
+  -->
+  <xs:element name="Consumers">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="id" type="xs:ID" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DataSyncDataRequest
+
+    Used to fetch synchronization data for one or more objects.
+
+    SyncObj
+        Identifies the objects to synchronize
+  -->
+  <xs:element name="DataSyncDataRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="SyncObj" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DataSyncDataResponse
+
+    Returned in response to a DataSyncDataRequest.
+    Contains the object snapshot(s) for synchronizing the client.
+  -->
+  <xs:element name="DataSyncDataResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="DataSyncSnapshot" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    DataSyncSnapshot
+
+    Wraps an object snapshot containing latest data
+
+    objectId
+        Uniquely identifies the object
+    scn
+        The scn of the transaction of most recent update to the object
+  -->
+  <xs:element name="DataSyncSnapshot">
+    <xs:complexType mixed="true">
+      <xs:sequence>
+        <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" />
+      </xs:sequence>
+      <xs:attribute name="objectId" type="xs:string" use="required" />
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="Org" />
+            <xs:enumeration value="User" />
+            <xs:enumeration value="Certification" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="scn" type="xs:string" />
+      <xs:attribute name="isDelete">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SyncObj
+        Identifies an object requiring data synchronization. Elements of this type
+        are returned to the data sync client in DataSyncChangeListResponse to indicate
+        to the client what needs to be synced, and sent to the server in
+        DataSyncDataRequest to indicate which object snapshots to return.
+
+        objId
+            The ID of the object to fetch
+        type
+            the object domain specifier
+        scn
+            scn (transaction) of the change
+        parentId
+            the id of the object that has an ownership relationship to the object represented by objId, if any.
+        consumers
+            If present, refers to a <buyers> element identifying the buyers for the supplier org related to the object
+        isDelete
+            If present, indicates that the identified object has been deleted.
+  -->
+  <xs:element name="SyncObj">
+    <xs:complexType>
+      <xs:attribute name="objId" type="xs:string" use="required" />
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="Org" />
+            <xs:enumeration value="User" />
+            <xs:enumeration value="Certification" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="scn" type="xs:string" />
+      <xs:attribute name="parentId" type="xs:string" />
+      <xs:attribute name="consumers" type="xs:IDREF" />
+      <xs:attribute name="isDelete">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    Certification
+        Certification info for a supplier organization. Used in data sync org snapshot.
+  -->
+  <xs:element name="Certification">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="CertificationAttachment" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="required" />
+      <xs:attribute name="type" type="xs:string" use="required" />
+      <xs:attribute name="expirationDate" type="xs:dateTime" />
+      <xs:attribute name="issueDate" type="xs:dateTime" />
+      <xs:attribute name="certificationNumber" type="xs:string" />
+      <xs:attribute name="authorityInfo" type="xs:string" />
+      <xs:attribute name="certificationName" type="xs:string" />
+      <xs:attribute name="certificationLocation" type="xs:string" />
+      <xs:attribute name="yearValid" type="xs:int" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="CertificationAttachment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Attachment" />
+      </xs:sequence>
+      <xs:attribute name="fileName" type="xs:string" />
+      <xs:attribute name="fileSize" type="xs:int" />
+      <xs:attribute name="fileDescription" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ContactData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Contact" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="ContactAssignment" />
+      </xs:sequence>
+      <xs:attribute name="businessTitle" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="ContactAssignment">
+    <xs:complexType>
+      <xs:attribute name="org" type="xs:string" />
+      <xs:attribute name="role" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    BusinessType
+        For representing org business types, which come from the table org_business_type and the master
+        table business_type.
+
+        name
+            The name of the business type. This is either an AN-defined name ("Government/Public Agency", "Retailer",
+            "Utilities", "Broker", "Contractor/Consultant", "Transportation/Logistics", "Distributor",
+            "Distributor/Wholesaler", "Energy Service Provider", "Generator", "Manufacturer", "Manufacturer(OEM),
+            "Sales Agent/Manufacturer's Representative", "Printer", "Producer", "Service Provider", "Mining Provider",
+            "Value Added Reseller", "System Integrator", "Wholesaler"), or "Other".
+        value
+            Not present unless the name is "Other", in which case this attribute contains the user-entered string.
+  -->
+  <xs:element name="BusinessType">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required" />
+      <xs:attribute name="value" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SupplierMigrationInfo
+        The info stores the organization id and user id that requests for AOD migration
+  -->
+  <xs:element name="SupplierMigrationInfo">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="orgId" type="xs:string" use="required" />
+      <xs:attribute name="userId" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    SupplierMirgationResult
+        The results stores the migration status, the ANID of organization, and the new AOD user id
+        The first credential is to specify the Supplier ANID.  The domain is NetworkId
+        The second credential is to specify the user AN login id. The domain is NetworkUserId
+  -->
+  <xs:element name="SupplierMigrationResult">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Credential" />
+        <xs:element ref="Credential" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="status" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="migrated" />
+            <xs:enumeration value="linked" />
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    UpdateMigratedSupplierRequest
+        The request sends an s4 suppplier migration status to S4.  The request contains
+        a new supplier id, and identity of the user.
+  -->
+  <xs:element name="UpdateMigratedSupplierRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="SupplierMigrationInfo" />
+        <xs:element ref="SupplierMigrationResult" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+   Certificate
+        It specifies the certificate for S4.  TimeRange specifies the certificate valid time.
+        Name specifies the name of the attachment.  Attachment is the actual certificate file.
+  -->
+  <xs:element name="Certificate">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TimeRange" />
+        <xs:element ref="Name" />
+        <xs:element ref="Attachment" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="Extrinsic" />
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    S4DataPushRequest
+  -->
+  <xs:element name="S4DataPushRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Organization" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--
+    S4DataPushResponse
+    Returned in response to a S4DataPuhsRequest processed by S4DataPushRequestHandler.
+  -->
+  <xs:element name="S4DataPushResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="User" />
+      </xs:sequence>
+      <xs:attribute name="s4orgprivateid" type="xs:string" use="required" />
+      <xs:attribute name="organid" type="xs:string" />
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="User">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="s4userprivateid" type="xs:string" use="required" />
+          <xs:attribute name="useranguid" type="xs:string" use="required" />
+          <xs:attribute name="useranid" type="xs:string" use="required" />
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
